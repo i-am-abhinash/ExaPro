@@ -32,10 +32,10 @@ export const GlassSkeleton: React.FC<GlassSkeletonProps> = ({
       {items.map((key) => (
         <div
           key={key}
-          className={`relative overflow-hidden bg-white/[0.04] border border-white/[0.04] ${getVariantClasses()} ${className}`}
+          className={`relative overflow-hidden bg-white/[0.06] border border-white/[0.06] ${getVariantClasses()} ${className}`}
         >
-          {/* Subtle dark shimmer sweep */}
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent animate-shimmer" />
+          {/* Subtle shimmer sweep */}
+          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/[0.10] to-transparent animate-shimmer" />
         </div>
       ))}
     </div>

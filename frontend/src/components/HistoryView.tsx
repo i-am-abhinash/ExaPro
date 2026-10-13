@@ -93,12 +93,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-3">
-            <h1 className="text-3xl font-black text-cream-primary tracking-tight">Project History</h1>
+            <h1 className="text-3xl font-black text-cool-primary tracking-tight">Project History</h1>
             <GlassBadge variant="neutral" size="sm">
               {projects.length} Total Repositories
             </GlassBadge>
           </div>
-          <p className="text-xs sm:text-sm text-cream-muted">
+          <p className="text-xs sm:text-sm text-cool-muted">
             Browse, inspect, and export previously evaluated software repositories and DOCX reports
           </p>
         </div>
@@ -106,7 +106,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         <GlassButton
           variant="primary"
           size="md"
-          icon={<Plus className="w-4 h-4 text-obsidian" />}
+          icon={<Plus className="w-4 h-4 text-white" />}
           onClick={onNewAnalysis}
           className="self-start sm:self-auto"
         >
@@ -115,13 +115,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-obsidian-card border border-white/[0.08] shadow-glass-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-graphite-secondary border border-white/[0.10] shadow-glass-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="w-full md:w-96">
           <GlassInput
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, repository, or language..."
-            icon={<Search className="w-4 h-4 text-cream-muted" />}
+            icon={<Search className="w-4 h-4 text-cool-muted" />}
           />
         </div>
 
@@ -139,8 +139,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                 onClick={() => setStatusFilter(tab.id as any)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   statusFilter === tab.id
-                    ? 'bg-obsidian-elevated text-cream-primary border border-white/[0.1] shadow-sm'
-                    : 'text-cream-muted hover:text-cream-primary hover:bg-white/[0.04]'
+                    ? 'bg-graphite-card text-cool-primary border border-white/[0.12] shadow-sm'
+                    : 'text-cool-muted hover:text-cool-primary hover:bg-white/[0.06]'
                 }`}
               >
                 {tab.label}
@@ -149,11 +149,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           </div>
 
           {/* Grid vs Table View Toggle */}
-          <div className="hidden sm:flex items-center p-1 rounded-xl bg-obsidian-elevated border border-white/[0.08]">
+          <div className="hidden sm:flex items-center p-1 rounded-xl bg-graphite-elevated border border-white/[0.10]">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
-                viewMode === 'grid' ? 'bg-obsidian text-cream-primary shadow-sm border border-white/[0.08]' : 'text-cream-muted hover:text-cream-primary'
+                viewMode === 'grid' ? 'bg-graphite-secondary text-cool-primary shadow-sm border border-white/[0.10]' : 'text-cool-muted hover:text-cool-primary'
               }`}
               title="Grid View"
             >
@@ -162,7 +162,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
             <button
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
-                viewMode === 'table' ? 'bg-obsidian text-cream-primary shadow-sm border border-white/[0.08]' : 'text-cream-muted hover:text-cream-primary'
+                viewMode === 'table' ? 'bg-graphite-secondary text-cool-primary shadow-sm border border-white/[0.10]' : 'text-cool-muted hover:text-cool-primary'
               }`}
               title="Table View"
             >
@@ -183,18 +183,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           title="No evaluations found"
           description="You haven't examined any repositories yet. Start by uploading a ZIP or specifying a GitHub URL."
           actionText="Examine First Project"
-          actionIcon={<Plus className="w-4 h-4 text-obsidian" />}
+          actionIcon={<Plus className="w-4 h-4 text-white" />}
           onAction={onNewAnalysis}
         />
       ) : filteredProjects.length === 0 ? (
         <div className="py-20 text-center space-y-3">
-          <p className="text-cream-primary text-sm font-semibold">No projects match your filter criteria.</p>
+          <p className="text-cool-primary text-sm font-semibold">No projects match your filter criteria.</p>
           <button
             onClick={() => {
               setSearchQuery('');
               setStatusFilter('all');
             }}
-            className="text-xs text-amber hover:underline font-semibold"
+            className="text-xs text-electric hover:underline font-semibold"
           >
             Clear all filters
           </button>
@@ -206,43 +206,43 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
             <TiltCard
               key={project._id}
               elevation="elevated"
-              className="p-6 flex flex-col justify-between space-y-4 bg-obsidian-card border border-white/[0.08] shadow-glass-sm hover:shadow-glass-md transition-all duration-200"
+              className="p-6 flex flex-col justify-between space-y-4 bg-graphite-elevated border border-white/[0.12] shadow-card-elevated hover:shadow-card-strong transition-all duration-200"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-obsidian-elevated border border-white/[0.08] flex items-center justify-center text-cream-primary flex-shrink-0 shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-graphite-secondary border border-white/[0.10] flex items-center justify-center text-cool-primary flex-shrink-0 shadow-sm">
                     {project.submissionType === 'github' ? (
-                      <Github className="w-5 h-5 text-cream-primary" />
+                      <Github className="w-5 h-5 text-cool-primary" />
                     ) : (
-                      <UploadCloud className="w-5 h-5 text-amber" />
+                      <UploadCloud className="w-5 h-5 text-electric" />
                     )}
                   </div>
 
                   {project.status === 'completed' ? (
-                    <GlassBadge variant="lime" dot size="sm">
+                    <GlassBadge variant="success" dot size="sm">
                       Ready
                     </GlassBadge>
                   ) : project.status === 'failed' ? (
-                    <GlassBadge variant="rose" dot size="sm">
+                    <GlassBadge variant="error" dot size="sm">
                       Failed
                     </GlassBadge>
                   ) : (
-                    <GlassBadge variant="amber" dot pulse size="sm">
+                    <GlassBadge variant="electric" dot pulse size="sm">
                       Analyzing...
                     </GlassBadge>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="font-bold text-cream-primary text-base truncate" title={project.projectName}>
+                  <h3 className="font-bold text-cool-primary text-base truncate" title={project.projectName}>
                     {project.projectName}
                   </h3>
-                  <p className="text-xs text-cream-muted truncate font-mono">
+                  <p className="text-xs text-cool-muted truncate font-mono">
                     {project.repositoryUrl || project.uploadedFileName}
                   </p>
                   {project.branch && (
-                    <p className="text-[11px] text-cream-muted flex items-center space-x-1 font-mono">
-                      <GitBranch className="w-3 h-3 text-cream-muted" />
+                    <p className="text-[11px] text-cool-muted flex items-center space-x-1 font-mono">
+                      <GitBranch className="w-3 h-3 text-cool-muted" />
                       <span>{project.branch}</span>
                     </p>
                   )}
@@ -256,7 +256,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                     </GlassBadge>
                   ))}
                   {project.detectedTechnologies.languages.length > 4 && (
-                    <span className="text-[10px] text-cream-muted self-center">
+                    <span className="text-[10px] text-cool-muted self-center">
                       +{project.detectedTechnologies.languages.length - 4}
                     </span>
                   )}
@@ -264,8 +264,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
               </div>
 
               {/* Bottom Actions */}
-              <div className="pt-4 border-t border-white/[0.08] flex items-center justify-between">
-                <span className="text-xs text-cream-muted">
+              <div className="pt-4 border-t border-white/[0.10] flex items-center justify-between">
+                <span className="text-xs text-cool-muted">
                   {new Date(project.createdAt).toLocaleDateString()}
                 </span>
 
@@ -282,17 +282,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                       <a
                         href={getDownloadDocxUrl(project._id)}
                         download
-                        className="p-1.5 rounded-lg bg-amber/15 hover:bg-amber/25 text-amber border border-amber/30 transition-colors"
+                        className="p-1.5 rounded-lg bg-electric/15 hover:bg-electric/25 text-electric border border-electric/30 transition-colors"
                         title="Download DOCX Report"
                       >
-                        <Download className="w-4 h-4 text-amber" />
+                        <Download className="w-4 h-4 text-electric" />
                       </a>
                     </>
                   )}
 
                   <button
                     onClick={() => setProjectToDelete({ id: project._id, name: project.projectName })}
-                    className="p-1.5 rounded-lg text-cream-muted hover:text-status-error hover:bg-status-error-bg transition-colors"
+                    className="p-1.5 rounded-lg text-cool-muted hover:text-status-error hover:bg-status-error-bg transition-colors"
                     title="Delete Project"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -304,10 +304,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         </div>
       ) : (
         /* 2. Compact Table View */
-        <div className="rounded-3xl bg-obsidian-card border border-white/[0.08] shadow-glass-sm overflow-hidden">
+        <div className="rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-obsidian-elevated/80 text-cream-muted border-b border-white/[0.08] uppercase tracking-wider font-bold text-[11px]">
+              <thead className="bg-graphite-elevated/90 text-cool-muted border-b border-white/[0.10] uppercase tracking-wider font-bold text-[11px]">
                 <tr>
                   <th className="py-3.5 px-6">Project Name</th>
                   <th className="py-3.5 px-6">Source</th>
@@ -317,19 +317,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                   <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.05] text-cream-primary">
+              <tbody className="divide-y divide-white/[0.06] text-cool-primary">
                 {filteredProjects.map((proj) => (
-                  <tr key={proj._id} className="hover:bg-obsidian-elevated/50 transition-colors">
+                  <tr key={proj._id} className="hover:bg-graphite-elevated/50 transition-colors">
                     <td className="py-4 px-6 font-semibold">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-lg bg-obsidian-elevated border border-white/[0.08] flex items-center justify-center text-amber flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-graphite-elevated border border-white/[0.10] flex items-center justify-center text-electric flex-shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
-                        <span className="truncate max-w-[200px] font-bold text-cream-primary">{proj.projectName}</span>
+                        <span className="truncate max-w-[200px] font-bold text-cool-primary">{proj.projectName}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="text-cream-muted truncate max-w-[150px] inline-block font-mono text-xs">
+                      <span className="text-cool-muted truncate max-w-[150px] inline-block font-mono text-xs">
                         {proj.repositoryUrl || proj.uploadedFileName}
                       </span>
                     </td>
@@ -344,20 +344,20 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                     </td>
                     <td className="py-4 px-6">
                       {proj.status === 'completed' ? (
-                        <GlassBadge variant="lime" dot size="sm">
+                        <GlassBadge variant="success" dot size="sm">
                           Ready
                         </GlassBadge>
                       ) : proj.status === 'failed' ? (
-                        <GlassBadge variant="rose" dot size="sm">
+                        <GlassBadge variant="error" dot size="sm">
                           Failed
                         </GlassBadge>
                       ) : (
-                        <GlassBadge variant="amber" dot pulse size="sm">
+                        <GlassBadge variant="electric" dot pulse size="sm">
                           {proj.statusMessage || 'Analyzing...'}
                         </GlassBadge>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-cream-muted whitespace-nowrap text-xs">
+                    <td className="py-4 px-6 text-cool-muted whitespace-nowrap text-xs">
                       {new Date(proj.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
@@ -373,16 +373,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                           <a
                             href={getDownloadDocxUrl(proj._id)}
                             download
-                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber hover:bg-amber-hover text-obsidian text-xs font-bold shadow-amber-sm transition-colors"
+                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-electric hover:bg-electric-hover text-white text-xs font-bold shadow-electric-sm transition-colors"
                           >
-                            <Download className="w-3.5 h-3.5 text-obsidian" />
+                            <Download className="w-3.5 h-3.5 text-white" />
                             <span>DOCX</span>
                           </a>
                         </>
                       )}
                       <button
                         onClick={() => setProjectToDelete({ id: proj._id, name: proj.projectName })}
-                        className="p-1.5 rounded-lg text-cream-muted hover:text-status-error hover:bg-status-error-bg transition-colors"
+                        className="p-1.5 rounded-lg text-cool-muted hover:text-status-error hover:bg-status-error-bg transition-colors"
                         title="Delete Project"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -422,9 +422,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           </div>
         }
       >
-        <p className="text-sm text-cream-muted leading-relaxed">
+        <p className="text-sm text-cool-muted leading-relaxed">
           Are you sure you want to delete the evaluation report for{' '}
-          <strong className="text-cream-primary font-bold">&ldquo;{projectToDelete?.name}&rdquo;</strong>? This will permanently remove the record and generated DOCX file from disk.
+          <strong className="text-cool-primary font-bold">&ldquo;{projectToDelete?.name}&rdquo;</strong>? This will permanently remove the record and generated DOCX file from disk.
         </p>
       </GlassModal>
     </div>

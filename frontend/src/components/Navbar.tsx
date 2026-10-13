@@ -19,7 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onReturnToLanding,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-obsidian/85 backdrop-blur-xl border-b border-white/[0.08] shadow-glass-sm">
+    <header className="sticky top-0 z-40 bg-graphite/85 backdrop-blur-xl border-b border-white/[0.10] shadow-glass-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand / Logo */}
         <div
@@ -30,24 +30,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             layoutId="brand-logo-icon"
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
-            className="w-9 h-9 rounded-xl bg-amber flex items-center justify-center text-obsidian shadow-amber-sm transition-transform duration-200"
+            className="w-9 h-9 rounded-xl bg-electric flex items-center justify-center text-white shadow-electric-sm transition-transform duration-200"
           >
-            <Layers className="w-5 h-5 text-obsidian" />
+            <Layers className="w-5 h-5 text-white" />
           </motion.div>
 
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <motion.span
                 layoutId="brand-examine-title"
-                className="font-extrabold text-lg sm:text-xl tracking-tight text-cream-primary group-hover:text-amber transition-colors"
+                className="font-extrabold text-lg sm:text-xl tracking-tight text-cool-primary group-hover:text-electric transition-colors"
               >
                 EXAPRO
               </motion.span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber/10 text-amber border border-amber/30">
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-electric/15 text-electric border border-electric/30">
                 PRO DOCX
               </span>
             </div>
-            <p className="hidden sm:block text-[10px] text-cream-muted font-medium tracking-tight">
+            <p className="hidden sm:block text-[10px] text-cool-muted font-medium tracking-tight">
               Software Architecture Evaluator
             </p>
           </div>
@@ -65,8 +65,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onReturnToLanding}
             className={`p-2 rounded-xl text-xs font-semibold transition-all ${
               currentTab === 'landing'
-                ? 'bg-obsidian-elevated text-cream-primary border border-white/[0.1] shadow-sm'
-                : 'text-cream-secondary hover:text-cream-primary hover:bg-white/[0.05]'
+                ? 'bg-graphite-elevated text-cool-primary border border-white/[0.12] shadow-sm'
+                : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
             }`}
             title="Overview & Landing"
           >
@@ -77,8 +77,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('dashboard')}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
               currentTab === 'dashboard'
-                ? 'bg-obsidian-elevated text-cream-primary border border-white/[0.1] shadow-sm'
-                : 'text-cream-secondary hover:text-cream-primary hover:bg-white/[0.05]'
+                ? 'bg-graphite-elevated text-cool-primary border border-white/[0.12] shadow-sm'
+                : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -89,8 +89,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('new')}
             className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               currentTab === 'new'
-                ? 'bg-amber text-obsidian shadow-amber-sm border border-amber/40'
-                : 'text-amber bg-amber/15 hover:bg-amber/25 border border-amber/30'
+                ? 'bg-electric text-white shadow-electric-sm border border-electric/40'
+                : 'text-electric bg-electric/15 hover:bg-electric/25 border border-electric/30'
             }`}
           >
             <PlusCircle className="w-4 h-4" />
@@ -101,8 +101,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('history')}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
               currentTab === 'history'
-                ? 'bg-obsidian-elevated text-cream-primary border border-white/[0.1] shadow-sm'
-                : 'text-cream-secondary hover:text-cream-primary hover:bg-white/[0.05]'
+                ? 'bg-graphite-elevated text-cool-primary border border-white/[0.12] shadow-sm'
+                : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
             }`}
           >
             <History className="w-4 h-4" />
@@ -118,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="hidden lg:flex items-center space-x-2 text-xs"
         >
           {health?.database.isConnected ? (
-            <GlassBadge variant="lime" dot size="sm">
+            <GlassBadge variant="success" dot size="sm">
               MongoDB Connected
             </GlassBadge>
           ) : (
@@ -128,7 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {health?.geminiConfigured ? (
-            <GlassBadge variant="amber" dot size="sm">
+            <GlassBadge variant="electric" dot size="sm">
               Gemini AI
             </GlassBadge>
           ) : (

@@ -3,35 +3,36 @@ import { motion } from 'framer-motion';
 
 export const AmbientBackground: React.FC = () => {
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-obsidian">
-      {/* Subtle Dark Vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_0%,rgba(29,34,43,0.6),transparent)]" />
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-graphite">
+      {/* Subtle Restrained Radial Gradient - Lighter at Top-Center */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,#2B3542_0%,transparent_80%)]" />
 
-      {/* Obsidian Grid Overlay */}
-      <div className="absolute inset-0 bg-grid-obsidian opacity-60" />
+      {/* Graphite Grid Overlay */}
+      <div className="absolute inset-0 bg-grid-graphite opacity-70" />
 
-      {/* Restrained Faint Amber Ambient Lighting */}
+      {/* Subtle Electric-Blue Ambient Glow behind Hero Area */}
       <motion.div
-        className="absolute -top-40 left-1/3 w-[650px] h-[650px] rounded-full bg-amber/[0.035] blur-[160px]"
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[680px] h-[550px] rounded-full bg-electric/[0.055] blur-[150px]"
         animate={{
-          x: [0, 25, -20, 0],
-          y: [0, -20, 15, 0],
+          scale: [1, 1.05, 1],
+          opacity: [0.7, 0.9, 0.7],
         }}
         transition={{
-          duration: 24,
+          duration: 18,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
       />
 
+      {/* Soft Secondary Lavender Ambient Ambiance */}
       <motion.div
-        className="absolute top-1/2 -right-48 w-[600px] h-[600px] rounded-full bg-amber/[0.02] blur-[150px]"
+        className="absolute top-1/2 -right-40 w-[550px] h-[550px] rounded-full bg-lavender/[0.035] blur-[160px]"
         animate={{
-          x: [0, -30, 20, 0],
-          y: [0, 30, -25, 0],
+          x: [0, -25, 15, 0],
+          y: [0, 25, -20, 0],
         }}
         transition={{
-          duration: 28,
+          duration: 24,
           repeat: Infinity,
           ease: 'easeInOut',
         }}

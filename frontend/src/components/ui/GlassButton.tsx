@@ -29,13 +29,13 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
 
   const variantClasses = {
     primary:
-      'bg-amber hover:bg-amber-hover active:bg-amber-active text-obsidian font-bold shadow-amber-sm hover:shadow-amber-md border border-amber/40 transition-all duration-200',
+      'bg-electric hover:bg-electric-hover active:bg-electric-active text-white font-bold shadow-electric-sm hover:shadow-electric-md border border-electric/40 transition-all duration-200',
     secondary:
-      'bg-obsidian-elevated hover:bg-obsidian-hover active:bg-obsidian text-cream-primary border border-white/[0.08] hover:border-white/[0.16] shadow-glass-sm transition-all duration-200',
+      'bg-graphite-elevated hover:bg-graphite-card active:bg-graphite-secondary text-cool-primary border border-white/[0.10] hover:border-white/[0.18] shadow-glass-sm transition-all duration-200',
     outline:
-      'bg-obsidian-card/80 hover:bg-obsidian-elevated text-cream-primary border border-white/[0.08] hover:border-amber/40 shadow-glass-sm transition-all duration-200',
+      'bg-graphite-secondary/80 hover:bg-graphite-elevated text-cool-primary border border-white/[0.10] hover:border-electric/40 shadow-glass-sm transition-all duration-200',
     ghost:
-      'bg-transparent hover:bg-white/[0.06] active:bg-white/[0.09] text-cream-muted hover:text-cream-primary border border-transparent transition-colors',
+      'bg-transparent hover:bg-white/[0.08] active:bg-white/[0.12] text-cool-muted hover:text-cool-primary border border-transparent transition-colors',
     danger:
       'bg-status-error-bg hover:bg-status-error-bg/80 active:bg-status-error-bg text-status-error border border-status-error-border shadow-glass-sm transition-colors',
   };

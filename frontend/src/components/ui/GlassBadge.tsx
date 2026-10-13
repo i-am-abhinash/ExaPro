@@ -2,7 +2,7 @@ import React from 'react';
 
 export interface GlassBadgeProps {
   children: React.ReactNode;
-  variant?: 'lime' | 'cobalt' | 'neutral' | 'amber' | 'rose' | 'warning' | 'success' | 'error';
+  variant?: 'lime' | 'cobalt' | 'neutral' | 'amber' | 'rose' | 'warning' | 'success' | 'error' | 'electric' | 'lavender';
   size?: 'sm' | 'md';
   dot?: boolean;
   pulse?: boolean;
@@ -23,25 +23,29 @@ export const GlassBadge: React.FC<GlassBadgeProps> = ({
   };
 
   const variantClasses: Record<string, string> = {
+    electric: 'bg-electric/15 text-electric border border-electric/30',
+    cobalt: 'bg-electric/15 text-electric border border-electric/30',
+    lavender: 'bg-lavender/15 text-lavender border border-lavender/30',
     lime: 'bg-status-success-bg text-status-success border border-status-success-border',
     success: 'bg-status-success-bg text-status-success border border-status-success-border',
-    amber: 'bg-amber/10 text-amber border border-amber/30',
-    cobalt: 'bg-amber/15 text-amber border border-amber/30',
-    neutral: 'bg-white/[0.06] text-cream-secondary border border-white/[0.08]',
     warning: 'bg-status-warning-bg text-status-warning border border-status-warning-border',
+    amber: 'bg-status-warning-bg text-status-warning border border-status-warning-border',
     rose: 'bg-status-error-bg text-status-error border border-status-error-border',
     error: 'bg-status-error-bg text-status-error border border-status-error-border',
+    neutral: 'bg-white/[0.08] text-cool-secondary border border-white/[0.10]',
   };
 
   const dotColorClasses: Record<string, string> = {
+    electric: 'bg-electric',
+    cobalt: 'bg-electric',
+    lavender: 'bg-lavender',
     lime: 'bg-status-success',
     success: 'bg-status-success',
-    amber: 'bg-amber',
-    cobalt: 'bg-amber',
-    neutral: 'bg-cream-muted',
     warning: 'bg-status-warning',
+    amber: 'bg-status-warning',
     rose: 'bg-status-error',
     error: 'bg-status-error',
+    neutral: 'bg-cool-muted',
   };
 
   const resolvedVariantClass = variantClasses[variant] || variantClasses.neutral;

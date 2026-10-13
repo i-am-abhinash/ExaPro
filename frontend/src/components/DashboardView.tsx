@@ -71,41 +71,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       animate="visible"
       className="space-y-8 py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
     >
-      {/* 1. Primary Action & Overview Command Card */}
+      {/* 1. Primary Action & Overview Hero Command Card (Visibly lighter with electric glow) */}
       <motion.div variants={itemVariants}>
-        <div className="rounded-3xl bg-obsidian-card border border-white/[0.08] shadow-glass-md p-6 sm:p-10 relative overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="rounded-3xl hero-panel p-6 sm:p-10 relative overflow-hidden">
+          {/* Subtle Electric-Blue Glow Behind Hero Area */}
+          <div className="absolute -top-24 left-1/4 w-96 h-96 rounded-full bg-electric/[0.08] blur-[120px] pointer-events-none" />
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Column: Command & Ingestion */}
             <div className="lg:col-span-8 space-y-5">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-obsidian-elevated border border-white/[0.08] text-xs font-semibold text-cream-secondary">
-                <span className="w-2 h-2 rounded-full bg-amber animate-subtle-pulse" />
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-graphite-secondary/90 border border-white/[0.12] text-xs font-semibold text-cool-secondary shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-electric animate-subtle-pulse" />
                 <span>Examine Project Workspace</span>
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-3xl sm:text-5xl font-black text-cream-primary tracking-tight leading-tight">
-                  Software Architecture <span className="text-amber">Evaluation</span>
+                <h1 className="text-3xl sm:text-5xl font-black text-cool-primary tracking-tight leading-tight">
+                  Software Architecture <span className="text-electric">Evaluation</span>
                 </h1>
-                <p className="text-cream-secondary text-sm sm:text-base leading-relaxed max-w-2xl">
+                <p className="text-cool-secondary text-sm sm:text-base leading-relaxed max-w-2xl">
                   Statically inspects project archives and public GitHub repositories, uncovers technology stacks and cross-service communication channels, synthesizes verified architecture diagrams, and exports camera-ready Word documentation reports.
                 </p>
               </div>
 
-              {/* Primary Dual Ingestion Launchpad */}
+              {/* Primary Dual Ingestion Launchpad (Visibly distinguishable from hero surface) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
                 <div
                   onClick={() => onStartSubmission('zip')}
-                  className="p-4 rounded-2xl bg-obsidian-elevated/70 hover:bg-obsidian-elevated border border-white/[0.08] hover:border-amber/40 shadow-sm cursor-pointer transition-all duration-200 group"
+                  className="p-4 rounded-2xl bg-graphite-secondary hover:bg-graphite-elevated border border-white/[0.10] hover:border-electric/50 shadow-md cursor-pointer transition-all duration-200 group"
                 >
                   <div className="flex items-center space-x-3.5">
-                    <div className="w-11 h-11 rounded-xl bg-amber/10 text-amber flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className="w-11 h-11 rounded-xl bg-electric/15 text-electric flex items-center justify-center group-hover:scale-105 transition-transform">
                       <UploadCloud className="w-5 h-5" />
                     </div>
                     <div className="space-y-0.5 min-w-0">
-                      <p className="text-sm font-bold text-cream-primary group-hover:text-amber transition-colors">
+                      <p className="text-sm font-bold text-cool-primary group-hover:text-electric transition-colors">
                         Upload ZIP Archive
                       </p>
-                      <p className="text-xs text-cream-muted truncate">
+                      <p className="text-xs text-cool-muted truncate">
                         Local source packages up to 50MB
                       </p>
                     </div>
@@ -114,17 +117,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <div
                   onClick={() => onStartSubmission('github')}
-                  className="p-4 rounded-2xl bg-obsidian-elevated/70 hover:bg-obsidian-elevated border border-white/[0.08] hover:border-amber/40 shadow-sm cursor-pointer transition-all duration-200 group"
+                  className="p-4 rounded-2xl bg-graphite-secondary hover:bg-graphite-elevated border border-white/[0.10] hover:border-electric/50 shadow-md cursor-pointer transition-all duration-200 group"
                 >
                   <div className="flex items-center space-x-3.5">
-                    <div className="w-11 h-11 rounded-xl bg-white/[0.06] text-cream-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className="w-11 h-11 rounded-xl bg-white/[0.08] text-cool-primary flex items-center justify-center group-hover:scale-105 transition-transform">
                       <Github className="w-5 h-5" />
                     </div>
                     <div className="space-y-0.5 min-w-0">
-                      <p className="text-sm font-bold text-cream-primary group-hover:text-amber transition-colors">
+                      <p className="text-sm font-bold text-cool-primary group-hover:text-electric transition-colors">
                         Import GitHub Repository
                       </p>
-                      <p className="text-xs text-cream-muted truncate">
+                      <p className="text-xs text-cool-muted truncate">
                         Public Git URLs and branches
                       </p>
                     </div>
@@ -134,35 +137,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {/* Right Column: Real Project Telemetry HUD */}
-            <div className="lg:col-span-4 lg:border-l lg:border-white/[0.08] lg:pl-8 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-cream-muted">
+            <div className="lg:col-span-4 lg:border-l lg:border-white/[0.12] lg:pl-8 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-cool-muted">
                 System Telemetry & Status
               </h3>
 
               {/* Counters */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 rounded-2xl bg-obsidian-elevated border border-white/[0.08]">
-                  <p className="text-xs uppercase font-bold text-cream-muted tracking-wider">Evaluations</p>
-                  <p className="text-3xl font-black text-cream-primary mt-1">{recentProjects.length}</p>
-                  <p className="text-[11px] text-cream-muted mt-0.5">Recorded Repos</p>
+                <div className="p-4 rounded-2xl bg-graphite-secondary border border-white/[0.10] shadow-sm">
+                  <p className="text-xs uppercase font-bold text-cool-muted tracking-wider">Evaluations</p>
+                  <p className="text-3xl font-black text-cool-primary mt-1">{recentProjects.length}</p>
+                  <p className="text-[11px] text-cool-muted mt-0.5">Recorded Repos</p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-obsidian-elevated border border-white/[0.08]">
-                  <p className="text-xs uppercase font-bold text-cream-muted tracking-wider">Reports</p>
-                  <p className="text-3xl font-black text-cream-primary mt-1">{completedProjectsCount}</p>
+                <div className="p-4 rounded-2xl bg-graphite-secondary border border-white/[0.10] shadow-sm">
+                  <p className="text-xs uppercase font-bold text-cool-muted tracking-wider">Reports</p>
+                  <p className="text-3xl font-black text-cool-primary mt-1">{completedProjectsCount}</p>
                   <p className="text-[11px] text-status-success font-medium mt-0.5">Camera-Ready</p>
                 </div>
               </div>
 
               {/* Health Info */}
               <div className="space-y-2 text-xs pt-1">
-                <div className="p-3 rounded-xl bg-obsidian-elevated border border-white/[0.08] flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-graphite-secondary border border-white/[0.10] flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Database className="w-4 h-4 text-cream-muted" />
-                    <span className="font-semibold text-cream-primary text-[11px]">Database Instance</span>
+                    <Database className="w-4 h-4 text-cool-muted" />
+                    <span className="font-semibold text-cool-primary text-[11px]">Database Instance</span>
                   </div>
                   {health?.database.isConnected ? (
-                    <GlassBadge variant="lime" dot size="sm">
+                    <GlassBadge variant="success" dot size="sm">
                       MongoDB Active
                     </GlassBadge>
                   ) : (
@@ -172,13 +175,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   )}
                 </div>
 
-                <div className="p-3 rounded-xl bg-obsidian-elevated border border-white/[0.08] flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-graphite-secondary border border-white/[0.10] flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-amber" />
-                    <span className="font-semibold text-cream-primary text-[11px]">AI Synthesis</span>
+                    <Sparkles className="w-4 h-4 text-electric" />
+                    <span className="font-semibold text-cool-primary text-[11px]">AI Synthesis</span>
                   </div>
                   {health?.geminiConfigured ? (
-                    <GlassBadge variant="amber" dot size="sm">
+                    <GlassBadge variant="electric" dot size="sm">
                       Gemini Flash
                     </GlassBadge>
                   ) : (
@@ -193,45 +196,45 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </motion.div>
 
-      {/* 2. Key Architecture Capabilities */}
+      {/* 2. Key Architecture Capabilities (Visibly distinguishable from hero panel) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Topology Engine (7 cols) */}
         <motion.div variants={itemVariants} className="lg:col-span-7 flex flex-col">
           <TiltCard
             elevation="elevated"
-            className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4 bg-obsidian-card border border-white/[0.08]"
+            className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4 bg-graphite-elevated border border-white/[0.12] shadow-card-elevated"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber/10 text-amber flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-electric/15 text-electric flex items-center justify-center">
                 <Cpu className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-cream-primary text-lg tracking-tight">Synthesized Architecture Topology Engine</h3>
-                <p className="text-xs sm:text-sm text-cream-secondary leading-relaxed">
+                <h3 className="font-bold text-cool-primary text-lg tracking-tight">Synthesized Architecture Topology Engine</h3>
+                <p className="text-xs sm:text-sm text-cool-secondary leading-relaxed">
                   Automatically maps client SPAs, backend microservices, serverless BaaS, and databases into a high-resolution SVG diagram embedded directly in camera-ready Word reports.
                 </p>
               </div>
 
               {/* Supported Models */}
               <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
-                <span className="px-2.5 py-1 rounded-lg bg-obsidian-elevated border border-white/[0.08] text-cream-secondary font-mono font-medium">
+                <span className="px-2.5 py-1 rounded-lg bg-graphite-secondary border border-white/[0.08] text-cool-secondary font-mono font-medium">
                   client_baas
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-obsidian-elevated border border-white/[0.08] text-cream-secondary font-mono font-medium">
+                <span className="px-2.5 py-1 rounded-lg bg-graphite-secondary border border-white/[0.08] text-cool-secondary font-mono font-medium">
                   polyglot_fullstack
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-obsidian-elevated border border-white/[0.08] text-cream-secondary font-mono font-medium">
+                <span className="px-2.5 py-1 rounded-lg bg-graphite-secondary border border-white/[0.08] text-cool-secondary font-mono font-medium">
                   client_server_db
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-obsidian-elevated border border-white/[0.08] text-cream-secondary font-mono font-medium">
+                <span className="px-2.5 py-1 rounded-lg bg-graphite-secondary border border-white/[0.08] text-cool-secondary font-mono font-medium">
                   frontend_spa_only
                 </span>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-white/[0.08] text-xs text-cream-muted flex items-center justify-between">
+            <div className="pt-3 border-t border-white/[0.10] text-xs text-cool-muted flex items-center justify-between">
               <span>Dynamic Vector SVG Embedded Directly into DOCX</span>
-              <span className="text-amber font-semibold">Zero Hallucinations</span>
+              <span className="text-electric font-semibold">Zero Hallucinations</span>
             </div>
           </TiltCard>
         </motion.div>
@@ -240,20 +243,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <motion.div variants={itemVariants} className="lg:col-span-5 flex flex-col">
           <TiltCard
             elevation="elevated"
-            className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4 bg-obsidian-card border border-white/[0.08]"
+            className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4 bg-graphite-elevated border border-white/[0.12] shadow-card-elevated"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-white/[0.06] text-cream-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.08] text-cool-primary flex items-center justify-center">
                 <FileText className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-cream-primary text-lg tracking-tight">14 Camera-Ready Sections</h3>
-                <p className="text-xs sm:text-sm text-cream-secondary leading-relaxed">
+                <h3 className="font-bold text-cool-primary text-lg tracking-tight">14 Camera-Ready Sections</h3>
+                <p className="text-xs sm:text-sm text-cool-secondary leading-relaxed">
                   Covers Executive Summary, Tech Stack, ASCII Directory Tree, Modules, Data Flow, Schemas, API Endpoints, and Setup scripts with reconciled coverage.
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-1 text-xs text-cream-primary font-medium">
+              <div className="grid grid-cols-2 gap-2 pt-1 text-xs text-cool-primary font-medium">
                 <div className="flex items-center space-x-1.5">
                   <CheckCircle className="w-3.5 h-3.5 text-status-success" />
                   <span>Strict File Coverage</span>
@@ -273,9 +276,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
 
-            <div className="pt-3 border-t border-white/[0.08] text-xs text-cream-muted flex items-center justify-between">
+            <div className="pt-3 border-t border-white/[0.10] text-xs text-cool-muted flex items-center justify-between">
               <span>Standardized Technical Typography</span>
-              <span className="text-cream-primary font-semibold">Production Ready</span>
+              <span className="text-cool-primary font-semibold">Production Ready</span>
             </div>
           </TiltCard>
         </motion.div>
@@ -283,12 +286,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* 3. Recent Project Evaluations Table Workspace */}
       <motion.div variants={itemVariants}>
-        <div className="rounded-3xl bg-obsidian-card border border-white/[0.08] shadow-glass-md overflow-hidden">
+        <div className="rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated overflow-hidden">
           {/* Table Header & Search Filter */}
-          <div className="p-6 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-6 border-b border-white/[0.10] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-0.5">
-              <h2 className="text-xl font-bold text-cream-primary tracking-tight">Recent Project Evaluations</h2>
-              <p className="text-xs sm:text-sm text-cream-muted">
+              <h2 className="text-xl font-bold text-cool-primary tracking-tight">Recent Project Evaluations</h2>
+              <p className="text-xs sm:text-sm text-cool-muted">
                 Previously examined software repositories and camera-ready DOCX deliverable downloads
               </p>
             </div>
@@ -298,7 +301,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
                 placeholder="Filter by name, repo, or stack..."
-                icon={<Search className="w-4 h-4 text-cream-muted" />}
+                icon={<Search className="w-4 h-4 text-cool-muted" />}
               />
             </div>
           </div>
@@ -309,17 +312,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               title="No project evaluations yet"
               description="Submit a project ZIP archive or public GitHub repository to generate your first technical evaluation report."
               actionText="Examine First Project"
-              actionIcon={<UploadCloud className="w-4 h-4 text-obsidian" />}
+              actionIcon={<UploadCloud className="w-4 h-4 text-white" />}
               onAction={() => onStartSubmission('zip')}
             />
           ) : filteredProjects.length === 0 ? (
-            <div className="py-16 text-center text-xs sm:text-sm text-cream-muted">
+            <div className="py-16 text-center text-xs sm:text-sm text-cool-muted">
               No evaluated projects match &ldquo;{tableSearch}&rdquo;
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-obsidian-elevated/80 text-cream-muted border-b border-white/[0.08] uppercase tracking-wider font-bold text-[11px]">
+                <thead className="bg-graphite-elevated/90 text-cool-muted border-b border-white/[0.10] uppercase tracking-wider font-bold text-[11px]">
                   <tr>
                     <th className="py-3.5 px-6">Project Name</th>
                     <th className="py-3.5 px-6">Source</th>
@@ -329,21 +332,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <th className="py-3.5 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.05] text-cream-primary">
+                <tbody className="divide-y divide-white/[0.06] text-cool-primary">
                   {filteredProjects.map((proj) => (
-                    <tr key={proj._id} className="hover:bg-obsidian-elevated/50 transition-colors group">
+                    <tr key={proj._id} className="hover:bg-graphite-elevated/60 transition-colors group">
                       <td className="py-4 px-6 font-semibold">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-lg bg-obsidian-elevated border border-white/[0.08] flex items-center justify-center text-amber flex-shrink-0 group-hover:border-amber/40 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-graphite-elevated border border-white/[0.10] flex items-center justify-center text-electric flex-shrink-0 group-hover:border-electric/40 transition-colors">
                             <FileText className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate max-w-[220px] font-bold text-cream-primary group-hover:text-amber transition-colors">
+                            <p className="truncate max-w-[220px] font-bold text-cool-primary group-hover:text-electric transition-colors">
                               {proj.projectName}
                             </p>
                             {proj.branch && (
-                              <p className="text-[11px] text-cream-muted flex items-center space-x-1 font-mono">
-                                <GitBranch className="w-3 h-3 text-cream-muted" />
+                              <p className="text-[11px] text-cool-muted flex items-center space-x-1 font-mono">
+                                <GitBranch className="w-3 h-3 text-cool-muted" />
                                 <span>{proj.branch}</span>
                               </p>
                             )}
@@ -352,15 +355,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </td>
 
                       <td className="py-4 px-6">
-                        <span className="inline-flex items-center space-x-1.5 text-cream-secondary">
+                        <span className="inline-flex items-center space-x-1.5 text-cool-secondary">
                           {proj.submissionType === 'github' ? (
                             <>
-                              <Github className="w-3.5 h-3.5 text-cream-primary flex-shrink-0" />
+                              <Github className="w-3.5 h-3.5 text-cool-primary flex-shrink-0" />
                               <span className="truncate max-w-[140px] font-mono text-[11px]">GitHub</span>
                             </>
                           ) : (
                             <>
-                              <UploadCloud className="w-3.5 h-3.5 text-amber flex-shrink-0" />
+                              <UploadCloud className="w-3.5 h-3.5 text-electric flex-shrink-0" />
                               <span className="truncate max-w-[140px] text-[11px]">ZIP Archive</span>
                             </>
                           )}
@@ -375,7 +378,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             </GlassBadge>
                           ))}
                           {proj.detectedTechnologies.languages.length > 3 && (
-                            <span className="text-[10px] text-cream-muted self-center">
+                            <span className="text-[10px] text-cool-muted self-center">
                               +{proj.detectedTechnologies.languages.length - 3}
                             </span>
                           )}
@@ -384,21 +387,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                       <td className="py-4 px-6">
                         {proj.status === 'completed' ? (
-                          <GlassBadge variant="lime" dot size="sm">
+                          <GlassBadge variant="success" dot size="sm">
                             Ready
                           </GlassBadge>
                         ) : proj.status === 'failed' ? (
-                          <GlassBadge variant="rose" dot size="sm">
+                          <GlassBadge variant="error" dot size="sm">
                             Failed
                           </GlassBadge>
                         ) : (
-                          <GlassBadge variant="amber" dot pulse size="sm">
+                          <GlassBadge variant="electric" dot pulse size="sm">
                             {proj.statusMessage || 'Analyzing...'}
                           </GlassBadge>
                         )}
                       </td>
 
-                      <td className="py-4 px-6 text-cream-muted whitespace-nowrap text-xs">
+                      <td className="py-4 px-6 text-cool-muted whitespace-nowrap text-xs">
                         {new Date(proj.createdAt).toLocaleDateString()}
                       </td>
 
@@ -415,9 +418,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             <a
                               href={getDownloadDocxUrl(proj._id)}
                               download
-                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber hover:bg-amber-hover text-obsidian text-xs font-bold shadow-amber-sm transition-colors"
+                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-electric hover:bg-electric-hover text-white text-xs font-bold shadow-electric-sm transition-colors"
                             >
-                              <Download className="w-3.5 h-3.5 text-obsidian" />
+                              <Download className="w-3.5 h-3.5 text-white" />
                               <span>DOCX</span>
                             </a>
                           </>

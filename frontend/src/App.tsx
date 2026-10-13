@@ -72,8 +72,8 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-obsidian text-cream-primary flex flex-col justify-between selection:bg-amber/25 selection:text-amber">
-      {/* Dark Ambient Canvas */}
+    <div className="relative min-h-screen bg-graphite text-cool-primary flex flex-col justify-between selection:bg-electric/25 selection:text-electric">
+      {/* Restrained Graphite & Electric Canvas */}
       <AmbientBackground />
 
       <div className="relative z-10 flex-1 flex flex-col">
@@ -190,17 +190,17 @@ export const App: React.FC = () => {
       </div>
 
       {/* Global Minimalist Footer */}
-      <footer className="relative z-10 border-t border-white/[0.08] bg-obsidian-card/80 backdrop-blur-md py-6 text-xs text-cream-muted">
+      <footer className="relative z-10 border-t border-white/[0.10] bg-graphite-secondary/85 backdrop-blur-md py-6 text-xs text-cool-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-cream-primary">EXAPRO</span>
+            <span className="font-bold text-cool-primary">EXAPRO</span>
             <span>•</span>
             <span>AI-Powered Software Architecture Evaluator & Technical Documentation Engine</span>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-cream-muted font-mono">
-            <span>Obsidian + Amber Workspace</span>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-cool-muted font-mono">
+            <span>Graphite + Electric Workspace</span>
             <span>•</span>
-            <span>Dark Spatial Glass</span>
+            <span>Layered Spatial Glass</span>
             <span>•</span>
             <span>Camera-Ready DOCX</span>
           </div>
