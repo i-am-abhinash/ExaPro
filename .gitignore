@@ -15,8 +15,9 @@ backend/temp_extracted/*
 !backend/temp_extracted/.gitkeep
 backend/reports/*
 !backend/reports/.gitkeep
-test-taskflow.zip
-downloaded_test_report.docx
+test-*.zip
+*.zip
+*.docx
 
 # Environment variables & secrets
 .env

@@ -11,7 +11,6 @@ import {
   AlignmentType,
   ImageRun,
   PageBreak,
-  BorderStyle,
   Header,
   Footer,
   PageNumber,
@@ -34,88 +33,128 @@ export async function generateDocxReport(
   diagramPngBuffer: Buffer
 ): Promise<DocxGenerationResult> {
   const safeProjectName = project.projectName.replace(/[^a-zA-Z0-9_-]/g, '_');
-  const fileName = `${safeProjectName}_Exapro_Documentation.docx`;
+  const fileName = `${safeProjectName}_ExaPro_Documentation_Report.docx`;
   const filePath = path.join(REPORTS_DIR, `${project._id}.docx`);
 
-  const primaryColor = '1E3A8A'; // Deep Navy
-  const secondaryColor = '0284C7'; // Cyan
-  const lightBgColor = 'F1F5F9'; // Light gray background
-  const borderColor = 'CBD5E1';
+  // Design System Palette: Deep Navy & Muted Accent
+  const navyColor = '0F172A';
+  const primaryNavy = '1E3A8A';
+  const accentBlue = '0284C7';
+  const slateText = '334155';
+  const tableHeaderBg = '1E293B';
+  const lightRowBg = 'F8FAFC';
+  const codeBg = 'F1F5F9';
 
-  // Helper function to create standard heading 1
-  function createHeading1(title: string): Paragraph {
+  // Typography & Layout Helpers
+  function createH1(title: string): Paragraph {
     return new Paragraph({
       heading: HeadingLevel.HEADING_1,
-      spacing: { before: 360, after: 180 },
+      spacing: { before: 360, after: 140 },
       children: [
         new TextRun({
           text: title,
           bold: true,
-          size: 32, // 16pt
-          color: primaryColor,
+          size: 30, // 15pt
+          color: primaryNavy,
           font: 'Calibri',
         }),
       ],
     });
   }
 
-  // Helper function to create standard heading 2
-  function createHeading2(title: string): Paragraph {
+  function createH2(title: string): Paragraph {
     return new Paragraph({
       heading: HeadingLevel.HEADING_2,
-      spacing: { before: 240, after: 120 },
+      spacing: { before: 240, after: 100 },
       children: [
         new TextRun({
           text: title,
           bold: true,
-          size: 26, // 13pt
-          color: secondaryColor,
+          size: 24, // 12pt
+          color: accentBlue,
           font: 'Calibri',
         }),
       ],
     });
   }
 
-  // Helper function for regular body paragraph
-  function createBodyParagraph(text: string): Paragraph {
+  function createBody(text: string): Paragraph {
     return new Paragraph({
-      spacing: { before: 80, after: 120, line: 276 },
+      spacing: { before: 60, after: 100, line: 260 },
       children: [
         new TextRun({
           text,
           size: 22, // 11pt
           font: 'Calibri',
-          color: '334155',
+          color: slateText,
         }),
       ],
     });
   }
 
-  // Convert markdown-like paragraphs to Docx paragraphs
-  function parseTextToParagraphs(text: string): Paragraph[] {
-    const lines = text.split('\n');
-    const paras: Paragraph[] = [];
-    let inCodeBlock = false;
-    let codeLines: string[] = [];
+  function createCallout(title: string, message: string): Table {
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              shading: { fill: 'F0F9FF' },
+              children: [
+                new Paragraph({
+                  spacing: { before: 100, after: 60 },
+                  children: [
+                    new TextRun({
+                      text: `[NOTE] ${title}`,
+                      bold: true,
+                      size: 20,
+                      color: accentBlue,
+                      font: 'Calibri',
+                    }),
+                  ],
+                }),
+                new Paragraph({
+                  spacing: { before: 40, after: 100 },
+                  children: [
+                    new TextRun({
+                      text: message,
+                      size: 20,
+                      color: slateText,
+                      font: 'Calibri',
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  function parseTextToParagraphs(rawText: string): Paragraph[] {
+    const lines = rawText.split('\n');
+    const result: Paragraph[] = [];
+    let inCode = false;
+    let codeAccumulator: string[] = [];
 
     for (const rawLine of lines) {
       const line = rawLine.trimEnd();
 
       if (line.startsWith('```')) {
-        if (!inCodeBlock) {
-          inCodeBlock = true;
-          codeLines = [];
+        if (!inCode) {
+          inCode = true;
+          codeAccumulator = [];
         } else {
-          inCodeBlock = false;
-          // Render accumulated code
-          paras.push(
+          inCode = false;
+          result.push(
             new Paragraph({
-              spacing: { before: 120, after: 120 },
+              spacing: { before: 100, after: 100 },
               children: [
                 new TextRun({
-                  text: codeLines.join('\n'),
+                  text: codeAccumulator.join('\n'),
                   font: 'Consolas',
-                  size: 19, // 9.5pt
+                  size: 19,
                   color: '0F172A',
                 }),
               ],
@@ -125,124 +164,125 @@ export async function generateDocxReport(
         continue;
       }
 
-      if (inCodeBlock) {
-        codeLines.push(line);
+      if (inCode) {
+        codeAccumulator.push(line);
         continue;
       }
 
-      if (!line.trim()) {
-        continue;
-      }
+      if (!line.trim()) continue;
 
       if (line.startsWith('### ')) {
-        paras.push(createHeading2(line.replace('### ', '')));
+        result.push(createH2(line.replace('### ', '')));
       } else if (line.startsWith('## ')) {
-        paras.push(createHeading1(line.replace('## ', '')));
+        result.push(createH1(line.replace('## ', '')));
       } else if (line.startsWith('• ') || line.startsWith('- ')) {
-        paras.push(
+        result.push(
           new Paragraph({
             bullet: { level: 0 },
-            spacing: { before: 60, after: 60 },
+            spacing: { before: 40, after: 40 },
             children: [
               new TextRun({
                 text: line.replace(/^[•\-]\s*/, '').replace(/\*\*/g, ''),
                 size: 22,
                 font: 'Calibri',
-                color: '334155',
+                color: slateText,
               }),
             ],
           })
         );
       } else {
-        paras.push(
+        result.push(
           new Paragraph({
-            spacing: { before: 80, after: 120, line: 276 },
+            spacing: { before: 60, after: 80, line: 260 },
             children: [
               new TextRun({
                 text: line.replace(/\*\*/g, ''),
                 size: 22,
                 font: 'Calibri',
-                color: '334155',
+                color: slateText,
               }),
             ],
           })
         );
       }
     }
-    return paras;
+    return result;
   }
 
-  // 1. Cover Page Elements
+  // 1. Cover Page
   const coverElements = [
     new Paragraph({ spacing: { before: 1200 } }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
       children: [
         new TextRun({
-          text: 'EXAPRO PROJECT DOCUMENTATION',
+          text: 'EXAPRO SOFTWARE EVALUATION & ARCHITECTURE REPORT',
           bold: true,
-          size: 24,
-          color: secondaryColor,
+          size: 22,
+          color: accentBlue,
           font: 'Calibri',
         }),
       ],
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 200, after: 300 },
+      spacing: { before: 160, after: 240 },
       children: [
         new TextRun({
           text: project.projectName,
           bold: true,
-          size: 52, // 26pt
-          color: primaryColor,
+          size: 48, // 24pt
+          color: primaryNavy,
           font: 'Calibri',
         }),
       ],
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 800 },
+      spacing: { after: 700 },
       children: [
         new TextRun({
-          text: 'Comprehensive Architecture, Technical Specifications & Evidence-Based System Report',
+          text: 'Evidence-Based Technical Architecture, Component Analysis & System Specifications',
           italics: true,
-          size: 24,
+          size: 22,
           color: '64748B',
           font: 'Calibri',
         }),
       ],
     }),
-    // Metadata Table
+    // Metadata Block Table
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
         new TableRow({
           children: [
             new TableCell({
-              width: { size: 30, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ children: [new TextRun({ text: 'Submission Type', bold: true, color: primaryColor })] })],
+              width: { size: 32, type: WidthType.PERCENTAGE },
+              shading: { fill: 'F1F5F9' },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Submission Source', bold: true, color: primaryNavy })] })],
             }),
             new TableCell({
-              width: { size: 70, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ children: [new TextRun({ text: project.submissionType === 'github' ? 'Public GitHub Repository' : 'Project ZIP Upload' })] })],
-            }),
-          ],
-        }),
-        new TableRow({
-          children: [
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: 'Source Reference', bold: true, color: primaryColor })] })],
-            }),
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: project.repositoryUrl || project.uploadedFileName || 'Submitted Project Archive' })] })],
+              width: { size: 68, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: project.submissionType === 'github' ? 'Public GitHub Repository' : 'Uploaded Project ZIP Archive' })] })],
             }),
           ],
         }),
         new TableRow({
           children: [
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: 'Revision / Commit SHA', bold: true, color: primaryColor })] })],
+              shading: { fill: 'F1F5F9' },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Source Reference', bold: true, color: primaryNavy })] })],
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: project.repositoryUrl || project.uploadedFileName || 'Project Source Tree' })] })],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              shading: { fill: 'F1F5F9' },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Source Revision', bold: true, color: primaryNavy })] })],
             }),
             new TableCell({
               children: [new Paragraph({ children: [new TextRun({ text: project.commitSha || 'Static Snapshot' })] })],
@@ -252,17 +292,30 @@ export async function generateDocxReport(
         new TableRow({
           children: [
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: 'Primary Technologies', bold: true, color: primaryColor })] })],
+              shading: { fill: 'F1F5F9' },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Architecture Style', bold: true, color: primaryNavy })] })],
             }),
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: project.detectedTechnologies.languages.concat(project.detectedTechnologies.frameworks).join(', ') || 'Auto-Detected' })] })],
+              children: [new Paragraph({ children: [new TextRun({ text: analysis.architecture.architectureType === 'client_baas' ? 'Client-Side BaaS (Serverless)' : analysis.architecture.architectureType === 'client_server_db' ? 'Client / Server / Database' : 'Single Page Application' })] })],
             }),
           ],
         }),
         new TableRow({
           children: [
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: 'Report Generated Date', bold: true, color: primaryColor })] })],
+              shading: { fill: 'F1F5F9' },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Inspection Coverage', bold: true, color: primaryNavy })] })],
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: `${analysis.coverage.inspectedFilesCount} of ${analysis.coverage.totalDiscoveredFiles} files analyzed (${analysis.coverage.coveragePercentage}%)` })] })],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              shading: { fill: 'F1F5F9' },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Generation Timestamp', bold: true, color: primaryNavy })] })],
             }),
             new TableCell({
               children: [new Paragraph({ children: [new TextRun({ text: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) })] })],
@@ -274,109 +327,170 @@ export async function generateDocxReport(
     new Paragraph({ children: [new PageBreak()] }),
   ];
 
-  // 2. Executive Summary
+  // 2. Document Information and Analysis Scope (Section 1)
+  const coverageElements = [
+    createH1('1. Document Information & Analysis Scope'),
+    createBody('This technical evaluation report is generated by ExaPro through deterministic static code inspection and evidence-constrained AI analysis. The table below discloses the exact repository inspection coverage:'),
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          tableHeader: true,
+          children: [
+            new TableCell({
+              width: { size: 50, type: WidthType.PERCENTAGE },
+              shading: { fill: tableHeaderBg },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Coverage Metric', bold: true, color: 'FFFFFF' })] })],
+            }),
+            new TableCell({
+              width: { size: 50, type: WidthType.PERCENTAGE },
+              shading: { fill: tableHeaderBg },
+              children: [new Paragraph({ children: [new TextRun({ text: 'Value / Status', bold: true, color: 'FFFFFF' })] })],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Total Discovered Repository Files' })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(analysis.coverage.totalDiscoveredFiles), bold: true })] })] }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: 'Successfully Inspected Files' })] })] }),
+            new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: String(analysis.coverage.inspectedFilesCount), bold: true })] })] }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Files Excluded by Policy (dependencies, binaries)' })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(analysis.coverage.skippedByPolicyCount) })] })] }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: 'Overall Coverage Percentage' })] })] }),
+            new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: `${analysis.coverage.coveragePercentage}% (${analysis.coverage.isPartial ? 'Partial Priority Coverage' : 'Complete'})` })] })] }),
+          ],
+        }),
+      ],
+    }),
+    new Paragraph({ spacing: { before: 120 } }),
+    createCallout('Inspection Scope Notice', analysis.coverage.limitationNotice),
+    new Paragraph({ spacing: { after: 180 } }),
+  ];
+
+  // 3. Executive Summary (Section 2)
   const execSummaryElements = [
-    createHeading1('1. Executive Summary'),
+    createH1('2. Executive Summary'),
     ...parseTextToParagraphs(project.documentation.executiveSummary),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 3. Project Overview
+  // 4. Project Overview (Section 3)
   const overviewElements = [
-    createHeading1('2. Project Overview'),
+    createH1('3. Project Overview and Purpose'),
     ...parseTextToParagraphs(project.documentation.projectOverview),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 4. Technology Stack (With Table)
-  const techTableRows = [
+  // 5. Technology Stack (Section 4)
+  const techRows = [
     new TableRow({
       tableHeader: true,
       children: [
         new TableCell({
-          width: { size: 30, type: WidthType.PERCENTAGE },
+          width: { size: 28, type: WidthType.PERCENTAGE },
+          shading: { fill: tableHeaderBg },
           children: [new Paragraph({ children: [new TextRun({ text: 'Category', bold: true, color: 'FFFFFF' })] })],
-          shading: { fill: primaryColor },
         }),
         new TableCell({
-          width: { size: 70, type: WidthType.PERCENTAGE },
-          children: [new Paragraph({ children: [new TextRun({ text: 'Detected Technologies & Frameworks', bold: true, color: 'FFFFFF' })] })],
-          shading: { fill: primaryColor },
+          width: { size: 36, type: WidthType.PERCENTAGE },
+          shading: { fill: tableHeaderBg },
+          children: [new Paragraph({ children: [new TextRun({ text: 'Verified Technologies', bold: true, color: 'FFFFFF' })] })],
+        }),
+        new TableCell({
+          width: { size: 36, type: WidthType.PERCENTAGE },
+          shading: { fill: tableHeaderBg },
+          children: [new Paragraph({ children: [new TextRun({ text: 'Evidence Source', bold: true, color: 'FFFFFF' })] })],
         }),
       ],
     }),
     new TableRow({
       children: [
         new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Programming Languages', bold: true })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: project.detectedTechnologies.languages.join(', ') || 'N/A' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.languages.join(', ') || 'N/A' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Inspected file extensions' })] })] }),
       ],
     }),
     new TableRow({
       children: [
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Frontend UI', bold: true })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: project.detectedTechnologies.frontend.join(', ') || 'N/A' })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: 'Frontend UI Framework', bold: true })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.frontend.join(', ') || 'N/A' })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: 'package.json & React imports' })] })] }),
       ],
     }),
     new TableRow({
       children: [
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Backend Frameworks', bold: true })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: project.detectedTechnologies.backend.join(', ') || 'N/A' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Authentication Service', bold: true })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.auth.join(', ') || 'None detected' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.auth.length > 0 ? 'firebase/auth SDK calls' : 'Static inspection' })] })] }),
       ],
     }),
     new TableRow({
       children: [
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Database & Storage', bold: true })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: project.detectedTechnologies.database.join(', ') || 'N/A' })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: 'Database & Storage', bold: true })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.database.join(', ') || 'None detected' })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: analysis.database.summary })] })] }),
       ],
     }),
     new TableRow({
       children: [
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Build & Tooling', bold: true })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: project.detectedTechnologies.buildTools.join(', ') || 'N/A' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Server Frameworks', bold: true })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.backend.join(', ') || 'None (Client-Side BaaS / SPA)' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.backend.length > 0 ? 'Confirmed server entry point' : 'Verified absence of server processes' })] })] }),
       ],
     }),
     new TableRow({
       children: [
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Testing Frameworks', bold: true })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: project.detectedTechnologies.testTools.join(', ') || 'N/A' })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: 'Build & Tooling', bold: true })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.buildTools.join(', ') || 'N/A' })] })] }),
+        new TableCell({ shading: { fill: lightRowBg }, children: [new Paragraph({ children: [new TextRun({ text: 'Build manifests & config files' })] })] }),
       ],
     }),
   ];
 
   const techStackElements = [
-    createHeading1('3. Technology Stack & Dependencies'),
+    createH1('4. Technology Stack & Dependencies'),
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: techTableRows,
+      rows: techRows,
     }),
-    new Paragraph({ spacing: { before: 200 } }),
+    new Paragraph({ spacing: { before: 140 } }),
     ...parseTextToParagraphs(project.documentation.technologyStackDescription),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 5. Project Structure & Folder Tree
+  // 6. Project Structure (Section 5)
   const structureElements = [
-    createHeading1('4. Project Structure & Organization'),
+    createH1('5. Project Structure & Directory Organization'),
     ...parseTextToParagraphs(project.documentation.projectStructureTree),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 6. System Architecture (Mandatory Diagram Embedded!)
+  // 7. System Architecture (Section 6 - Mandatory Embedded Diagram Image)
   const architectureElements = [
-    createHeading1('5. System Architecture'),
-    createBodyParagraph(
-      'The following project-specific architecture diagram was synthesized directly from inspected source files, route declarations, and package dependencies:'
-    ),
-    // Embedded Architecture Diagram Image
+    createH1('6. System Architecture'),
+    createBody('The following project-specific architecture diagram was synthesized dynamically from verified component evidence:'),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 200, after: 200 },
+      spacing: { before: 140, after: 140 },
       children: [
         new ImageRun({
           data: diagramPngBuffer,
           transformation: {
             width: 580,
-            height: 295,
+            height: 290,
           },
           type: 'png',
         }),
@@ -384,10 +498,10 @@ export async function generateDocxReport(
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 300 },
+      spacing: { after: 200 },
       children: [
         new TextRun({
-          text: `Figure 5.1: High-level System Architecture Diagram for ${project.projectName}`,
+          text: `Figure 6.1: Evidence-Based System Architecture Diagram for ${project.projectName}`,
           italics: true,
           size: 19,
           color: '64748B',
@@ -395,73 +509,79 @@ export async function generateDocxReport(
       ],
     }),
     ...parseTextToParagraphs(project.documentation.systemArchitectureDescription),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 7. Module and Component Details
+  // 8. Module and Component Analysis (Section 7)
   const moduleElements = [
-    createHeading1('6. Module and Component Details'),
+    createH1('7. Module and Component Analysis'),
+    createBody('Detailed inspection of application modules, component state hooks, and service interfaces:'),
     ...parseTextToParagraphs(project.documentation.moduleDetails),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 8. Data Flow
+  // 9. Data Flow (Section 8)
   const dataFlowElements = [
-    createHeading1('7. Data Flow & Communication'),
+    createH1('8. Data Flow and External Integrations'),
     ...parseTextToParagraphs(project.documentation.dataFlowDescription),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 9. Database Design
+  // 10. Database Design and API Analysis (Section 9)
   const databaseElements = [
-    createHeading1('8. Database Design & Schemas'),
+    createH1('9. Database Design and API Analysis'),
     ...parseTextToParagraphs(project.documentation.databaseDesignDescription),
-    new Paragraph({ spacing: { after: 200 } }),
-  ];
-
-  // 10. API Documentation
-  const apiElements = [
-    createHeading1('9. API Documentation & Routes'),
+    new Paragraph({ spacing: { before: 140 } }),
+    createH2('Network API & Communication Analysis'),
     ...parseTextToParagraphs(project.documentation.apiDocumentationDescription),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 11. Setup and Execution
+  // 11. Setup and Execution Guide (Section 10)
   const setupElements = [
-    createHeading1('10. Setup and Execution Guide'),
+    createH1('10. Setup and Execution Guide'),
     ...parseTextToParagraphs(project.documentation.setupAndExecutionInstructions),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 12. Testing and Quality
+  // 12. Testing and Verification (Section 11)
   const testingElements = [
-    createHeading1('11. Testing & Quality Verification'),
+    createH1('11. Testing & Quality Verification'),
     ...parseTextToParagraphs(project.documentation.testingAndQualityDescription),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 13. Limitations and Observations
+  // 13. Limitations and Recommendations (Section 12)
   const limitationElements = [
-    createHeading1('12. Limitations & Observations'),
+    createH1('12. Findings, Limitations & Recommendations'),
     ...parseTextToParagraphs(project.documentation.limitationsAndObservations),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // 14. Appendix
+  // 14. Appendix (Section 13)
   const appendixElements = [
-    createHeading1('13. Appendix & Inventory'),
+    createH1('13. Appendix & Evidence Inventory'),
     ...parseTextToParagraphs(project.documentation.appendix),
-    new Paragraph({ spacing: { after: 200 } }),
+    new Paragraph({ spacing: { after: 180 } }),
   ];
 
-  // Build the complete docx Document
+  // Compile complete Document with running Headers & Footers
   const doc = new Document({
-    creator: 'Exapro AI-Powered Project Evaluator',
-    title: `${project.projectName} Documentation Report`,
-    description: 'Evidence-based software project documentation report with architecture diagram',
+    creator: 'ExaPro Project Evaluator',
+    title: `${project.projectName} Architecture Report`,
+    description: 'Evidence-based software architecture documentation report',
     sections: [
       {
-        properties: {},
+        properties: {
+          page: {
+            margin: {
+              top: 1440, // 1 inch
+              right: 1440,
+              bottom: 1440,
+              left: 1440,
+            },
+          },
+        },
         headers: {
           default: new Header({
             children: [
@@ -469,7 +589,7 @@ export async function generateDocxReport(
                 alignment: AlignmentType.RIGHT,
                 children: [
                   new TextRun({
-                    text: `Exapro Documentation — ${project.projectName}`,
+                    text: `ExaPro Architecture Report — ${project.projectName}`,
                     size: 16,
                     color: '94A3B8',
                     font: 'Calibri',
@@ -489,21 +609,25 @@ export async function generateDocxReport(
                     text: 'Page ',
                     size: 18,
                     color: '94A3B8',
+                    font: 'Calibri',
                   }),
                   new TextRun({
                     children: [PageNumber.CURRENT],
                     size: 18,
                     color: '94A3B8',
+                    font: 'Calibri',
                   }),
                   new TextRun({
                     text: ' of ',
                     size: 18,
                     color: '94A3B8',
+                    font: 'Calibri',
                   }),
                   new TextRun({
                     children: [PageNumber.TOTAL_PAGES],
                     size: 18,
                     color: '94A3B8',
+                    font: 'Calibri',
                   }),
                 ],
               }),
@@ -512,6 +636,7 @@ export async function generateDocxReport(
         },
         children: [
           ...coverElements,
+          ...coverageElements,
           ...execSummaryElements,
           ...overviewElements,
           ...techStackElements,
@@ -520,7 +645,6 @@ export async function generateDocxReport(
           ...moduleElements,
           ...dataFlowElements,
           ...databaseElements,
-          ...apiElements,
           ...setupElements,
           ...testingElements,
           ...limitationElements,

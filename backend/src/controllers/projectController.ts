@@ -98,6 +98,7 @@ async function processZipProjectAsync(projectId: string, uploadedZipPath: string
     project.usedAiFallback = docResult.usedAiFallback;
     project.aiProviderUsed = docResult.aiProviderUsed;
     project.aiModelUsed = docResult.aiModelUsed;
+    project.structuredAnalysis = analysis;
 
     // 4. Generate DOCX
     const docxMeta = await generateDocxReport(project, analysis, diagram.pngBuffer);
@@ -213,6 +214,7 @@ async function processGitHubProjectAsync(projectId: string, repoUrl: string): Pr
     project.usedAiFallback = docResult.usedAiFallback;
     project.aiProviderUsed = docResult.aiProviderUsed;
     project.aiModelUsed = docResult.aiModelUsed;
+    project.structuredAnalysis = analysis;
 
     // 4. Generate DOCX
     const docxMeta = await generateDocxReport(project, analysis, diagram.pngBuffer);
@@ -304,6 +306,7 @@ export async function getProjectReport(req: Request, res: Response): Promise<voi
       aiProviderUsed: project.aiProviderUsed,
       aiModelUsed: project.aiModelUsed,
       usedAiFallback: project.usedAiFallback,
+      structuredAnalysis: project.structuredAnalysis,
       createdAt: project.createdAt,
     });
   } catch (err: any) {

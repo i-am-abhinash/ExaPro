@@ -6,6 +6,7 @@ export interface IDetectedTechnologies {
   frontend: string[];
   backend: string[];
   database: string[];
+  auth?: string[];
   frameworks: string[];
   buildTools: string[];
   testTools: string[];
@@ -90,6 +91,7 @@ export interface IReportData {
   aiProviderUsed?: string;
   aiModelUsed?: string;
   usedAiFallback: boolean;
+  structuredAnalysis?: any;
   createdAt: string;
 }
 

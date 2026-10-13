@@ -229,27 +229,27 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Backend</span>
-                <p className="text-xs font-semibold text-sky-300 mt-1">
-                  {report.detectedTechnologies.backend.join(', ') || 'N/A'}
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Authentication</span>
+                <p className="text-xs font-semibold text-fuchsia-300 mt-1">
+                  {report.detectedTechnologies.auth?.join(', ') || 'None declared'}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Database</span>
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Database & Storage</span>
                 <p className="text-xs font-semibold text-emerald-300 mt-1">
                   {report.detectedTechnologies.database.join(', ') || 'None declared'}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Server Runtime</span>
+                <p className="text-xs font-semibold text-sky-300 mt-1">
+                  {report.detectedTechnologies.backend.join(', ') || 'None (Client BaaS / SPA)'}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
                 <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Build Tools</span>
                 <p className="text-xs font-semibold text-amber-300 mt-1">
                   {report.detectedTechnologies.buildTools.join(', ') || 'Standard'}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Testing</span>
-                <p className="text-xs font-semibold text-slate-300 mt-1">
-                  {report.detectedTechnologies.testTools.join(', ') || 'N/A'}
                 </p>
               </div>
             </div>

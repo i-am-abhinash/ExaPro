@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { StructuredProjectModel } from './analysisModel';
 
 export type SubmissionType = 'zip' | 'github';
 export type AnalysisStatus = 'queued' | 'inspecting' | 'analyzing' | 'generating_docx' | 'completed' | 'failed';
@@ -8,6 +9,7 @@ export interface IDetectedTechnologies {
   frontend: string[];
   backend: string[];
   database: string[];
+  auth: string[];
   frameworks: string[];
   buildTools: string[];
   testTools: string[];
@@ -16,7 +18,7 @@ export interface IDetectedTechnologies {
 
 export interface IProjectComponent {
   name: string;
-  type: 'client' | 'server' | 'database' | 'service' | 'model' | 'router' | 'utility' | 'config' | 'test' | 'other';
+  type: string;
   path: string;
   description: string;
   responsibilities: string[];
@@ -66,28 +68,30 @@ export interface IProjectDocument extends Document {
   progress: number;
   statusMessage: string;
   errorMessage?: string;
-  
+
   detectedTechnologies: IDetectedTechnologies;
   inspectedFiles: string[];
   totalFilesCount: number;
-  
+
   components: IProjectComponent[];
   databaseSchemas: IDatabaseSchemaInfo[];
   apiEndpoints: IApiEndpointInfo[];
-  
+
   architectureDiagramSvg: string;
   architectureDescription: string;
-  
+
   documentation: IDocumentationSections;
-  
+
   reportFilePath?: string;
   reportFileName?: string;
   reportFileSize?: number;
-  
+
   aiProviderUsed?: string;
   aiModelUsed?: string;
   usedAiFallback: boolean;
-  
+
+  structuredAnalysis?: StructuredProjectModel;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -115,6 +119,7 @@ const ProjectSchema = new Schema<IProjectDocument>(
       frontend: { type: [String], default: [] },
       backend: { type: [String], default: [] },
       database: { type: [String], default: [] },
+      auth: { type: [String], default: [] },
       frameworks: { type: [String], default: [] },
       buildTools: { type: [String], default: [] },
       testTools: { type: [String], default: [] },
@@ -187,6 +192,8 @@ const ProjectSchema = new Schema<IProjectDocument>(
     aiProviderUsed: { type: String, default: 'none' },
     aiModelUsed: { type: String, default: 'none' },
     usedAiFallback: { type: Boolean, default: false },
+
+    structuredAnalysis: { type: Schema.Types.Mixed },
   },
   {
     timestamps: true,

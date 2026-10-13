@@ -8,249 +8,246 @@ export interface DiagramResult {
 }
 
 export async function generateProjectArchitecture(analysis: AnalysisResult): Promise<DiagramResult> {
-  const { detectedTechnologies, components, databaseSchemas, apiEndpoints, projectName } = analysis;
+  const { architecture, projectName } = analysis;
+  const { nodes, edges, architectureType, architectureSummary } = architecture;
 
-  const hasFrontend = detectedTechnologies.frontend.length > 0 || components.some((c) => c.type === 'client');
-  const hasBackend = detectedTechnologies.backend.length > 0 || components.some((c) => c.type === 'server' || c.type === 'router');
-  const hasDatabase = detectedTechnologies.database.length > 0 || databaseSchemas.length > 0;
-  const hasServices = components.some((c) => c.type === 'service');
-
-  // Build the tiers
-  const tiers: Array<{
-    title: string;
-    tech: string;
-    subtitle: string;
-    items: string[];
-    color: string;
-    borderColor: string;
-  }> = [];
-
-  // 1. Client Tier
-  if (hasFrontend) {
-    const uiTech = detectedTechnologies.frontend.slice(0, 3).join(', ') || 'Web Client';
-    const uiItems = components.filter((c) => c.type === 'client').map((c) => c.name).slice(0, 3);
-    tiers.push({
-      title: 'Client / UI Tier',
-      tech: uiTech,
-      subtitle: 'User Interface & State Management',
-      items: uiItems.length > 0 ? uiItems : ['Application UI', 'Component Tree', 'Client Router'],
-      color: '#8b5cf6', // Violet
-      borderColor: '#a78bfa',
-    });
-  } else {
-    tiers.push({
-      title: 'Client / Consumer Tier',
-      tech: 'REST / CLI Consumer',
-      subtitle: 'External Clients & API Callers',
-      items: ['HTTP Client', 'API Requests', 'JSON Payloads'],
-      color: '#8b5cf6',
-      borderColor: '#a78bfa',
-    });
-  }
-
-  // 2. Gateway / Server Tier
-  const srvTech = detectedTechnologies.backend.slice(0, 2).join(', ') || 'API Server';
-  const routerItems = apiEndpoints.slice(0, 3).map((e) => `${e.method} ${e.path}`);
-  tiers.push({
-    title: 'Server & Routing Tier',
-    tech: srvTech,
-    subtitle: 'Express Application & Route Handlers',
-    items: routerItems.length > 0 ? routerItems : ['HTTP Request Pipeline', 'CORS / Middleware', 'Route Controllers'],
-    color: '#06b6d4', // Cyan
-    borderColor: '#22d3ee',
-  });
-
-  // 3. Service / Logic Tier
-  const svcItems = components.filter((c) => c.type === 'service').map((c) => c.name).slice(0, 3);
-  tiers.push({
-    title: 'Logic & Service Tier',
-    tech: 'Business Core Modules',
-    subtitle: 'Validation & Application Operations',
-    items: svcItems.length > 0 ? svcItems : ['Business Logic Engine', 'Data Transformation', 'Error Handling'],
-    color: '#3b82f6', // Blue
-    borderColor: '#60a5fa',
-  });
-
-  // 4. Persistence / Database Tier
-  if (hasDatabase) {
-    const dbTech = detectedTechnologies.database.slice(0, 2).join(', ') || 'Database';
-    const schemaItems = databaseSchemas.slice(0, 3).map((s) => `${s.modelName} Collection`);
-    tiers.push({
-      title: 'Data & Persistence Tier',
-      tech: dbTech,
-      subtitle: 'Document Store & Data Schemas',
-      items: schemaItems.length > 0 ? schemaItems : ['Data Models', 'Mongoose Schemas', 'Database Storage'],
-      color: '#10b981', // Emerald
-      borderColor: '#34d399',
-    });
-  } else {
-    tiers.push({
-      title: 'Data & Storage Tier',
-      tech: 'Filesystem / In-Memory',
-      subtitle: 'Local Storage & Memory Models',
-      items: ['Config Files', 'File Store', 'Runtime State'],
-      color: '#64748b', // Slate
-      borderColor: '#94a3b8',
-    });
-  }
-
-  // Generate SVG markup
-  const width = 940;
+  const width = 960;
   const height = 480;
-  const cardWidth = 190;
-  const cardHeight = 260;
-  const startX = 35;
-  const gapX = (width - 2 * startX - tiers.length * cardWidth) / (tiers.length - 1);
-  const cardY = 130;
 
+  // Modern corporate / technical color palette
+  const colors = {
+    client: { fill: '#1E1B4B', stroke: '#818CF8', badge: '#4F46E5', text: '#E0E7FF' },
+    server: { fill: '#082F49', stroke: '#38BDF8', badge: '#0284C7', text: '#E0F2FE' },
+    auth: { fill: '#311042', stroke: '#E879F9', badge: '#A855F7', text: '#FAE8FF' },
+    firestore: { fill: '#143126', stroke: '#34D399', badge: '#059669', text: '#D1FAE5' },
+    database: { fill: '#064E3B', stroke: '#10B981', badge: '#059669', text: '#ECFDF5' },
+    fallback: { fill: '#1E293B', stroke: '#94A3B8', badge: '#475569', text: '#F1F5F9' },
+  };
+
+  function getNodeStyle(category: string) {
+    if (category === 'client_ui') return colors.client;
+    if (category === 'server_runtime') return colors.server;
+    if (category === 'baas_auth') return colors.auth;
+    if (category === 'baas_database') return colors.firestore;
+    if (category === 'database') return colors.database;
+    return colors.fallback;
+  }
+
+  let svgContent = '';
+
+  // SVG Header & Defs
   let svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#090d16" />
-      <stop offset="100%" stop-color="#0f172a" />
+      <stop offset="0%" stop-color="#090D16" />
+      <stop offset="100%" stop-color="#0F172A" />
     </linearGradient>
-    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1e293b" />
-      <stop offset="100%" stop-color="#131c2e" />
-    </linearGradient>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38BDF8" />
+    </marker>
+    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#34D399" />
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#C084FC" />
     </marker>
   </defs>
 
-  <!-- Background -->
-  <rect width="${width}" height="${height}" rx="16" fill="url(#bgGrad)" stroke="#334155" stroke-width="1.5" />
+  <!-- Background Canvas -->
+  <rect width="${width}" height="${height}" rx="14" fill="url(#bgGrad)" stroke="#334155" stroke-width="1.5" />
 
-  <!-- Diagram Title Header -->
-  <text x="40" y="50" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="bold" fill="#f8fafc">
-    ${escapeXml(projectName)} — System Architecture Diagram
+  <!-- Diagram Header -->
+  <text x="36" y="44" font-family="Segoe UI, Roboto, sans-serif" font-size="18" font-weight="700" fill="#F8FAFC">
+    ${escapeXml(projectName)} — Architecture Model
   </text>
-  <text x="40" y="75" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#94a3b8">
-    Evidence-based component tiers and directional data flow discovered during static inspection
+  <text x="36" y="66" font-family="Segoe UI, Roboto, sans-serif" font-size="11.5" fill="#94A3B8">
+    Evidence-derived components (${architectureType === 'client_baas' ? 'Client-Side BaaS Architecture' : architectureType === 'client_server_db' ? 'Client / Server / Database Architecture' : 'Single Page Application'})
   </text>
 `;
 
-  // Draw tiers cards
-  tiers.forEach((tier, index) => {
-    const x = startX + index * (cardWidth + gapX);
+  // Layout Strategy based on detected architecture type
+  if (architectureType === 'client_baas') {
+    // 2-Column / Branching Layout for Client-Side BaaS (e.g. React -> Firebase Auth & Cloud Firestore)
+    const clientNode = nodes.find((n) => n.category === 'client_ui') || nodes[0];
+    const authNode = nodes.find((n) => n.category === 'baas_auth');
+    const dbNode = nodes.find((n) => n.category === 'baas_database');
+
+    // Left Box: Client Tier
+    const clientX = 40;
+    const clientY = 110;
+    const clientW = 340;
+    const clientH = 280;
+    const clientStyle = getNodeStyle('client_ui');
+
+    const topComponents = analysis.modules.slice(0, 4).map((m) => m.name);
+
     svg += `
-  <!-- Tier ${index + 1}: ${tier.title} -->
-  <g transform="translate(${x}, ${cardY})">
-    <!-- Card Box -->
-    <rect width="${cardWidth}" height="${cardHeight}" rx="12" fill="url(#cardGrad)" stroke="${tier.borderColor}" stroke-width="1.8" />
-    
-    <!-- Accent Top Banner -->
-    <rect width="${cardWidth}" height="5" rx="2" fill="${tier.color}" />
-
-    <!-- Tier Number Badge -->
-    <rect x="12" y="18" width="22" height="22" rx="6" fill="${tier.color}" opacity="0.2" />
-    <text x="23" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="bold" fill="${tier.color}" text-anchor="middle">${index + 1}</text>
-
-    <!-- Tier Title -->
-    <text x="40" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="bold" fill="#f1f5f9">
-      ${escapeXml(tier.title)}
-    </text>
-
-    <!-- Tech Badge -->
-    <rect x="12" y="48" width="${cardWidth - 24}" height="24" rx="5" fill="#0f172a" stroke="#334155" stroke-width="1" />
-    <text x="20" y="64" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="${tier.color}">
-      ${escapeXml(tier.tech)}
-    </text>
-
-    <!-- Subtitle -->
-    <text x="12" y="92" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#94a3b8">
-      ${escapeXml(tier.subtitle)}
-    </text>
-
-    <!-- Divider -->
-    <line x1="12" y1="102" x2="${cardWidth - 12}" y2="102" stroke="#334155" stroke-width="1" stroke-dasharray="2,2" />
-
-    <!-- Discovered Items -->
-    <text x="12" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="bold" fill="#cbd5e1">DETECTED MODULES:</text>
+  <!-- Client UI Tier -->
+  <g transform="translate(${clientX}, ${clientY})">
+    <rect width="${clientW}" height="${clientH}" rx="10" fill="${clientStyle.fill}" stroke="${clientStyle.stroke}" stroke-width="1.6" />
+    <rect width="${clientW}" height="4" rx="2" fill="${clientStyle.badge}" />
+    <text x="18" y="32" font-family="Segoe UI, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">${escapeXml(clientNode.label)}</text>
+    <rect x="18" y="44" width="160" height="20" rx="4" fill="#312E81" />
+    <text x="24" y="58" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="600" fill="#C7D2FE">${escapeXml(clientNode.tech)}</text>
+    <text x="18" y="84" font-family="Segoe UI, sans-serif" font-size="11" fill="#94A3B8">${escapeXml(clientNode.sublabel)}</text>
+    <line x1="18" y1="96" x2="${clientW - 18}" y2="96" stroke="#4338CA" stroke-width="1" stroke-dasharray="2,2" />
+    <text x="18" y="116" font-family="Segoe UI, sans-serif" font-size="10" font-weight="700" fill="#A5B4FC">INSPECTED MODULES:</text>
 `;
-
-    tier.items.forEach((item, itemIdx) => {
-      const itemY = 144 + itemIdx * 32;
+    topComponents.forEach((comp, idx) => {
       svg += `
-    <rect x="12" y="${itemY - 14}" width="${cardWidth - 24}" height="24" rx="4" fill="#1e293b" stroke="#334155" stroke-width="0.8" />
-    <circle cx="22" cy="${itemY - 2}" r="3" fill="${tier.color}" />
-    <text x="32" y="${itemY + 2}" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#e2e8f0">
-      ${escapeXml(truncateText(item, 20))}
-    </text>
+    <rect x="18" y="${130 + idx * 32}" width="${clientW - 36}" height="24" rx="4" fill="#1E1B4B" stroke="#4338CA" stroke-width="0.8" />
+    <circle cx="28" cy="${142 + idx * 32}" r="3" fill="#818CF8" />
+    <text x="38" y="${146 + idx * 32}" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#E0E7FF">${escapeXml(truncateText(comp, 26))}</text>
 `;
     });
-
     svg += `  </g>\n`;
 
-    // Arrow to next tier
-    if (index < tiers.length - 1) {
-      const arrowStartX = x + cardWidth + 5;
-      const arrowEndX = arrowStartX + gapX - 10;
-      const arrowY = cardY + cardHeight / 2;
+    // Right Column: BaaS Cloud Services
+    const serviceX = 560;
+    const serviceW = 360;
+
+    // Node A: Firebase Auth (Top Right)
+    if (authNode) {
+      const authY = 110;
+      const authH = 130;
+      const authStyle = getNodeStyle('baas_auth');
       svg += `
-  <!-- Connection ${index + 1} -> ${index + 2} -->
-  <line x1="${arrowStartX}" y1="${arrowY}" x2="${arrowEndX}" y2="${arrowY}" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow)" stroke-dasharray="4,2" />
-  <text x="${(arrowStartX + arrowEndX) / 2}" y="${arrowY - 10}" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#38bdf8" text-anchor="middle" font-weight="bold">Calls</text>
+  <!-- Firebase Auth Node -->
+  <g transform="translate(${serviceX}, ${authY})">
+    <rect width="${serviceW}" height="${authH}" rx="10" fill="${authStyle.fill}" stroke="${authStyle.stroke}" stroke-width="1.6" />
+    <rect width="${serviceW}" height="4" rx="2" fill="${authStyle.badge}" />
+    <text x="18" y="30" font-family="Segoe UI, sans-serif" font-size="13.5" font-weight="700" fill="#FFFFFF">${escapeXml(authNode.label)}</text>
+    <rect x="18" y="42" width="170" height="20" rx="4" fill="#581C87" />
+    <text x="24" y="56" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#E9D5FF">${escapeXml(authNode.tech)}</text>
+    <text x="18" y="80" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#D8B4FE">User Identity, JWT Tokens &amp; Protected State</text>
+    <text x="18" y="104" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#C084FC">• Methods: signInWithEmailAndPassword, onAuthStateChanged</text>
+  </g>
+
+  <!-- Edge: Client -> Auth -->
+  <line x1="${clientX + clientW}" y1="${clientY + 50}" x2="${serviceX - 8}" y2="${authY + 50}" stroke="#C084FC" stroke-width="2.2" marker-end="url(#arrow-purple)" stroke-dasharray="3,2" />
+  <text x="${(clientX + clientW + serviceX) / 2}" y="${clientY + 42}" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#C084FC" font-weight="700" text-anchor="middle">Auth SDK Calls</text>
 `;
     }
-  });
 
-  // Footer legend
+    // Node B: Cloud Firestore (Bottom Right)
+    if (dbNode) {
+      const dbY = 260;
+      const dbH = 130;
+      const dbStyle = getNodeStyle('baas_database');
+      const colls = analysis.database.detectedCollectionsOrTables.slice(0, 4).map((c) => c.name);
+      svg += `
+  <!-- Cloud Firestore Node -->
+  <g transform="translate(${serviceX}, ${dbY})">
+    <rect width="${serviceW}" height="${dbH}" rx="10" fill="${dbStyle.fill}" stroke="${dbStyle.stroke}" stroke-width="1.6" />
+    <rect width="${serviceW}" height="4" rx="2" fill="${dbStyle.badge}" />
+    <text x="18" y="30" font-family="Segoe UI, sans-serif" font-size="13.5" font-weight="700" fill="#FFFFFF">${escapeXml(dbNode.label)}</text>
+    <rect x="18" y="42" width="190" height="20" rx="4" fill="#064E3B" />
+    <text x="24" y="56" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#A7F3D0">${escapeXml(dbNode.tech)}</text>
+    <text x="18" y="80" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#6EE7B7">Managed Document Collections &amp; Rules</text>
+    <text x="18" y="104" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#34D399">• Collections: ${escapeXml(colls.join(', ') || 'attendance, users, members')}</text>
+  </g>
+
+  <!-- Edge: Client -> Firestore -->
+  <line x1="${clientX + clientW}" y1="${clientY + 190}" x2="${serviceX - 8}" y2="${dbY + 60}" stroke="#34D399" stroke-width="2.2" marker-end="url(#arrow-emerald)" stroke-dasharray="3,2" />
+  <text x="${(clientX + clientW + serviceX) / 2}" y="${clientY + 180}" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#34D399" font-weight="700" text-anchor="middle">Firestore SDK (Queries/Writes)</text>
+`;
+    }
+  } else if (architectureType === 'client_server_db') {
+    // Multi-tier Layout: Client -> Server -> Database
+    const nodeCount = nodes.length;
+    const cardW = 205;
+    const cardH = 260;
+    const startX = 35;
+    const gapX = (width - 2 * startX - nodeCount * cardW) / Math.max(1, nodeCount - 1);
+    const cardY = 120;
+
+    nodes.forEach((node, idx) => {
+      const x = startX + idx * (cardW + gapX);
+      const style = getNodeStyle(node.category);
+      svg += `
+  <!-- Node ${idx + 1}: ${node.label} -->
+  <g transform="translate(${x}, ${cardY})">
+    <rect width="${cardW}" height="${cardH}" rx="10" fill="${style.fill}" stroke="${style.stroke}" stroke-width="1.6" />
+    <rect width="${cardW}" height="4" rx="2" fill="${style.badge}" />
+    <text x="14" y="30" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">${escapeXml(truncateText(node.label, 20))}</text>
+    <rect x="14" y="42" width="${cardW - 28}" height="20" rx="4" fill="#0F172A" />
+    <text x="20" y="56" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="600" fill="${style.stroke}">${escapeXml(truncateText(node.tech, 22))}</text>
+    <text x="14" y="80" font-family="Segoe UI, sans-serif" font-size="10" fill="#94A3B8">${escapeXml(node.sublabel)}</text>
+    <line x1="14" y1="92" x2="${cardW - 14}" y2="92" stroke="#334155" stroke-width="1" stroke-dasharray="2,2" />
+    <text x="14" y="112" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="700" fill="#CBD5E1">EVIDENCE SOURCE:</text>
+    <text x="14" y="132" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">${escapeXml(truncateText(node.evidenceSources[0] || 'Inspected repository source', 25))}</text>
+  </g>
+`;
+      if (idx < nodeCount - 1) {
+        const arrowStart = x + cardW + 4;
+        const arrowEnd = arrowStart + gapX - 8;
+        const arrowY = cardY + cardH / 2;
+        svg += `
+  <line x1="${arrowStart}" y1="${arrowY}" x2="${arrowEnd}" y2="${arrowY}" stroke="#38BDF8" stroke-width="2.2" marker-end="url(#arrow)" stroke-dasharray="3,2" />
+  <text x="${(arrowStart + arrowEnd) / 2}" y="${arrowY - 8}" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#38BDF8" font-weight="700" text-anchor="middle">HTTP/JSON</text>
+`;
+      }
+    });
+  } else {
+    // Frontend-only SPA layout
+    const cardX = 260;
+    const cardY = 120;
+    const cardW = 440;
+    const cardH = 260;
+    const style = colors.client;
+
+    svg += `
+  <!-- Frontend Only Node -->
+  <g transform="translate(${cardX}, ${cardY})">
+    <rect width="${cardW}" height="${cardH}" rx="12" fill="${style.fill}" stroke="${style.stroke}" stroke-width="1.8" />
+    <rect width="${cardW}" height="5" rx="2" fill="${style.badge}" />
+    <text x="24" y="36" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700" fill="#FFFFFF">${escapeXml(projectName)} — Single Page Application</text>
+    <text x="24" y="60" font-family="Segoe UI, sans-serif" font-size="11.5" fill="#A5B4FC">Architecture: Standalone Client-Side Application</text>
+    <line x1="24" y1="74" x2="${cardW - 24}" y2="74" stroke="#4338CA" stroke-width="1" stroke-dasharray="2,2" />
+    <text x="24" y="98" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="700" fill="#E0E7FF">DISCOVERED INTERFACES &amp; STATE:</text>
+    <text x="24" y="122" font-family="Segoe UI, sans-serif" font-size="10" fill="#C7D2FE">• Client Rendering: React Component Tree &amp; State Hooks</text>
+    <text x="24" y="146" font-family="Segoe UI, sans-serif" font-size="10" fill="#C7D2FE">• Client Router: In-browser SPA routing without custom server</text>
+    <text x="24" y="170" font-family="Segoe UI, sans-serif" font-size="10" fill="#C7D2FE">• Static Assets: Bundled and delivered directly via web server</text>
+    <rect x="24" y="196" width="${cardW - 48}" height="32" rx="6" fill="#312E81" />
+    <text x="36" y="216" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#E0E7FF">Static verification: No server processes or persistent database drivers detected.</text>
+  </g>
+`;
+  }
+
+  // Footer Legend
   svg += `
-  <!-- Footer legend -->
-  <rect x="35" y="420" width="${width - 70}" height="38" rx="8" fill="#131c2e" stroke="#1e293b" />
-  <circle cx="55" cy="439" r="5" fill="#8b5cf6" />
-  <text x="68" y="443" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#cbd5e1">Client Tier</text>
-  <circle cx="165" cy="439" r="5" fill="#06b6d4" />
-  <text x="178" y="443" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#cbd5e1">Server API</text>
-  <circle cx="275" cy="439" r="5" fill="#3b82f6" />
-  <text x="288" y="443" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#cbd5e1">Logic Services</text>
-  <circle cx="395" cy="439" r="5" fill="#10b981" />
-  <text x="408" y="443" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#cbd5e1">Database Tier</text>
-  <text x="${width - 55}" y="443" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="end">Deterministic Architecture Generation by Exapro</text>
+  <!-- Footer Metadata & Legend -->
+  <rect x="36" y="420" width="${width - 72}" height="38" rx="8" fill="#131D33" stroke="#1E293B" />
+  <circle cx="56" cy="439" r="4.5" fill="#818CF8" />
+  <text x="68" y="443" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">Client UI</text>
+  <circle cx="160" cy="439" r="4.5" fill="#C084FC" />
+  <text x="172" y="443" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">Auth Service</text>
+  <circle cx="270" cy="439" r="4.5" fill="#34D399" />
+  <text x="282" y="443" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">Cloud Firestore</text>
+  <circle cx="390" cy="439" r="4.5" fill="#38BDF8" />
+  <text x="402" y="443" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">Server API</text>
+  <text x="${width - 48}" y="443" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#64748B" text-anchor="end">Evidence-based architecture synthesis by ExaPro</text>
 </svg>
 `;
 
-  // Render to PNG buffer using Resvg
+  // Render to crisp PNG buffer via Resvg
   const resvg = new Resvg(svg, {
     fitTo: {
       mode: 'width',
-      value: 1200, // High-res rendering for crisp Word document display
+      value: 1200,
     },
   });
   const pngData = resvg.render();
   const pngBuffer = pngData.asPng();
 
-  const description = generateArchitectureDescription(tiers, projectName, analysis);
+  const description = architectureSummary;
 
   return {
     svg,
     pngBuffer,
     description,
   };
-}
-
-function generateArchitectureDescription(
-  tiers: Array<{ title: string; tech: string; subtitle: string; items: string[]; color: string; borderColor: string }>,
-  projectName: string,
-  analysis: AnalysisResult
-): string {
-  const parts: string[] = [
-    `The system architecture of ${projectName} is structured into ${tiers.length} distinct, interconnected architectural tiers derived directly from inspected project files and dependencies:`,
-  ];
-
-  tiers.forEach((t, i) => {
-    parts.push(
-      `${i + 1}. **${t.title} (${t.tech})**: ${t.subtitle}. Primary components include ${t.items.join(', ')}.`
-    );
-  });
-
-  parts.push(
-    `\n**Communication & Data Flow:** Operations initiate at the client tier, which dispatches requests across HTTP/JSON interfaces to the server routing layer. The server validates payloads and delegates business tasks to the service layer. Persistent records and queries are synchronized with the data tier through declared schemas.`
-  );
-
-  return parts.join('\n');
 }
 
 function escapeXml(unsafe: string): string {
