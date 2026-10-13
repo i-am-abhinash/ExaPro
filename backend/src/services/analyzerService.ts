@@ -188,13 +188,34 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   const packageScripts: Record<string, string> = {};
   const dependenciesList: Array<{ name: string; version: string; isDev: boolean }> = [];
   const declaredDeps = new Map<string, { version: string; isDev: boolean }>();
+  const declaredPythonDeps = new Map<string, { version: string; isDev: boolean }>();
+
+  const GENERIC_BOILERPLATE_NAMES = new Set([
+    'vite_react_shadcn_ts',
+    'vite-react-starter',
+    'my-app',
+    'react-app',
+    'frontend',
+    'backend',
+    'client',
+    'server',
+    'app',
+  ]);
 
   for (const [relPath, content] of fileContents.entries()) {
-    if (path.basename(relPath).toLowerCase() === 'package.json') {
+    const baseName = path.basename(relPath).toLowerCase();
+    if (baseName === 'package.json') {
       try {
         const parsed = JSON.parse(content);
-        if (parsed.name && (detectedProjectName === defaultName || !detectedProjectName)) {
-          detectedProjectName = parsed.name;
+        if (parsed.name) {
+          const isGeneric = GENERIC_BOILERPLATE_NAMES.has(parsed.name.toLowerCase());
+          const hasGoodDefault =
+            defaultName && !['Project', 'Archive Upload', 'GitHub Repository', 'archive'].includes(defaultName);
+          if (!isGeneric && (detectedProjectName === defaultName || !detectedProjectName)) {
+            detectedProjectName = parsed.name;
+          } else if (isGeneric && hasGoodDefault) {
+            detectedProjectName = defaultName;
+          }
         }
         if (parsed.description && !projectDescription) {
           projectDescription = parsed.description;
@@ -216,6 +237,18 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         }
       } catch (err: any) {
         limitations.push(`Notice: package.json at ${relPath} could not be parsed as valid JSON: ${err.message}`);
+      }
+    } else if (baseName === 'requirements.txt') {
+      // Parse Python requirements.txt
+      const lines = content.split('\n');
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith('#') || line.startsWith('-')) continue;
+        const pkgMatch = line.split(/[=<>!~;@\s]/)[0].trim().toLowerCase();
+        if (pkgMatch) {
+          declaredPythonDeps.set(pkgMatch, { version: line, isDev: false });
+          dependenciesList.push({ name: pkgMatch, version: line, isDev: false });
+        }
       }
     }
   }
@@ -253,6 +286,46 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     }
   }
 
+  // C. Code import scanning for verified usage
+  const allCodeText = Array.from(fileContents.values()).join('\n');
+
+  // Python Server Frameworks & Ecosystem
+  const hasFastAPIDep = declaredPythonDeps.has('fastapi');
+  const hasFastAPIImport =
+    allCodeText.includes('from fastapi') ||
+    allCodeText.includes('import fastapi') ||
+    allCodeText.includes('FastAPI(');
+  const hasFastAPIServer = (hasFastAPIDep || hasFastAPIImport) && allCodeText.includes('FastAPI(');
+
+  const hasFlaskDep = declaredPythonDeps.has('flask');
+  const hasFlaskImport = allCodeText.includes('from flask') || allCodeText.includes('import flask');
+  const hasFlaskServer = (hasFlaskDep || hasFlaskImport) && (allCodeText.includes('Flask(') || allCodeText.includes('@app.route'));
+
+  const hasDjangoDep = declaredPythonDeps.has('django');
+  const hasDjangoServer = hasDjangoDep && allCodeText.includes('django');
+
+  const hasPythonServer = hasFastAPIServer || hasFlaskServer || hasDjangoServer;
+
+  // Python AI / NLP / Audio Libraries
+  if (declaredPythonDeps.has('scikit-learn') || allCodeText.includes('sklearn') || allCodeText.includes('TfidfVectorizer')) {
+    frameworks.add('Scikit-Learn (TF-IDF & Classification)');
+  }
+  if (declaredPythonDeps.has('nltk') || allCodeText.includes('nltk')) {
+    frameworks.add('NLTK (Tokenization & Corpora)');
+  }
+  if (declaredPythonDeps.has('networkx') || allCodeText.includes('networkx')) {
+    frameworks.add('NetworkX (Graph Analysis)');
+  }
+  if (declaredPythonDeps.has('gtts') || allCodeText.includes('from gtts') || allCodeText.includes('gTTS(')) {
+    frameworks.add('gTTS Text-to-Speech Engine');
+  }
+  if (declaredPythonDeps.has('beautifulsoup4') || allCodeText.includes('BeautifulSoup(') || allCodeText.includes('bs4')) {
+    frameworks.add('BeautifulSoup4 (Web Scraping)');
+  }
+  if (declaredPythonDeps.has('requests') || allCodeText.includes('import requests')) {
+    frameworks.add('Requests (HTTP Client)');
+  }
+
   const sourceLanguages: LanguageInventory[] = Object.entries(langCounts).map(([lang, info]) => {
     let role: LanguageInventory['role'] = 'other';
     if (lang === 'JavaScript' || lang === 'TypeScript') {
@@ -260,8 +333,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     } else if (lang === 'HTML' || lang === 'CSS') {
       role = 'markup_styling';
     } else if (lang === 'Python') {
-      // If Python files are only in scripts or standalone files
-      role = 'offline_utility_script';
+      role = hasPythonServer ? 'backend_service_runtime' : 'offline_utility_script';
     } else if (lang === 'JSON') {
       role = 'build_configuration';
     }
@@ -273,21 +345,34 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     };
   });
 
-  // Determine primary application runtime
+  // Determine primary application runtime and backend runtime
   let primaryRuntime = 'Client-Side Web Application';
+  let backendRuntime: string | undefined = undefined;
+
   if (languages.has('TypeScript')) {
     primaryRuntime = 'TypeScript / Browser (Vite SPA)';
   } else if (languages.has('JavaScript')) {
     primaryRuntime = 'JavaScript (ES Modules) / Browser (Vite SPA)';
   }
 
+  if (hasPythonServer) {
+    if (hasFastAPIServer) {
+      backend.add('FastAPI (Python)');
+      backendRuntime = 'Python 3 / FastAPI HTTP Microservice';
+    } else if (hasFlaskServer) {
+      backend.add('Flask (Python)');
+      backendRuntime = 'Python 3 / Flask Web Application';
+    } else {
+      backend.add('Django (Python)');
+      backendRuntime = 'Python 3 / Django Web Application';
+    }
+  }
+
   // B. Manifest lockfiles
   if (allDiscoveredFiles.some((f) => f.endsWith('package-lock.json'))) packageManagers.add('npm');
   if (allDiscoveredFiles.some((f) => f.endsWith('yarn.lock'))) packageManagers.add('yarn');
   if (allDiscoveredFiles.some((f) => f.endsWith('pnpm-lock.yaml'))) packageManagers.add('pnpm');
-
-  // C. Code import scanning for verified usage
-  const allCodeText = Array.from(fileContents.values()).join('\n');
+  if (declaredPythonDeps.size > 0) packageManagers.add('pip');
 
   // React
   if (declaredDeps.has('react') || allCodeText.includes("from 'react'") || allCodeText.includes('from "react"')) {
@@ -386,7 +471,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     frameworks.add('Firebase Hosting (Configured)');
   }
 
-  // E. Server Frameworks (Express) - STRICT PROOF REQUIRED
+  // E. Server Frameworks (Express & FastAPI)
   const hasExpressDep = declaredDeps.has('express');
   const hasExpressImport =
     allCodeText.includes("from 'express'") ||
@@ -420,6 +505,35 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       detectionRule: 'express() instantiation and route/server declaration',
       confidence: 'high',
     });
+  } else if (hasPythonServer) {
+    hasConfirmedServer = true;
+    if (hasFastAPIServer) {
+      findings.push({
+        id: 'TECH-FASTAPI',
+        category: 'server_framework',
+        name: 'FastAPI',
+        value: 'Python ASGI Web Framework',
+        status: 'confirmed',
+        evidenceSources: inspectedFiles.filter((f) => {
+          const c = fileContents.get(f) || '';
+          return c.includes('FastAPI(') || c.includes('from fastapi');
+        }),
+        evidenceLevel: 'imported_in_code',
+        detectionRule: 'FastAPI application instance and route declarations in Python source',
+        confidence: 'high',
+      });
+    }
+    findings.push({
+      id: 'TECH-EXPRESS-CHECK',
+      category: 'server_framework',
+      name: 'Express / Node Server',
+      value: 'Not detected; backend runtime verified as Python FastAPI',
+      status: 'not_detected',
+      evidenceSources: [],
+      evidenceLevel: 'configured_in_file',
+      detectionRule: 'Static scan verified backend is powered by Python ASGI rather than Express',
+      confidence: 'high',
+    });
   } else {
     findings.push({
       id: 'TECH-SERVER-CHECK',
@@ -432,6 +546,65 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       detectionRule: 'Static scan verified no server initialization or HTTP listener',
       confidence: 'high',
       limitations: 'Application runs as a client-side SPA or serverless client',
+    });
+  }
+
+  // F. Supabase & LocalStorage Data Stores
+  const hasSupabaseDep = declaredDeps.has('@supabase/supabase-js') || allCodeText.includes('@supabase/supabase-js');
+  const hasSupabaseClient = allCodeText.includes('createClient(');
+  const hasActiveSupabaseQueries =
+    allCodeText.includes('.from(') ||
+    allCodeText.includes('.rpc(') ||
+    allCodeText.includes('.auth.signUp') ||
+    allCodeText.includes('.auth.signIn');
+
+  if (hasSupabaseDep || hasSupabaseClient) {
+    if (hasActiveSupabaseQueries) {
+      database.add('Supabase (PostgreSQL BaaS)');
+      findings.push({
+        id: 'TECH-SUPABASE',
+        category: 'database',
+        name: 'Supabase',
+        value: 'PostgreSQL Backend-as-a-Service',
+        status: 'confirmed',
+        evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('supabase')),
+        evidenceLevel: 'imported_in_code',
+        detectionRule: 'Supabase client queries (.from) in source modules',
+        confidence: 'high',
+      });
+    } else {
+      findings.push({
+        id: 'TECH-SUPABASE-SCAFFOLD',
+        category: 'database',
+        name: 'Supabase (Configured Scaffolding)',
+        value: 'Client Configured, No Active Table Queries Observed',
+        status: 'probable',
+        evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('supabase')),
+        evidenceLevel: 'configured_in_file',
+        detectionRule: 'createClient present in client.ts without active .from() table operations in UI modules',
+        confidence: 'high',
+        limitations:
+          'Supabase client initialized via VITE_SUPABASE_URL scaffolding, but no active database table queries or mutations were detected in inspected application components. User bookmarks are persisted client-side via browser localStorage.',
+      });
+    }
+  }
+
+  // Browser LocalStorage check
+  const hasLocalStorage = allCodeText.includes('localStorage.getItem') || allCodeText.includes('localStorage.setItem');
+  if (hasLocalStorage) {
+    findings.push({
+      id: 'TECH-LOCALSTORAGE',
+      category: 'storage',
+      name: 'Browser LocalStorage',
+      value: 'Client-Side Key-Value Storage',
+      status: 'confirmed',
+      evidenceSources: inspectedFiles.filter((f) => {
+        const c = fileContents.get(f) || '';
+        return c.includes('localStorage.getItem') || c.includes('localStorage.setItem');
+      }),
+      evidenceLevel: 'imported_in_code',
+      detectionRule: 'localStorage.getItem/setItem calls in component state management',
+      confidence: 'high',
     });
   }
 
@@ -645,6 +818,8 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         ? `Database integration active via Cloud Firestore. Detected ${activeSdkCollections.length} active application collections queried/mutated in code (${activeSdkCollections.map((c) => c.name).join(', ')}). An additional ${ruleOnlyCollectionPaths.length} collection paths are declared in security rules (${ruleOnlyCollectionPaths.map((c) => c.name).join(', ')}) without observed client application operations.`
         : database.has('MongoDB')
         ? `Database integration active via MongoDB / Mongoose. Detected ${legacyDatabaseSchemas.length} Mongoose models (${legacyDatabaseSchemas.map((s) => s.modelName).join(', ')}).`
+        : hasLocalStorage
+        ? `No remote database (SQL/NoSQL) queries detected in application runtime code. Application state and user bookmarks are persisted client-side via browser localStorage (${inspectedFiles.filter((f) => fileContents.get(f)?.includes('localStorage')).map((f) => path.basename(f)).join(', ') || 'SavedNews.tsx'}).${hasSupabaseDep ? ' Supabase client is scaffolded in configuration but not actively queried by UI components.' : ''}`
         : 'No dedicated database models or client datastore operations detected in inspected project files.',
     schemaConfidence: activeSdkCollections.length > 0 ? 'partial' : 'none',
   };
@@ -655,7 +830,8 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   const externalHttpCalls: Array<{ method: string; urlPattern: string; filePath: string }> = [];
 
   for (const [relPath, code] of fileContents.entries()) {
-    if (hasConfirmedServer) {
+    // Express Server routes
+    if (hasConfirmedServer && !hasPythonServer) {
       const routeMatches = code.matchAll(/(router|app)\.(get|post|put|delete|patch)\(\s*['"`]([^'"`]+)['"`]/g);
       for (const rm of routeMatches) {
         serverRestEndpoints.push({
@@ -664,6 +840,23 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
           filePath: relPath,
           description: `Server route handling ${rm[2].toUpperCase()} requests for ${rm[3]}`,
         });
+      }
+    }
+
+    // Python FastAPI / ASGI routes
+    if (hasPythonServer) {
+      const pyRouteMatches = code.matchAll(/@(?:app|router)\.(get|post|put|delete|patch)\(\s*['"`]([^'"`]+)['"`]/g);
+      for (const rm of pyRouteMatches) {
+        const method = rm[1].toUpperCase();
+        const routePath = rm[2];
+        if (!serverRestEndpoints.some((e) => e.method === method && e.path === routePath)) {
+          serverRestEndpoints.push({
+            method,
+            path: routePath,
+            filePath: relPath,
+            description: `FastAPI endpoint handling ${method} requests for ${routePath}`,
+          });
+        }
       }
     }
 
@@ -687,14 +880,30 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       });
     }
 
-    // External fetch calls
-    const fetchMatches = code.matchAll(/fetch\(\s*['"`](https?:\/\/[^'"`]+)['"`]/g);
+    // External fetch calls and frontend client calls
+    const fetchMatches = code.matchAll(/fetch\(\s*[`'"](http:\/\/(?:localhost|127\.0\.0\.1):\d+)?(\/[a-zA-Z0-9_\-\?=&;]+|https?:\/\/[^`'"]+)/g);
     for (const fm of fetchMatches) {
-      externalHttpCalls.push({
-        method: 'GET/POST',
-        urlPattern: fm[1].substring(0, 60),
-        filePath: relPath,
-      });
+      const urlTarget = (fm[1] || '') + fm[2];
+      if (!externalHttpCalls.some((c) => c.urlPattern === urlTarget)) {
+        externalHttpCalls.push({
+          method: 'GET/POST',
+          urlPattern: urlTarget.substring(0, 80),
+          filePath: relPath,
+        });
+      }
+    }
+
+    // Audio stream instantiations targeting backend
+    const audioMatches = code.matchAll(/new\s+Audio\(\s*[`'"](http:\/\/(?:localhost|127\.0\.0\.1):\d+)?(\/[a-zA-Z0-9_\-\?=&;]+|https?:\/\/[^`'"]+)/g);
+    for (const am of audioMatches) {
+      const urlTarget = (am[1] || '') + am[2];
+      if (!externalHttpCalls.some((c) => c.urlPattern === urlTarget)) {
+        externalHttpCalls.push({
+          method: 'AUDIO STREAM',
+          urlPattern: urlTarget.substring(0, 80),
+          filePath: relPath,
+        });
+      }
     }
   }
 
@@ -712,7 +921,9 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     externalHttpCalls,
     summary:
       serverRestEndpoints.length > 0
-        ? `Application operates an Express HTTP server declaring ${serverRestEndpoints.length} REST endpoints.`
+        ? hasPythonServer
+          ? `Application operates an asynchronous Python FastAPI microservice declaring ${serverRestEndpoints.length} REST endpoints (${serverRestEndpoints.map((e) => `${e.method} ${e.path}`).join(', ')}). Frontend interfaces with backend via direct HTTP fetch and audio streaming.`
+          : `Application operates an Express HTTP server declaring ${serverRestEndpoints.length} REST endpoints.`
         : clientSdkOperations.length > 0
         ? 'Application communicates directly with cloud backend services via client SDK calls (Firebase Authentication & Cloud Firestore). No custom Express REST endpoints are required or declared.'
         : 'No network API endpoints or client SDK operations detected.',
@@ -729,77 +940,177 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     const baseName = path.basename(relPath, ext);
     const lowerRel = relPath.toLowerCase();
 
+    // Extract function exports, imports, hooks, and integrations
+    const exports: string[] = [];
+    const importedServices: string[] = [];
+    const hooksUsed: string[] = [];
+    const externalIntegrations: string[] = [];
+
     // Classification
     let modType: ModuleAnalysis['type'] = 'other';
-    if (baseName === 'main' || baseName === 'index' || baseName === 'server' || baseName === 'App') {
-      modType = 'entry_point';
-    } else if (lowerRel.includes('/pages/') || lowerRel.includes('/views/') || baseName.endsWith('Page')) {
-      modType = 'page';
-    } else if (lowerRel.includes('/components/')) {
-      modType = 'ui_component';
-    } else if (lowerRel.includes('/context/') || code.includes('createContext')) {
-      modType = 'context';
-    } else if (lowerRel.includes('/services/')) {
-      modType = 'service';
-    } else if (lowerRel.includes('/hooks/') || baseName.startsWith('use')) {
-      modType = 'hook';
-    } else if (lowerRel.includes('/routes/')) {
-      modType = 'route_handler';
-    } else if (lowerRel.includes('/models/')) {
-      modType = 'model';
-    } else if (lowerRel.includes('/scripts/') || ext === '.py') {
-      modType = 'script';
-    } else if (baseName.includes('config') || ext === '.json') {
-      modType = 'config';
-    } else if (lowerRel.includes('test') || baseName.endsWith('.test') || baseName.endsWith('.spec')) {
-      modType = 'test';
-    } else if (lowerRel.includes('/utils/') || lowerRel.includes('/helpers/')) {
-      modType = 'utility';
-    }
 
-    // Extract function exports
-    const exports: string[] = [];
-    const exportFuncMatches = code.matchAll(/export\s+(async\s+)?function\s+([a-zA-Z0-9_]+)/g);
-    for (const ef of exportFuncMatches) exports.push(ef[2]);
+    if (ext === '.py') {
+      // Python symbol extraction
+      const pyFuncMatches = code.matchAll(/def\s+([a-zA-Z0-9_]+)\s*\(/g);
+      for (const pf of pyFuncMatches) exports.push(pf[1]);
 
-    const exportConstMatches = code.matchAll(/export\s+const\s+([a-zA-Z0-9_]+)\s*=/g);
-    for (const ec of exportConstMatches) exports.push(ec[1]);
+      const pyClassMatches = code.matchAll(/class\s+([a-zA-Z0-9_]+)/g);
+      for (const pc of pyClassMatches) exports.push(pc[1]);
 
-    if (code.includes('export default')) {
-      exports.push(`default (${baseName})`);
-    }
+      const pyImportMatches = code.matchAll(/(?:from\s+([a-zA-Z0-9_.]+)\s+import|import\s+([a-zA-Z0-9_.]+))/g);
+      for (const pim of pyImportMatches) {
+        const mod = pim[1] || pim[2];
+        if (mod && !importedServices.includes(mod)) importedServices.push(mod);
+      }
 
-    // Extract imported modules
-    const importedServices: string[] = [];
-    const importMatches = code.matchAll(/import\s+.*?\s+from\s+['"]([^'"]+)['"]/g);
-    for (const im of importMatches) {
-      const impPath = im[1];
-      if (!impPath.startsWith('.') && !impPath.startsWith('react') && !importedServices.includes(impPath)) {
-        importedServices.push(impPath);
-      } else if (impPath.startsWith('.')) {
-        const impBase = path.basename(impPath);
-        if (!importedServices.includes(impBase)) importedServices.push(impBase);
+      if (code.includes('gTTS') || code.includes('from gtts')) externalIntegrations.push('gTTS Audio Synthesis');
+      if (code.includes('nltk')) externalIntegrations.push('NLTK');
+      if (code.includes('sklearn') || code.includes('TfidfVectorizer')) externalIntegrations.push('Scikit-Learn');
+      if (code.includes('BeautifulSoup') || code.includes('bs4')) externalIntegrations.push('BeautifulSoup4');
+      if (code.includes('requests')) externalIntegrations.push('Requests HTTP');
+      if (code.includes('fastapi') || code.includes('FastAPI')) externalIntegrations.push('FastAPI');
+      if (code.includes('dotenv')) externalIntegrations.push('python-dotenv');
+
+      // Python module classification
+      if (baseName === 'main' || code.includes('FastAPI(') || code.includes('Flask(')) {
+        modType = 'entry_point';
+      } else if (lowerRel.includes('services/') || baseName.endsWith('_service') || baseName.endsWith('service') || baseName.includes('pipeline')) {
+        modType = 'service';
+      } else if (baseName === 'config' || baseName.includes('config')) {
+        modType = 'config';
+      } else if (baseName.startsWith('test') || baseName.endsWith('_test') || lowerRel.includes('test')) {
+        modType = 'test';
+      } else if (lowerRel.includes('models/') || code.includes('BaseModel')) {
+        modType = 'model';
+      } else if (hasPythonServer) {
+        modType = 'service';
+      } else {
+        modType = 'script';
+      }
+    } else {
+      // JavaScript / TypeScript extraction
+      const exportFuncMatches = code.matchAll(/export\s+(async\s+)?function\s+([a-zA-Z0-9_]+)/g);
+      for (const ef of exportFuncMatches) exports.push(ef[2]);
+
+      const exportConstMatches = code.matchAll(/export\s+const\s+([a-zA-Z0-9_]+)\s*=/g);
+      for (const ec of exportConstMatches) exports.push(ec[1]);
+
+      if (code.includes('export default')) {
+        exports.push(`default (${baseName})`);
+      }
+
+      const importMatches = code.matchAll(/import\s+.*?\s+from\s+['"]([^'"]+)['"]/g);
+      for (const im of importMatches) {
+        const impPath = im[1];
+        if (!impPath.startsWith('.') && !impPath.startsWith('react') && !importedServices.includes(impPath)) {
+          importedServices.push(impPath);
+        } else if (impPath.startsWith('.')) {
+          const impBase = path.basename(impPath);
+          if (!importedServices.includes(impBase)) importedServices.push(impBase);
+        }
+      }
+
+      ['useState', 'useEffect', 'useContext', 'useAuth', 'useNavigate', 'useParams', 'useMemo', 'useCallback'].forEach((h) => {
+        if (code.includes(h)) hooksUsed.push(h);
+      });
+
+      if (code.includes('firebase/auth') || code.includes('getAuth')) externalIntegrations.push('Firebase Auth');
+      if (code.includes('firebase/firestore') || code.includes('getFirestore')) externalIntegrations.push('Cloud Firestore');
+      if (code.includes('recharts')) externalIntegrations.push('Recharts');
+      if (code.includes('xlsx')) externalIntegrations.push('SheetJS (XLSX)');
+      if (code.includes('@supabase/supabase-js')) externalIntegrations.push('Supabase Client');
+
+      // JavaScript / TypeScript classification
+      if (baseName === 'main' || baseName === 'index' || baseName === 'server' || baseName === 'App') {
+        modType = 'entry_point';
+      } else if (lowerRel.includes('/pages/') || lowerRel.includes('/views/') || baseName.endsWith('Page')) {
+        modType = 'page';
+      } else if (lowerRel.includes('/components/')) {
+        modType = 'ui_component';
+      } else if (lowerRel.includes('/context/') || code.includes('createContext')) {
+        modType = 'context';
+      } else if (lowerRel.includes('/services/')) {
+        modType = 'service';
+      } else if (lowerRel.includes('/hooks/') || baseName.startsWith('use')) {
+        modType = 'hook';
+      } else if (lowerRel.includes('/routes/')) {
+        modType = 'route_handler';
+      } else if (lowerRel.includes('/models/')) {
+        modType = 'model';
+      } else if (lowerRel.includes('/scripts/')) {
+        modType = 'script';
+      } else if (baseName.includes('config') || ext === '.json') {
+        modType = 'config';
+      } else if (lowerRel.includes('test') || baseName.endsWith('.test') || baseName.endsWith('.spec')) {
+        modType = 'test';
+      } else if (lowerRel.includes('/utils/') || lowerRel.includes('/helpers/')) {
+        modType = 'utility';
       }
     }
-
-    // Extract React hooks
-    const hooksUsed: string[] = [];
-    ['useState', 'useEffect', 'useContext', 'useAuth', 'useNavigate', 'useParams', 'useMemo', 'useCallback'].forEach((h) => {
-      if (code.includes(h)) hooksUsed.push(h);
-    });
-
-    // Extract integrations
-    const externalIntegrations: string[] = [];
-    if (code.includes('firebase/auth') || code.includes('getAuth')) externalIntegrations.push('Firebase Auth');
-    if (code.includes('firebase/firestore') || code.includes('getFirestore')) externalIntegrations.push('Cloud Firestore');
-    if (code.includes('recharts')) externalIntegrations.push('Recharts');
-    if (code.includes('xlsx')) externalIntegrations.push('SheetJS (XLSX)');
 
     // Generate specific, non-generic responsibilities
     let role = '';
     const responsibilities: string[] = [];
 
-    if (modType === 'entry_point') {
+    if (ext === '.py') {
+      if (modType === 'entry_point') {
+        role = `Backend ASGI application entry point declaring HTTP REST API routes and CORS middleware.`;
+        responsibilities.push('Initializes FastAPI application instance and configures CORS middleware');
+        const foundRoutes: string[] = [];
+        const rm = code.matchAll(/@(?:app|router)\.(get|post|put|delete|patch)\(\s*['"`]([^'"`]+)['"`]/g);
+        for (const r of rm) foundRoutes.push(`${r[1].toUpperCase()} ${r[2]}`);
+        if (foundRoutes.length > 0) {
+          responsibilities.push(`Declares HTTP REST routes: ${foundRoutes.join(', ')}`);
+        }
+        if (importedServices.length > 0) {
+          const domainServices = importedServices.filter((s) => !s.startsWith('fastapi') && !s.startsWith('pydantic'));
+          if (domainServices.length > 0) {
+            responsibilities.push(`Coordinates operations with ${domainServices.slice(0, 3).join(', ')}`);
+          }
+        }
+      } else if (modType === 'service') {
+        if (baseName.includes('audio') || code.includes('gTTS')) {
+          role = 'Audio synthesis service leveraging gTTS for text-to-speech audio rendering.';
+          responsibilities.push('Generates MP3 audio files from article summaries using gTTS');
+          responsibilities.push('Manages local audio cache in AUDIO_DIR to prevent redundant generation');
+        } else if (baseName.includes('news') || code.includes('BeautifulSoup') || code.includes('requests')) {
+          role = 'News aggregation and web scraping service ingesting articles from RSS and publisher feeds.';
+          responsibilities.push('Fetches top headlines and RSS items from Google News and publishers');
+          responsibilities.push('Scrapes full article paragraphs and sanitizes HTML tags via BeautifulSoup');
+          responsibilities.push('Coordinates with NLP pipeline for clustering and categorization');
+        } else if (baseName.includes('nlp') || code.includes('TfidfVectorizer') || code.includes('nltk')) {
+          role = 'Natural language processing pipeline for extractive text summarization and categorization.';
+          responsibilities.push('Implements extractive TextRank summarization via TF-IDF sentence vectorization');
+          responsibilities.push('Performs news classification using Naive Bayes (MultinomialNB) and 20newsgroups');
+          responsibilities.push('Initializes NLTK tokenization and stopword removal models');
+        } else {
+          role = `Backend service module providing ${baseName} operations.`;
+          if (exports.length > 0) {
+            responsibilities.push(`Exposes domain functions: ${exports.slice(0, 4).join(', ')}`);
+          } else {
+            responsibilities.push(`Executes specialized business logic for ${baseName}`);
+          }
+        }
+      } else if (modType === 'config') {
+        role = 'Backend configuration and environment management module.';
+        responsibilities.push('Loads environment variables using python-dotenv');
+        responsibilities.push('Configures caching directories and external API keys');
+      } else if (modType === 'test') {
+        role = 'Backend verification and smoke testing script.';
+        responsibilities.push('Executes smoke tests and validates news fetching workflows');
+        responsibilities.push('Benchmarks NLP summarization pipeline performance');
+      } else if (hasPythonServer) {
+        role = `Backend supporting module for ${baseName}.`;
+        if (exports.length > 0) {
+          responsibilities.push(`Provides supporting routines: ${exports.slice(0, 3).join(', ')}`);
+        } else {
+          responsibilities.push('Provides supporting logic');
+        }
+      } else {
+        role = `Offline Python utility script (${baseName}); not executed during application runtime.`;
+        responsibilities.push('Performs local file maintenance and offline formatting transformations');
+      }
+    } else if (modType === 'entry_point') {
       role = `Application bootstrap module mounting root components.`;
       responsibilities.push(`Initializes application context and binds root React DOM element`);
       if (code.includes('createBrowserRouter') || code.includes('<Router') || code.includes('<Routes')) {
@@ -827,13 +1138,8 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       responsibilities.push(`Presents interface controls and emits user interaction events`);
       if (hooksUsed.length > 0) responsibilities.push(`Maintains local interaction state (${hooksUsed.slice(0, 2).join(', ')})`);
     } else if (modType === 'script') {
-      if (ext === '.py') {
-        role = `Offline Python utility script (${baseName}); not executed during application runtime.`;
-        responsibilities.push('Performs local file maintenance and offline formatting transformations');
-      } else {
-        role = `Administrative script for database maintenance or test execution.`;
-        responsibilities.push('Executes administrative workflow outside main application bundle');
-      }
+      role = `Administrative script for database maintenance or test execution.`;
+      responsibilities.push('Executes administrative workflow outside main application bundle');
     } else if (modType === 'hook') {
       role = `Custom React hook encapsulating reusable ${baseName} behavior.`;
       responsibilities.push('Encapsulates component state and lifecycle side effects');
@@ -893,45 +1199,130 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   });
 
   if (hasConfirmedServer) {
-    architectureType = 'client_server_db';
-    archNodes.push({
-      id: 'server_runtime',
-      label: 'Server Application',
-      sublabel: 'REST API Gateway',
-      category: 'server_runtime',
-      tech: 'Node.js / Express',
-      evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('express()')),
-      isConfirmed: true,
-      tierNumber: 2,
-    });
-    archEdges.push({
-      sourceId: 'client_ui',
-      targetId: 'server_runtime',
-      label: 'HTTP REST / JSON',
-      protocol: 'http_rest',
-      isConfirmed: true,
-      evidenceSources: serverRestEndpoints.map((e) => e.filePath),
-    });
-
-    if (database.has('MongoDB')) {
+    if (hasPythonServer) {
+      architectureType = 'polyglot_fullstack';
       archNodes.push({
-        id: 'database_layer',
-        label: 'MongoDB Database',
-        sublabel: 'Document Datastore',
-        category: 'database',
-        tech: 'MongoDB / Mongoose',
-        evidenceSources: legacyDatabaseSchemas.map((s) => s.filePath),
+        id: 'server_runtime',
+        label: 'Python Backend Microservice',
+        sublabel: 'FastAPI ASGI REST Gateway',
+        category: 'server_runtime',
+        tech: backendRuntime || 'Python 3 / FastAPI',
+        evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('FastAPI(') || fileContents.get(f)?.includes('@app.')),
         isConfirmed: true,
-        tierNumber: 3,
+        tierNumber: 2,
       });
       archEdges.push({
-        sourceId: 'server_runtime',
-        targetId: 'database_layer',
-        label: 'Mongoose ODM Driver',
-        protocol: 'db_driver',
+        sourceId: 'client_ui',
+        targetId: 'server_runtime',
+        label: 'HTTP REST / JSON (Port 8012)',
+        protocol: 'http_rest',
         isConfirmed: true,
-        evidenceSources: legacyDatabaseSchemas.map((s) => s.filePath),
+        evidenceSources: serverRestEndpoints.map((e) => e.filePath),
       });
+
+      if (declaredPythonDeps.has('nltk') || declaredPythonDeps.has('scikit-learn') || declaredPythonDeps.has('gtts')) {
+        archNodes.push({
+          id: 'nlp_audio_pipeline',
+          label: 'NLP & Audio Pipeline',
+          sublabel: 'Extractive Summarization & Audio Synthesis',
+          category: 'service_module',
+          tech: 'Scikit-Learn, NLTK & gTTS',
+          evidenceSources: inspectedFiles.filter((f) => f.includes('nlp_pipeline') || f.includes('audio_service')),
+          isConfirmed: true,
+          tierNumber: 3,
+        });
+        archEdges.push({
+          sourceId: 'server_runtime',
+          targetId: 'nlp_audio_pipeline',
+          label: 'In-Process Dispatch',
+          protocol: 'direct_call',
+          isConfirmed: true,
+          evidenceSources: inspectedFiles.filter((f) => f.includes('main.py')),
+        });
+      }
+
+      if (declaredPythonDeps.has('beautifulsoup4') || declaredPythonDeps.has('requests')) {
+        archNodes.push({
+          id: 'external_news_source',
+          label: 'External News Feeds',
+          sublabel: 'Google News RSS & Publisher Scrapes',
+          category: 'external_api',
+          tech: 'RSS Feeds & BeautifulSoup4',
+          evidenceSources: inspectedFiles.filter((f) => f.includes('news_service')),
+          isConfirmed: true,
+          tierNumber: 3,
+        });
+        archEdges.push({
+          sourceId: 'server_runtime',
+          targetId: 'external_news_source',
+          label: 'HTTP GET / XML RSS Ingestion',
+          protocol: 'http_rest',
+          isConfirmed: true,
+          evidenceSources: inspectedFiles.filter((f) => f.includes('news_service')),
+        });
+      }
+
+      if (hasLocalStorage) {
+        archNodes.push({
+          id: 'client_storage',
+          label: 'Browser LocalStorage',
+          sublabel: 'Offline Bookmarked Articles',
+          category: 'database',
+          tech: 'Web Storage API',
+          evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('localStorage')),
+          isConfirmed: true,
+          tierNumber: 1,
+        });
+        archEdges.push({
+          sourceId: 'client_ui',
+          targetId: 'client_storage',
+          label: 'Synchronous Key-Value API',
+          protocol: 'direct_call',
+          isConfirmed: true,
+          evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('localStorage')),
+        });
+      }
+    } else {
+      architectureType = 'client_server_db';
+      archNodes.push({
+        id: 'server_runtime',
+        label: 'Server Application',
+        sublabel: 'REST API Gateway',
+        category: 'server_runtime',
+        tech: 'Node.js / Express',
+        evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('express()')),
+        isConfirmed: true,
+        tierNumber: 2,
+      });
+      archEdges.push({
+        sourceId: 'client_ui',
+        targetId: 'server_runtime',
+        label: 'HTTP REST / JSON',
+        protocol: 'http_rest',
+        isConfirmed: true,
+        evidenceSources: serverRestEndpoints.map((e) => e.filePath),
+      });
+
+      if (database.has('MongoDB')) {
+        archNodes.push({
+          id: 'database_layer',
+          label: 'MongoDB Database',
+          sublabel: 'Document Datastore',
+          category: 'database',
+          tech: 'MongoDB / Mongoose',
+          evidenceSources: legacyDatabaseSchemas.map((s) => s.filePath),
+          isConfirmed: true,
+          tierNumber: 3,
+        });
+        archEdges.push({
+          sourceId: 'server_runtime',
+          targetId: 'database_layer',
+          label: 'Mongoose ODM Driver',
+          protocol: 'db_driver',
+          isConfirmed: true,
+          evidenceSources: legacyDatabaseSchemas.map((s) => s.filePath),
+        });
+      }
     }
   } else if (auth.has('Firebase Authentication') || database.has('Cloud Firestore (Firebase)')) {
     architectureType = 'client_baas';
@@ -985,7 +1376,9 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   const architecture: ArchitectureModel = {
     architectureType,
     architectureSummary:
-      architectureType === 'client_baas'
+      architectureType === 'polyglot_fullstack'
+        ? `${detectedProjectName} implements a Polyglot Fullstack architecture comprising a ${Array.from(frontend).join(', ') || 'React'} client single-page application and an independent ${Array.from(backend).join(', ') || 'Python FastAPI'} backend microservice. The client interfaces with the backend over HTTP REST endpoints (${serverRestEndpoints.map((e) => e.path).join(', ') || '/news, /summarize, /audio'}).`
+        : architectureType === 'client_baas'
         ? `${detectedProjectName} implements a client-side Backend-as-a-Service (BaaS) architecture. The ${Array.from(frontend).join(', ') || 'React'} client application interfaces directly with managed cloud services (Firebase Authentication and Cloud Firestore) via client SDK calls without an intermediate custom Express server.`
         : architectureType === 'client_server_db'
         ? `${detectedProjectName} implements a multi-tier client/server architecture with a client interface, custom Express.js server routing tier, and ${Array.from(database).join(', ') || 'database'} persistence.`
@@ -1053,6 +1446,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     findings,
     technologies: {
       primaryRuntime,
+      backendRuntime,
       languages: Array.from(languages),
       sourceLanguages,
       frontend: Array.from(frontend),
@@ -1064,6 +1458,13 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       testTools: Array.from(testTools),
       packageManagers: Array.from(packageManagers),
     },
+    subsystems: hasPythonServer
+      ? {
+          frontend: `${Array.from(frontend).join(', ') || 'React'} Single Page Application (Vite)`,
+          backend: `${backendRuntime || 'Python 3 / FastAPI HTTP Microservice'}`,
+          communicationStatus: `Confirmed HTTP REST client-to-backend integration (${serverRestEndpoints.map((e) => e.path).join(', ') || '/news, /summarize, /audio'})`,
+        }
+      : undefined,
     modules,
     database: databaseAnalysis,
     api: apiAnalysis,

@@ -101,6 +101,43 @@ async function createAmbiguousZip() {
   return zipPath;
 }
 
+async function createSmartNewsDigestZip() {
+  const zipPath = path.join(__dirname, 'test-smart-news-digest.zip');
+  if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
+
+  const zip = new AdmZip();
+  const sourceDir = 'd:\\Mitra\\Smart-news-Digest';
+
+  const ignoreDirs = new Set(['node_modules', 'dist', '.firebase', '.git', '.vscode', '__pycache__', 'audio_cache', 'venv', '.venv']);
+
+  function addFolderRecursively(currentPath, zipPathPrefix) {
+    const entries = fs.readdirSync(currentPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') && entry.name !== '.env.example' && entry.name !== '.gitignore') {
+        continue;
+      }
+      if (entry.name.endsWith('.mp3') || entry.name.endsWith('.pyc')) {
+        continue;
+      }
+      const fullPath = path.join(currentPath, entry.name);
+      const zipEntryName = zipPathPrefix ? `${zipPathPrefix}/${entry.name}` : entry.name;
+
+      if (entry.isDirectory()) {
+        if (!ignoreDirs.has(entry.name)) {
+          addFolderRecursively(fullPath, zipEntryName);
+        }
+      } else {
+        zip.addLocalFile(fullPath, zipPathPrefix || '');
+      }
+    }
+  }
+
+  addFolderRecursively(sourceDir, '');
+  zip.writeZip(zipPath);
+  console.log(`[Setup] Created test-smart-news-digest.zip (${fs.statSync(zipPath).size} bytes)`);
+  return zipPath;
+}
+
 async function uploadAndPoll(zipPath) {
   const formData = new FormData();
   const fileBytes = fs.readFileSync(zipPath);
@@ -123,17 +160,25 @@ async function uploadAndPoll(zipPath) {
   const startTime = Date.now();
   while (Date.now() - startTime < 120000) {
     await new Promise(r => setTimeout(r, 2000));
-    const res = await fetch(`${BASE_URL}/projects/${projectId}`);
-    const data = await res.json();
-    const project = data.project;
+    try {
+      const res = await fetch(`${BASE_URL}/projects/${projectId}`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const project = data.project;
 
-    if (project && project.status === 'completed') {
-      console.log(`  Project ${projectId} analysis completed in ${Math.round((Date.now() - startTime) / 1000)}s!`);
-      return project;
-    }
+      if (project && project.status === 'completed') {
+        console.log(`  Project ${projectId} analysis completed in ${Math.round((Date.now() - startTime) / 1000)}s!`);
+        return project;
+      }
 
-    if (project && project.status === 'failed') {
-      throw new Error(`Project analysis failed: ${project.errorMessage}`);
+      if (project && project.status === 'failed') {
+        throw new Error(`Project analysis failed: ${project.errorMessage}`);
+      }
+    } catch (pollErr) {
+      if (pollErr.message && pollErr.message.includes('Project analysis failed')) {
+        throw pollErr;
+      }
+      // Transient socket reset during heavy processing, retry next loop iteration
     }
   }
 
@@ -295,6 +340,79 @@ async function runRegressionSuite() {
   assert(ambProject.detectedTechnologies.backend.length === 0, 'No server hallucinated for ambiguous scripts');
   assert(ambProject.detectedTechnologies.database.length === 0, 'No database hallucinated for ambiguous scripts');
   assert(ambAnalysis.coverage.limitationNotice.length > 0, 'Uncertainty limitation notice disclosed');
+
+  // --------------------------------------------------------------------------
+  // TEST CASE 5: Polyglot Full-Stack (Smart-news-Digest)
+  // --------------------------------------------------------------------------
+  console.log('\n--- 5. Testing Polyglot Full-Stack Project (Smart-news-Digest) ---');
+  const smartZip = await createSmartNewsDigestZip();
+  const smartProject = await uploadAndPoll(smartZip);
+  const smartAnalysis = smartProject.structuredAnalysis;
+
+  console.log('\nInspecting Smart-news-Digest Structured Analysis:');
+  assert(Boolean(smartAnalysis), 'Smart-news-Digest structuredAnalysis exists');
+
+  // Verify Project Name is preserved and NOT overwritten by boilerplate "vite_react_shadcn_ts"
+  assert(smartProject.projectName !== 'vite_react_shadcn_ts', 'Project name is not overwritten by boilerplate vite_react_shadcn_ts');
+  assert(smartProject.projectName.toLowerCase().includes('smart-news-digest'), 'Project name accurately reflects Smart-news-Digest (got: ' + smartProject.projectName + ')');
+
+  // Architecture Model assertion
+  assert(smartAnalysis.architecture.architectureType === 'polyglot_fullstack', 'Architecture type is polyglot_fullstack (got: ' + smartAnalysis.architecture.architectureType + ')');
+  assert(smartAnalysis.api.communicationModel === 'custom_rest_endpoints', 'Communication model is custom_rest_endpoints');
+
+  // Technology Stack assertions
+  assert(smartProject.detectedTechnologies.frontend.includes('React'), 'React detected in frontend');
+  assert(smartProject.detectedTechnologies.backend.some(b => b.includes('FastAPI')), 'FastAPI detected in backend: ' + smartProject.detectedTechnologies.backend.join(', '));
+  assert(smartAnalysis.technologies.sourceLanguages.some(l => l.language === 'Python' && l.role === 'backend_service_runtime'), 'Python classified as backend_service_runtime');
+  assert(Boolean(smartAnalysis.technologies.backendRuntime && smartAnalysis.technologies.backendRuntime.includes('Python')), 'Backend runtime identified as Python: ' + smartAnalysis.technologies.backendRuntime);
+
+  // FastAPI REST Endpoints detected
+  const endpointPaths = smartAnalysis.api.serverRestEndpoints.map(e => e.path);
+  console.log('  Detected server REST endpoints:', endpointPaths);
+  assert(endpointPaths.includes('/news') || endpointPaths.includes('/audio') || endpointPaths.includes('/summarize'), 'FastAPI REST routes detected (/news, /audio, /summarize)');
+
+  // Database / Storage: LocalStorage detected, NO active Supabase or MongoDB
+  assert(smartAnalysis.database.summary.toLowerCase().includes('localstorage'), 'Browser LocalStorage identified in datastore summary: ' + smartAnalysis.database.summary);
+  assert(smartAnalysis.database.databaseType === 'none_detected', 'Database type is none_detected (no remote server database)');
+  assert(!smartProject.detectedTechnologies.database.includes('MongoDB'), 'MongoDB is NOT hallucinated');
+  assert(!smartProject.detectedTechnologies.database.includes('Mongoose'), 'Mongoose is NOT hallucinated');
+  assert(!smartProject.detectedTechnologies.backend.includes('Express'), 'Express is NOT hallucinated');
+
+  // Reconciled Coverage Accounting
+  assert(smartAnalysis.coverage.inventoryReconciled === true, 'Coverage accounting is strictly reconciled');
+
+  // Module Inspection: Python backend files correctly classified
+  const mainPyMod = smartAnalysis.modules.find(m => m.path.includes('main.py'));
+  assert(Boolean(mainPyMod), 'main.py inspected as module');
+  if (mainPyMod) {
+    assert(mainPyMod.type === 'entry_point', 'main.py classified as entry_point (got: ' + mainPyMod.type + ')');
+    assert(mainPyMod.responsibilities.some(r => r.includes('FastAPI')), 'main.py responsibilities include FastAPI server initialization');
+  }
+
+  const nlpMod = smartAnalysis.modules.find(m => m.path.includes('nlp_pipeline.py'));
+  assert(Boolean(nlpMod), 'nlp_pipeline.py inspected as module');
+  if (nlpMod) {
+    assert(nlpMod.type === 'service', 'nlp_pipeline.py classified as service');
+    assert(nlpMod.responsibilities.some(r => r.toLowerCase().includes('nlp') || r.toLowerCase().includes('textrank') || r.toLowerCase().includes('summariz')), 'nlp_pipeline.py responsibilities reflect NLP/TextRank summarization');
+  }
+
+  // DOCX Generation & Verification
+  assert(Boolean(smartProject.reportFilePath) && fs.existsSync(smartProject.reportFilePath), 'DOCX file generated on disk at ' + smartProject.reportFilePath);
+
+  console.log('\nInspecting generated Smart-news-Digest DOCX package...');
+  const smartDocxZip = new AdmZip(smartProject.reportFilePath);
+  const smartDocXmlEntry = smartDocxZip.getEntry('word/document.xml');
+  assert(Boolean(smartDocXmlEntry), 'word/document.xml exists in generated DOCX');
+
+  const smartMediaEntry = smartDocxZip.getEntries().find(e => e.entryName.startsWith('word/media/') && e.entryName.endsWith('.png'));
+  assert(Boolean(smartMediaEntry), 'Architecture Diagram PNG embedded in DOCX (' + (smartMediaEntry ? smartMediaEntry.entryName : 'none') + ')');
+
+  const smartDocXmlText = smartDocxZip.readAsText(smartDocXmlEntry);
+  assert(smartDocXmlText.includes('Figure 6.1'), 'Figure 6.1 caption present in document.xml');
+  assert(smartDocXmlText.includes('FastAPI'), 'FastAPI referenced in document.xml');
+  assert(!smartDocXmlText.includes('Express API server'), 'No hallucinated Express API server claims in document.xml');
+  assert(!smartDocXmlText.includes('MongoDB'), 'No hallucinated MongoDB claims in document.xml');
+  assert(!smartDocXmlText.includes('Mongoose'), 'No hallucinated Mongoose claims in document.xml');
 
   console.log('\n===============================================================');
   console.log(`ALL TESTS PASSED! (${passedAssertions}/${totalAssertions} assertions passed)`);

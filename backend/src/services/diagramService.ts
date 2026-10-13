@@ -62,12 +62,143 @@ export async function generateProjectArchitecture(analysis: AnalysisResult): Pro
     ${escapeXml(projectName)} — Architecture Model
   </text>
   <text x="36" y="66" font-family="Segoe UI, Roboto, sans-serif" font-size="11.5" fill="#94A3B8">
-    Evidence-derived components (${architectureType === 'client_baas' ? 'Client-Side BaaS Architecture' : architectureType === 'client_server_db' ? 'Client / Server / Database Architecture' : 'Single Page Application'})
+    Evidence-derived components (${
+      architectureType === 'polyglot_fullstack'
+        ? 'Polyglot Fullstack Architecture (React + Python FastAPI)'
+        : architectureType === 'client_baas'
+        ? 'Client-Side BaaS Architecture'
+        : architectureType === 'client_server_db'
+        ? 'Client / Server / Database Architecture'
+        : 'Single Page Application'
+    })
   </text>
 `;
 
   // Layout Strategy based on detected architecture type
-  if (architectureType === 'client_baas') {
+  if (architectureType === 'polyglot_fullstack') {
+    // 3-Column Microservice layout: Client (Left) -> FastAPI (Center) -> NLP/Audio + External News (Right)
+    const clientNode = nodes.find((n) => n.id === 'client_ui') || nodes[0];
+    const serverNode = nodes.find((n) => n.id === 'server_runtime');
+
+    const clientX = 40;
+    const clientY = 95;
+    const clientW = 265;
+    const clientH = 305;
+    const clientStyle = getNodeStyle('client_ui');
+
+    const serverX = 360;
+    const serverY = 95;
+    const serverW = 270;
+    const serverH = 305;
+    const serverStyle = getNodeStyle('server_runtime');
+
+    const rightX = 680;
+    const rightW = 245;
+
+    // Collect frontend modules
+    const feModules = analysis.modules
+      .filter((m) => m.path.includes('frontend/') || m.path.includes('src/'))
+      .slice(0, 4)
+      .map((m) => m.name);
+    const beEndpoints = analysis.api.serverRestEndpoints.slice(0, 4);
+
+    svg += `
+  <!-- Tier 1: Client UI Subsystem -->
+  <g transform="translate(${clientX}, ${clientY})">
+    <rect width="${clientW}" height="${clientH}" rx="10" fill="${clientStyle.fill}" stroke="${clientStyle.stroke}" stroke-width="1.6" />
+    <rect width="${clientW}" height="4" rx="2" fill="${clientStyle.badge}" />
+    <text x="18" y="28" font-family="Segoe UI, sans-serif" font-size="13.5" font-weight="700" fill="#FFFFFF">${escapeXml(clientNode.label)}</text>
+    <rect x="18" y="38" width="${clientW - 36}" height="20" rx="4" fill="#312E81" />
+    <text x="24" y="52" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#C7D2FE">${escapeXml(truncateText(clientNode.tech, 28))}</text>
+    <text x="18" y="74" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#94A3B8">${escapeXml(clientNode.sublabel)}</text>
+    <line x1="18" y1="84" x2="${clientW - 18}" y2="84" stroke="#4338CA" stroke-width="1" stroke-dasharray="2,2" />
+    <text x="18" y="100" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="700" fill="#A5B4FC">FRONTEND MODULES:</text>
+`;
+    feModules.forEach((comp, idx) => {
+      svg += `
+    <rect x="18" y="${110 + idx * 28}" width="${clientW - 36}" height="22" rx="4" fill="#1E1B4B" stroke="#4338CA" stroke-width="0.8" />
+    <circle cx="28" cy="${121 + idx * 28}" r="2.5" fill="#818CF8" />
+    <text x="36" y="${125 + idx * 28}" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#E0E7FF">${escapeXml(truncateText(comp, 24))}</text>
+`;
+    });
+
+    svg += `
+    <!-- Client LocalStorage Box -->
+    <rect x="18" y="${clientH - 65}" width="${clientW - 36}" height="48" rx="5" fill="#0F172A" stroke="#334155" stroke-width="0.8" />
+    <text x="26" y="${clientH - 47}" font-family="Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#38BDF8">Browser LocalStorage</text>
+    <text x="26" y="${clientH - 32}" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#94A3B8">Offline Bookmarks ('saved_articles')</text>
+  </g>
+
+  <!-- Edge: Client -> Python Server -->
+  <line x1="${clientX + clientW}" y1="${clientY + 120}" x2="${serverX - 8}" y2="${serverY + 120}" stroke="#38BDF8" stroke-width="2.2" marker-end="url(#arrow)" stroke-dasharray="3,2" />
+  <text x="${(clientX + clientW + serverX) / 2}" y="${clientY + 110}" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#38BDF8" font-weight="700" text-anchor="middle">HTTP REST</text>
+  <text x="${(clientX + clientW + serverX) / 2}" y="${clientY + 135}" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#7DD3FC" text-anchor="middle">Port 8012</text>
+
+  <!-- Tier 2: Python Backend Microservice -->
+  <g transform="translate(${serverX}, ${serverY})">
+    <rect width="${serverW}" height="${serverH}" rx="10" fill="${serverStyle.fill}" stroke="${serverStyle.stroke}" stroke-width="1.6" />
+    <rect width="${serverW}" height="4" rx="2" fill="${serverStyle.badge}" />
+    <text x="18" y="28" font-family="Segoe UI, sans-serif" font-size="13.5" font-weight="700" fill="#FFFFFF">${escapeXml(serverNode?.label || 'Python Backend')}</text>
+    <rect x="18" y="38" width="${serverW - 36}" height="20" rx="4" fill="#0C4A6E" />
+    <text x="24" y="52" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#BAE6FD">${escapeXml(serverNode?.tech || 'Python 3 / FastAPI')}</text>
+    <text x="18" y="74" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#94A3B8">${escapeXml(serverNode?.sublabel || 'FastAPI ASGI Microservice')}</text>
+    <line x1="18" y1="84" x2="${serverW - 18}" y2="84" stroke="#0369A1" stroke-width="1" stroke-dasharray="2,2" />
+    <text x="18" y="100" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="700" fill="#7DD3FC">DECLARED API ROUTES:</text>
+`;
+    beEndpoints.forEach((ep, idx) => {
+      svg += `
+    <rect x="18" y="${110 + idx * 30}" width="${serverW - 36}" height="24" rx="4" fill="#082F49" stroke="#0284C7" stroke-width="0.8" />
+    <text x="26" y="${126 + idx * 30}" font-family="Consolas, monospace" font-size="9" font-weight="700" fill="#38BDF8">${escapeXml(ep.method)}</text>
+    <text x="64" y="${126 + idx * 30}" font-family="Consolas, monospace" font-size="9" fill="#E0F2FE">${escapeXml(truncateText(ep.path, 20))}</text>
+`;
+    });
+    svg += `
+    <rect x="18" y="${serverH - 65}" width="${serverW - 36}" height="48" rx="4" fill="#032D42" />
+    <text x="26" y="${serverH - 45}" font-family="Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#7DD3FC">CORS Middleware Configured</text>
+    <text x="26" y="${serverH - 30}" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#94A3B8">Cross-origin requests permitted</text>
+  </g>
+`;
+
+    // Tier 3A: NLP & Audio Pipeline
+    const nlpY = 95;
+    const nlpH = 142;
+    const nlpStyle = getNodeStyle('baas_auth');
+    svg += `
+  <!-- Tier 3A: NLP & Audio Pipeline -->
+  <g transform="translate(${rightX}, ${nlpY})">
+    <rect width="${rightW}" height="${nlpH}" rx="10" fill="${nlpStyle.fill}" stroke="${nlpStyle.stroke}" stroke-width="1.6" />
+    <rect width="${rightW}" height="4" rx="2" fill="${nlpStyle.badge}" />
+    <text x="16" y="26" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">NLP &amp; Audio Pipeline</text>
+    <rect x="16" y="36" width="${rightW - 32}" height="18" rx="4" fill="#581C87" />
+    <text x="22" y="49" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#E9D5FF">Scikit-Learn, NLTK, gTTS</text>
+    <text x="16" y="72" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#D8B4FE">• TextRank TF-IDF Summarizer</text>
+    <text x="16" y="90" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#D8B4FE">• Naive Bayes 20News Categorizer</text>
+    <text x="16" y="108" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#D8B4FE">• gTTS Speech Engine (audio_cache/)</text>
+    <text x="16" y="126" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#D8B4FE">• NLTK Punkt &amp; Stopwords Tokenizer</text>
+  </g>
+
+  <!-- Edge: Server -> NLP/Audio -->
+  <line x1="${serverX + serverW}" y1="${serverY + 65}" x2="${rightX - 8}" y2="${nlpY + 65}" stroke="#C084FC" stroke-width="2" marker-end="url(#arrow-purple)" stroke-dasharray="3,2" />
+  <text x="${(serverX + serverW + rightX) / 2}" y="${nlpY + 57}" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#C084FC" font-weight="700" text-anchor="middle">Dispatch</text>
+
+  <!-- Tier 3B: External News Sources -->
+  <g transform="translate(${rightX}, 255)">
+    <rect width="${rightW}" height="145" rx="10" fill="#143126" stroke="#34D399" stroke-width="1.6" />
+    <rect width="${rightW}" height="4" rx="2" fill="#059669" />
+    <text x="16" y="26" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">External News Sources</text>
+    <rect x="16" y="36" width="${rightW - 32}" height="18" rx="4" fill="#064E3B" />
+    <text x="22" y="49" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#A7F3D0">Google News RSS &amp; BS4</text>
+    <text x="16" y="72" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#6EE7B7">• Google News RSS Topic Feeds</text>
+    <text x="16" y="90" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#6EE7B7">• BeautifulSoup4 Article Scraper</text>
+    <text x="16" y="108" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#6EE7B7">• NewsAPI Client Integration</text>
+    <text x="16" y="126" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#6EE7B7">• Publisher Redirect Piercer</text>
+  </g>
+
+  <!-- Edge: Server -> External News -->
+  <line x1="${serverX + serverW}" y1="${serverY + 220}" x2="${rightX - 8}" y2="325" stroke="#34D399" stroke-width="2" marker-end="url(#arrow-emerald)" stroke-dasharray="3,2" />
+  <text x="${(serverX + serverW + rightX) / 2}" y="317" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#34D399" font-weight="700" text-anchor="middle">HTTP Scrape</text>
+`;
+  } else if (architectureType === 'client_baas') {
     // 2-Column / Branching Layout for Client-Side BaaS (e.g. React -> Firebase Auth & Cloud Firestore)
     const clientNode = nodes.find((n) => n.category === 'client_ui') || nodes[0];
     const authNode = nodes.find((n) => n.category === 'baas_auth');

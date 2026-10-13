@@ -50,7 +50,7 @@ export interface ArchitectureEdge {
 }
 
 export interface ArchitectureModel {
-  architectureType: 'client_baas' | 'client_server_db' | 'frontend_spa_only' | 'server_api_only' | 'custom_multi_tier';
+  architectureType: 'client_baas' | 'client_server_db' | 'frontend_spa_only' | 'server_api_only' | 'custom_multi_tier' | 'polyglot_fullstack';
   architectureSummary: string;
   nodes: ArchitectureNode[];
   edges: ArchitectureEdge[];
@@ -158,7 +158,7 @@ export interface ApiAnalysis {
 
 export interface LanguageInventory {
   language: string;
-  role: 'primary_application_runtime' | 'markup_styling' | 'offline_utility_script' | 'build_configuration' | 'other';
+  role: 'primary_application_runtime' | 'backend_service_runtime' | 'markup_styling' | 'offline_utility_script' | 'build_configuration' | 'other';
   fileCount: number;
   evidenceFiles: string[];
 }
@@ -171,6 +171,7 @@ export interface StructuredProjectModel {
   findings: Finding[];
   technologies: {
     primaryRuntime: string;
+    backendRuntime?: string;
     languages: string[];
     sourceLanguages: LanguageInventory[];
     frontend: string[];
@@ -181,6 +182,11 @@ export interface StructuredProjectModel {
     buildTools: string[];
     testTools: string[];
     packageManagers: string[];
+  };
+  subsystems?: {
+    frontend?: string;
+    backend?: string;
+    communicationStatus: string;
   };
   modules: ModuleAnalysis[];
   database: DatabaseAnalysis;

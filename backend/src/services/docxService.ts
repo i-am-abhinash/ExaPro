@@ -242,7 +242,7 @@ export async function generateDocxReport(
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
         new TableRow({
-          cantSplit: true,
+          cantSplit: false,
           children: [
             new TableCell({
               shading: { fill: codeBoxBg },
@@ -547,7 +547,7 @@ export async function generateDocxReport(
                 left: { style: BorderStyle.SINGLE, size: 4, color: borderColor },
                 right: { style: BorderStyle.SINGLE, size: 4, color: borderColor },
               },
-              children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.primaryRuntime, bold: true, color: secondaryNavy, font: 'Calibri' })] })],
+              children: [new Paragraph({ children: [new TextRun({ text: analysis.technologies.backendRuntime ? `${analysis.technologies.primaryRuntime} & ${analysis.technologies.backendRuntime}` : analysis.technologies.primaryRuntime, bold: true, color: secondaryNavy, font: 'Calibri' })] })],
             }),
           ],
         }),
@@ -576,7 +576,9 @@ export async function generateDocxReport(
                   children: [
                     new TextRun({
                       text:
-                        analysis.architecture.architectureType === 'client_baas'
+                        analysis.architecture.architectureType === 'polyglot_fullstack'
+                          ? 'Polyglot Full-Stack (Distributed Client & Microservice Runtime)'
+                          : analysis.architecture.architectureType === 'client_baas'
                           ? 'Client-Side BaaS (Serverless Cloud Services)'
                           : analysis.architecture.architectureType === 'client_server_db'
                           ? 'Multi-Tier Client / Server / Database'

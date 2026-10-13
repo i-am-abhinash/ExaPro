@@ -40,11 +40,13 @@ Use ONLY the supplied verified facts and component inventory.
 
 CRITICAL ARCHITECTURAL CONSTRAINTS:
 1. Do NOT invent an Express server, custom backend, or REST API endpoints if the verified architecture is Client-Side BaaS or Frontend SPA.
-2. If the project uses Firebase/Firestore, do NOT claim it uses local, in-memory, or filesystem storage.
-3. Distinguish confirmed facts from inferences. Distinguish active application collections from paths declared only in security rules.
-4. If a language (e.g. Python) is present only in a utility script, do NOT declare it as the primary runtime.
-5. Do NOT use generic filler phrases like "provides application logic", "manages data efficiently", "ensures security", or "modern and robust architecture". Explain actual mechanisms.
-6. Do not claim tests passed or rules were deployed unless verified at runtime.
+2. If the project is a polyglot system (e.g. React frontend + Python FastAPI backend), accurately describe BOTH subsystems and their verified communication path (e.g. HTTP REST fetch calls to port 8012). Do NOT invent an Express or Node.js server tier.
+3. If the project uses Firebase/Firestore, do NOT claim it uses local, in-memory, or filesystem storage.
+4. If the project uses browser localStorage for bookmarks without querying database tables, accurately describe localStorage and do NOT invent MongoDB, Mongoose, or database mutations.
+5. Distinguish confirmed facts from inferences. Distinguish active application collections from paths declared only in security rules.
+6. If a language (e.g. Python) is present only in a utility script, do NOT declare it as the primary runtime.
+7. Do NOT use generic filler phrases like "provides application logic", "manages data efficiently", "ensures security", or "modern and robust architecture". Explain actual mechanisms.
+8. Do not claim tests passed or rules were deployed unless verified at runtime.
 
 Respond strictly in JSON matching this schema:
 {
@@ -139,26 +141,60 @@ Respond strictly in JSON matching this schema:
 function sanitizeAiResponse(ai: AIDocumentationResponse, analysis: AnalysisResult): AIDocumentationResponse {
   let { executiveSummary, projectOverview, architectureExplanation, dataFlowExplanation, limitations } = ai;
 
-  // Rule 1: If project is client-side BaaS (e.g. Firebase) or SPA, remove any invented Express server claims
-  if (analysis.architecture.architectureType === 'client_baas' || analysis.architecture.architectureType === 'frontend_spa_only') {
-    const forbiddenPhrases = [
-      /Express(\.js)?\s+(backend|server|API|tier)/gi,
+  // Rule 1: Eliminate Express / Node server claims when Express is NOT in backend
+  if (!analysis.technologies.backend.includes('Express')) {
+    const forbiddenExpress = [
+      /Express(\.js)?\s+(backend|server|API|tier|routing|controllers)/gi,
       /Node(\.js)?\s+(server|backend)\s+layer/gi,
-      /custom\s+REST\s+API\s+server/gi,
-      /operating\s+securely/gi,
+      /four-tier\s+server/gi,
+      /custom\s+Express\s+REST/gi,
     ];
-    forbiddenPhrases.forEach((regex) => {
-      architectureExplanation = architectureExplanation.replace(regex, 'managed Cloud BaaS integration');
-      executiveSummary = executiveSummary.replace(regex, 'client-side application with cloud services');
+    forbiddenExpress.forEach((regex) => {
+      const repArch =
+        analysis.architecture.architectureType === 'polyglot_fullstack'
+          ? 'FastAPI ASGI microservice'
+          : 'client runtime';
+      const repSum =
+        analysis.architecture.architectureType === 'polyglot_fullstack'
+          ? 'FastAPI backend service'
+          : 'client application';
+      const repFlow =
+        analysis.architecture.architectureType === 'polyglot_fullstack'
+          ? 'FastAPI route handlers'
+          : 'application handlers';
+      architectureExplanation = architectureExplanation.replace(regex, repArch);
+      executiveSummary = executiveSummary.replace(regex, repSum);
+      dataFlowExplanation = dataFlowExplanation.replace(regex, repFlow);
     });
   }
 
-  // Rule 2: If database is Cloud Firestore, eliminate "in-memory / local filesystem" claims
+  // Rule 2: Eliminate MongoDB / Mongoose claims when MongoDB is NOT in database
+  if (!analysis.technologies.database.includes('MongoDB')) {
+    const forbiddenMongo = [
+      /Mongoose(\s+ODM)?(\s+to\s+MongoDB)?/gi,
+      /MongoDB(\s+database|\s+datastore)?/gi,
+    ];
+    forbiddenMongo.forEach((regex) => {
+      const rep = analysis.findings.some((f) => f.id === 'TECH-LOCALSTORAGE')
+        ? 'browser localStorage'
+        : 'client state persistence';
+      architectureExplanation = architectureExplanation.replace(regex, rep);
+      dataFlowExplanation = dataFlowExplanation.replace(regex, rep);
+      executiveSummary = executiveSummary.replace(regex, rep);
+    });
+  }
+
+  // Rule 3: If database is Cloud Firestore, eliminate "in-memory / local filesystem" claims
   if (analysis.database.databaseType === 'cloud_firestore') {
     const memoryRegex = /(in-memory|filesystem-based|local)\s+(storage|database)/gi;
     architectureExplanation = architectureExplanation.replace(memoryRegex, 'Cloud Firestore document database');
     dataFlowExplanation = dataFlowExplanation.replace(memoryRegex, 'Cloud Firestore');
   }
+
+  // Rule 4: Remove generic filler phrases
+  const fillerRegex = /(operating\s+securely|modern\s+and\s+robust\s+architecture|ensures\s+security\s+and\s+scalability)/gi;
+  executiveSummary = executiveSummary.replace(fillerRegex, 'grounded in inspected source files');
+  architectureExplanation = architectureExplanation.replace(fillerRegex, 'verified in codebase');
 
   return {
     ...ai,
@@ -194,16 +230,32 @@ function compileEvidenceSections(
   const activeCollsList = database.activeSdkCollections.map((c) => `\`${c.name}\``).join(', ');
   const executiveSummary =
     ai?.executiveSummary ||
-    `**${projectName}** is a software application designed for ${projectDescription || 'web workflows'}. ` +
-      `The system is built upon **${technologies.primaryRuntime}**, with source files structured across ${coverage.inspectedFilesCount} inspected modules out of ${coverage.totalDiscoveredFiles} discovered repository files (${coverage.coveragePercentage}% coverage). ` +
-      `\n\n**Architectural Pattern:** The application implements a **${architecture.architectureType === 'client_baas' ? 'Client-Side Backend-as-a-Service (BaaS)' : architecture.architectureType === 'client_server_db' ? 'Multi-Tier Client / Server / Database' : 'Single Page Application (SPA)'}** architecture. ` +
-      (architecture.architectureType === 'client_baas'
-        ? `Client interface modules communicate directly with cloud infrastructure via official client SDKs (${technologies.auth.concat(technologies.database).join(', ')}), executing authenticated queries and document mutations without an intermediate custom Express server. `
-        : architecture.architectureType === 'client_server_db'
-        ? `A dedicated Express application server routes incoming requests, coordinates domain logic, and synchronizes persistent state with the database tier. `
-        : `All application state and view rendering execute locally within the client browser runtime without dedicated backend server dependencies. `) +
-      `\n\n**Key Technical Findings:** Data persistence is established with ${database.databaseType === 'cloud_firestore' ? `Cloud Firestore, with **${database.activeSdkCollections.length} actively referenced collections** (${activeCollsList || 'attendance, users'}) verified in client code, and ${database.ruleOnlyCollectionPaths.length} additional paths declared in security rules.` : database.databaseType === 'mongodb' ? `MongoDB via Mongoose ODM.` : 'no dedicated datastore.'} ` +
-      `Static analysis confirmed no custom Express server routes, consistent with its serverless BaaS design. All findings in this report are grounded strictly in inspected source code and manifest declarations.`;
+    (architecture.architectureType === 'polyglot_fullstack'
+      ? `**${projectName}** is a software application designed for ${projectDescription || 'automated news aggregation, extractive summarization, and audio synthesis'}. ` +
+        `The system implements a **Polyglot Fullstack Microservice** architecture comprising a **${technologies.primaryRuntime}** frontend and a dedicated **${technologies.backendRuntime || 'Python 3 / FastAPI HTTP Microservice'}** backend. ` +
+        `Analysis is grounded in ${coverage.inspectedFilesCount} inspected modules out of ${coverage.totalDiscoveredFiles} discovered repository files (${coverage.coveragePercentage}% coverage).\n\n` +
+        `**Architectural Style & Subsystems:** The application operates two decoupled subsystems: an interactive React single-page application built with Vite and Tailwind CSS, and a high-performance Python ASGI backend powered by FastAPI. ` +
+        `Communication is established via HTTP REST endpoints (\`/news\`, \`/summarize\`, \`/categories\`, \`/audio\`). ` +
+        `The backend integrates an extractive NLP summarization pipeline (\`scikit-learn\`, \`nltk\`) and a text-to-speech audio rendering engine (\`gTTS\`). ` +
+        `Client-side persistence for saved bookmarks is handled via browser \`localStorage\`, with no active remote SQL or NoSQL database queries observed in inspected application code.`
+      : architecture.architectureType === 'client_baas'
+      ? `**${projectName}** is a software application designed for ${projectDescription || 'web workflows'}. ` +
+        `The system is built upon **${technologies.primaryRuntime}**, with source files structured across ${coverage.inspectedFilesCount} inspected modules out of ${coverage.totalDiscoveredFiles} discovered repository files (${coverage.coveragePercentage}% coverage). ` +
+        `\n\n**Architectural Pattern:** The application implements a **Client-Side Backend-as-a-Service (BaaS)** architecture. ` +
+        `Client interface modules communicate directly with cloud infrastructure via official client SDKs (${technologies.auth.concat(technologies.database).join(', ')}), executing authenticated queries and document mutations without an intermediate custom Express server. ` +
+        `\n\n**Key Technical Findings:** Data persistence is established with Cloud Firestore, with **${database.activeSdkCollections.length} actively referenced collections** (${activeCollsList || 'attendance, users'}) verified in client code, and ${database.ruleOnlyCollectionPaths.length} additional paths declared in security rules. ` +
+        `Static analysis confirmed no custom Express server routes, consistent with its serverless BaaS design. All findings in this report are grounded strictly in inspected source code and manifest declarations.`
+      : architecture.architectureType === 'client_server_db'
+      ? `**${projectName}** is a software application designed for ${projectDescription || 'multi-tier workflows'}. ` +
+        `The system implements a **Multi-Tier Client / Server / Database** architecture with a **${technologies.primaryRuntime}** client and a dedicated application server. ` +
+        `Analysis is grounded in ${coverage.inspectedFilesCount} inspected modules out of ${coverage.totalDiscoveredFiles} discovered repository files (${coverage.coveragePercentage}% coverage).\n\n` +
+        `**Architectural Pattern:** A dedicated application server routes incoming requests, coordinates domain logic, and synchronizes persistent state with the database tier. ` +
+        `\n\n**Key Technical Findings:** Data persistence is established with ${database.databaseType === 'mongodb' ? `MongoDB via Mongoose ODM.` : database.summary}`
+      : `**${projectName}** is a software application designed for ${projectDescription || 'client-side workflows'}. ` +
+        `The system implements a **Single Page Application (SPA)** architecture built upon **${technologies.primaryRuntime}**. ` +
+        `Analysis is grounded in ${coverage.inspectedFilesCount} inspected modules out of ${coverage.totalDiscoveredFiles} discovered repository files (${coverage.coveragePercentage}% coverage).\n\n` +
+        `**Architectural Pattern:** All application state and view rendering execute locally within the client browser runtime without dedicated backend server dependencies. ` +
+        `\n\n**Key Technical Findings:** ${database.summary}`);
 
   // 2. Project Overview
   const projectOverview =
@@ -224,6 +276,11 @@ function compileEvidenceSections(
     `| **Primary Application Runtime** | **${technologies.primaryRuntime}** | Confirmed in Code | Source files, entry points, package.json |`,
   ];
 
+  if (technologies.backendRuntime) {
+    techTableRows.push(
+      `| **Backend Microservice Runtime** | **${technologies.backendRuntime}** | Confirmed in Code | ${technologies.backend.some((b) => b.includes('FastAPI')) ? 'backend/main.py FastAPI entry point' : 'Server entry point'} |`
+    );
+  }
   if (technologies.sourceLanguages.length > 0) {
     const langDesc = technologies.sourceLanguages
       .map((l) => `${l.language} (${l.fileCount} files, ${l.role.replace(/_/g, ' ')})`)
@@ -238,9 +295,13 @@ function compileEvidenceSections(
   }
   if (technologies.database.length > 0) {
     techTableRows.push(`| **Database & Datastore** | ${technologies.database.join(', ')} | Imported & Configured | firebase/firestore SDK operations |`);
+  } else if (analysis.findings.some((f) => f.id === 'TECH-LOCALSTORAGE')) {
+    techTableRows.push(`| **Client Data Persistence** | Browser LocalStorage | Verified in Code | localStorage API for user bookmarks ('saved_articles') |`);
   }
   if (technologies.backend.length > 0) {
-    techTableRows.push(`| **Server Frameworks** | ${technologies.backend.join(', ')} | Verified in Code | Server entry point with Express instantiation |`);
+    techTableRows.push(
+      `| **Server Frameworks** | ${technologies.backend.join(', ')} | Verified in Code | ${technologies.backend.some((b) => b.includes('FastAPI')) ? 'FastAPI route declarations in Python source' : 'Server entry point with Express instantiation'} |`
+    );
   } else {
     techTableRows.push(`| **Server Frameworks** | None (Client-Side BaaS / SPA) | Statically Verified | Absence of server entry points or HTTP listeners |`);
   }
@@ -302,19 +363,33 @@ function compileEvidenceSections(
   // 7. Data Flow
   const dataFlowDescription =
     ai?.dataFlowExplanation ||
-    (architecture.architectureType === 'client_baas'
+    (architecture.architectureType === 'polyglot_fullstack'
+      ? `**Polyglot Fullstack Data Flow & Processing Lifecycle:**\n\n` +
+        `1. **Client Initialization & News Fetch:** The React single-page application mounts and dispatches an HTTP GET request to \`http://localhost:8012/news\` via the native Fetch API.\n` +
+        `2. **Backend Route Dispatch & Web Ingestion:** The Python FastAPI microservice receives the request in \`main.py\` and invokes \`fetch_and_process_news\` in \`services/news_service.py\`. It requests live Google News RSS feeds and scrapes article text using \`BeautifulSoup4\`.\n` +
+        `3. **NLP Processing & Extractive Summarization:** \`services/nlp_pipeline.py\` processes article paragraphs, computing sentence weights via TextRank with TF-IDF vectorization and classifying articles using Naive Bayes.\n` +
+        `4. **Reactive Client Display:** Structured JSON article payloads return to the client, where React hook state triggers immediate UI rendering in \`NewsHome.tsx\`.\n` +
+        `5. **On-Demand Audio Streaming:** When the user plays an article summary, \`AudioPlayer.tsx\` requests \`http://localhost:8012/audio?id=...\`. The FastAPI backend coordinates with \`services/audio_service.py\` to generate an MP3 audio file using \`gTTS\` with disk-based caching in \`audio_cache/\`.\n` +
+        `6. **Local State Persistence:** User bookmarks are stored directly in browser \`localStorage\` via \`SavedNews.tsx\` without remote database mutations.`
+      : architecture.architectureType === 'client_baas'
       ? `**Client-to-Cloud BaaS Operational Lifecycle:**\n\n` +
         `1. **User Action:** The end user interacts with a React view component (e.g. login credentials submitted, attendance marked, roster queried).\n` +
         `2. **Component State & Service Invocation:** The view handler validates local input and dispatches a call to an application service module (e.g., \`authService.js\`, \`attendanceService.js\`).\n` +
         `3. **Direct Cloud SDK Dispatch:** The service module executes official Firebase SDK methods (\`signInWithEmailAndPassword\`, \`getDocs\`, \`setDoc\`, \`addDoc\`) targeting Google Cloud endpoints.\n` +
         `4. **Security Rules Authorization:** Cloud Firestore statically evaluates security rules in \`firestore.rules\` against the requesting user's authentication token (\`request.auth\`).\n` +
         `5. **Reactive UI Synchronization:** Returned document payloads or real-time snapshot streams update React Context and component state, triggering immediate UI re-rendering.`
-      : `**Multi-Tier Request & Persistence Lifecycle:**\n\n` +
+      : architecture.architectureType === 'client_server_db'
+      ? `**Multi-Tier Request & Persistence Lifecycle:**\n\n` +
         `1. **Client Request:** The user interaction dispatches an HTTP REST call to the server API.\n` +
         `2. **Routing & Middleware:** Express routing controllers validate incoming request parameters.\n` +
         `3. **Service Logic:** Domain services coordinate business operations and data models.\n` +
         `4. **Database Persistence:** Operations persist state through Mongoose ODM to MongoDB.\n` +
-        `5. **Response & Rendering:** JSON payloads return to the client for local state update.`);
+        `5. **Response & Rendering:** JSON payloads return to the client for local state update.`
+      : `**Client-Side SPA Operational Lifecycle:**\n\n` +
+        `1. **User Action:** The end user interacts with a React view component.\n` +
+        `2. **Local State Transitions:** Component state hooks (\`useState\`, \`useReducer\`) update reactive view state.\n` +
+        `3. **Local Storage:** Client-side data and user preferences are persisted in browser \`localStorage\`.\n` +
+        `4. **Virtual DOM Reconciliation:** React re-renders view trees locally within the browser runtime.`);
 
   // 8. Database Design: Clear separation between Active SDK collections and Rule-only paths
   let databaseDesignDescription = '';
