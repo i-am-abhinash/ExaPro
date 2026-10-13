@@ -8,6 +8,7 @@ export interface GlassModalProps {
   title?: string;
   description?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
@@ -17,6 +18,7 @@ export const GlassModal: React.FC<GlassModalProps> = ({
   title,
   description,
   children,
+  footer,
   maxWidth = 'md',
 }) => {
   // Close on Escape key
@@ -75,6 +77,9 @@ export const GlassModal: React.FC<GlassModalProps> = ({
 
             {/* Content */}
             <div className="space-y-4">{children}</div>
+
+            {/* Footer */}
+            {footer && <div className="pt-4 border-t border-white/5">{footer}</div>}
           </motion.div>
         </div>
       )}

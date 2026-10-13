@@ -200,23 +200,23 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 1: EXECUTIVE SUMMARY */}
-          <div id="section-summary" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-summary" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">1. Executive Summary & Project Profile</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.executiveSummary}
             </div>
           </div>
 
           {/* SECTION 2: PROJECT OVERVIEW */}
-          <div id="section-overview" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-overview" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">2. Project Overview & Capabilities</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.projectOverview}
             </div>
           </div>
 
           {/* SECTION 3: TECHNOLOGY STACK */}
-          <div id="section-tech" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-6">
+          <div id="section-tech" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-6">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">3. Technology Stack & Dependencies</h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -258,13 +258,13 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
               </div>
             </div>
 
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line pt-2 font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line pt-2 font-normal">
               {report.documentation.technologyStackDescription}
             </div>
           </div>
 
           {/* SECTION 4: PROJECT STRUCTURE */}
-          <div id="section-structure" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-structure" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">4. Directory Structure (ASCII Code Tree)</h2>
             <div className="bg-slate-950 p-5 rounded-2xl border border-white/10 font-mono text-[11px] text-slate-200 overflow-x-auto leading-relaxed max-h-96">
               <pre>{report.documentation.projectStructureTree}</pre>
@@ -272,67 +272,85 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 6: MODULE & COMPONENT DETAILS */}
-          <div id="section-modules" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-modules" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">6. Module & Component Details</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.moduleDetails}
             </div>
           </div>
 
           {/* SECTION 7: DATA FLOW */}
-          <div id="section-dataflow" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-dataflow" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">7. Data Flow & Communication</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.dataFlowDescription}
             </div>
           </div>
 
           {/* SECTION 8: DATABASE DESIGN */}
-          <div id="section-database" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-database" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">8. Database Design & Schemas</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.databaseDesignDescription}
             </div>
           </div>
 
           {/* SECTION 9: API DOCUMENTATION */}
-          <div id="section-api" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-api" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">9. API Documentation & Endpoints</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.apiDocumentationDescription}
             </div>
           </div>
 
           {/* SECTION 10: SETUP & EXECUTION */}
-          <div id="section-setup" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-setup" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">10. Setup & Execution Guide</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.setupAndExecutionInstructions}
             </div>
           </div>
 
           {/* SECTION 11: TESTING & QUALITY */}
-          <div id="section-testing" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-testing" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">11. Testing & Quality Verification</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.testingAndQualityDescription}
             </div>
           </div>
 
           {/* SECTION 12: LIMITATIONS */}
-          <div id="section-limitations" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-limitations" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">12. Limitations & Observations</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.limitationsAndObservations}
             </div>
           </div>
 
           {/* SECTION 13: APPENDIX */}
-          <div id="section-appendix" className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
+          <div id="section-appendix" className="glass-surface-opaque p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">13. Appendix & File Inventory</h2>
-            <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-normal">
               {report.documentation.appendix}
             </div>
+          </div>
+
+          {/* Bottom Export Action Card */}
+          <div className="glass-surface-elevated p-8 rounded-3xl border border-cyan-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-glass-lg">
+            <div className="space-y-1 text-center sm:text-left">
+              <h3 className="text-lg font-bold text-white">Camera-Ready Document Package</h3>
+              <p className="text-xs text-slate-400">
+                Download the complete typeset Word DOCX deliverable including embedded vector architecture topology.
+              </p>
+            </div>
+            <a
+              href={getDownloadDocxUrl(report.projectId)}
+              download
+              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-black text-sm shadow-xl shadow-cyan-500/25 transition-all transform hover:-translate-y-0.5 flex-shrink-0"
+            >
+              <Download className="w-4 h-4 text-slate-950" />
+              <span>Download DOCX Report</span>
+            </a>
           </div>
         </div>
       </div>

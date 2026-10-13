@@ -53,8 +53,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <nav className="flex items-center space-x-1 sm:space-x-2">
+        {/* Navigation Tabs with Coordinated Reveal */}
+        <motion.nav
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.45, delay: 0.12, ease: 'easeOut' }}
+          className="flex items-center space-x-1 sm:space-x-2"
+        >
           {/* Landing shortcut */}
           <button
             onClick={onReturnToLanding}
@@ -103,10 +108,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             <History className="w-4 h-4 text-violet-400" />
             <span>History</span>
           </button>
-        </nav>
+        </motion.nav>
 
         {/* Live System Health Indicators */}
-        <div className="hidden lg:flex items-center space-x-2 text-xs">
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.45, delay: 0.18, ease: 'easeOut' }}
+          className="hidden lg:flex items-center space-x-2 text-xs"
+        >
           {health?.database.isConnected ? (
             <GlassBadge variant="emerald" dot size="sm">
               MongoDB Active
@@ -126,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               Static Deterministic Engine
             </GlassBadge>
           )}
-        </div>
+        </motion.div>
       </div>
     </header>
   );

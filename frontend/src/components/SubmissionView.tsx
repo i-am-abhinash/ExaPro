@@ -13,13 +13,18 @@ import {
   Cpu,
   Sparkles,
   FileText,
+  X,
+  RefreshCw,
+  GitBranch,
 } from 'lucide-react';
 import { uploadZipProject, submitGitHubRepo, fetchProject, getDownloadDocxUrl } from '../services/api';
 import { AnalysisStatus } from '../types';
-import { GlassCard } from './ui/GlassCard';
-import { GlassButton } from './ui/GlassButton';
-import { GlassBadge } from './ui/GlassBadge';
-import { GlassInput } from './ui/GlassInput';
+import {
+  GlassCard,
+  GlassButton,
+  GlassBadge,
+  GlassInput,
+} from './ui';
 
 interface SubmissionViewProps {
   initialType?: 'zip' | 'github';
@@ -88,7 +93,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
     setErrorMessage(null);
     setIsSubmitting(true);
     setProgressPercent(10);
-    setStatusMessage('Initiating submission...');
+    setStatusMessage('Initiating repository evaluation...');
 
     try {
       let createdId = '';
@@ -138,112 +143,80 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
           }
         }
       } catch (err: any) {
-        console.warn('Status poll warning:', err);
+        console.warn('Polling error:', err);
       }
-    }, 1500);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [activeProjectId, projectStatus]);
 
-  const getStageState = (stageIndex: number) => {
-    if (projectStatus === 'completed') return 'completed';
-    if (projectStatus === 'failed') return 'failed';
-
-    const currentIdx =
-      projectStatus === 'inspecting'
-        ? 1
-        : projectStatus === 'analyzing'
-        ? 2
-        : projectStatus === 'generating_docx'
-        ? 3
-        : 0;
-
-    if (currentIdx > stageIndex) return 'completed';
-    if (currentIdx === stageIndex) return 'active';
-    return 'pending';
-  };
+  const pipelineStages = [
+    { key: 'inspecting', label: '1. Ingestion & Extraction', pct: 25 },
+    { key: 'analyzing', label: '2. Codebase & AST Inspection', pct: 50 },
+    { key: 'generating_docx', label: '3. Topology & AI Synthesis', pct: 75 },
+    { key: 'completed', label: '4. DOCX Report Compilation', pct: 100 },
+  ];
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-      {/* Title */}
+      {/* Workflow Header */}
       <div className="text-center space-y-2">
+        <GlassBadge variant="cyan" dot size="sm">
+          Guided Ingestion Workflow
+        </GlassBadge>
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-          Examine Project
+          Examine Project Repository
         </h1>
-        <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
-          Submit your codebase for automated evidence extraction, architecture graph synthesis, and DOCX technical reporting.
+        <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+          Upload a ZIP archive or specify a public GitHub repository for static analysis, architecture synthesis, and camera-ready technical documentation.
         </p>
       </div>
 
-      {!activeProjectId || projectStatus === 'failed' ? (
-        <GlassCard elevation="floating" className="p-6 sm:p-10 space-y-6">
-          {/* Method Selector Tabs */}
-          <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-midnight-900 border border-white/5">
-            <button
-              onClick={() => {
-                setActiveTab('zip');
-                setErrorMessage(null);
-              }}
-              className={`flex items-center justify-center space-x-2 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeTab === 'zip'
-                  ? 'bg-slate-800 text-cyan-300 shadow-glass-sm border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <UploadCloud className="w-4 h-4" />
-              <span>Upload Project ZIP</span>
-            </button>
+      {/* Main Guided Card */}
+      <GlassCard elevation="floating" className="p-6 sm:p-10 relative overflow-hidden">
+        <div className="corner-bracket-tl" />
+        <div className="corner-bracket-br" />
 
-            <button
-              onClick={() => {
-                setActiveTab('github');
-                setErrorMessage(null);
-              }}
-              className={`flex items-center justify-center space-x-2 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeTab === 'github'
-                  ? 'bg-slate-800 text-violet-300 shadow-glass-sm border border-violet-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Github className="w-4 h-4" />
-              <span>Import from GitHub</span>
-            </button>
-          </div>
-
-          {/* Error Banner */}
-          <AnimatePresence>
-            {errorMessage && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="p-4 rounded-2xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs flex items-start space-x-3 shadow-glass-sm"
-              >
-                <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-400 mt-0.5" />
-                <div>
-                  <p className="font-bold text-red-200">Submission Notice</p>
-                  <p className="mt-0.5 leading-relaxed">{errorMessage}</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Option A: ZIP Upload */}
-          {activeTab === 'zip' && (
-            <div className="space-y-4">
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center cursor-pointer transition-all duration-300 ${
-                  isDragging
-                    ? 'border-cyan-400 bg-cyan-950/20 shadow-glow-cyan'
-                    : selectedFile
-                    ? 'border-emerald-500/60 bg-emerald-950/10'
-                    : 'border-slate-700/60 hover:border-cyan-400/50 bg-slate-900/40'
+        {/* 1. Selection Tabs */}
+        {!isSubmitting && projectStatus !== 'completed' && (
+          <div className="space-y-6">
+            <div className="flex p-1.5 rounded-2xl bg-slate-900/80 border border-slate-800 max-w-md mx-auto shadow-inner">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('zip');
+                  setErrorMessage(null);
+                }}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition-all ${
+                  activeTab === 'zip'
+                    ? 'bg-gradient-to-r from-cyan-500/25 to-sky-500/25 text-cyan-200 border border-cyan-400/40 shadow-glow-cyan'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
+                <UploadCloud className="w-4 h-4" />
+                <span>ZIP Archive</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('github');
+                  setErrorMessage(null);
+                }}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition-all ${
+                  activeTab === 'github'
+                    ? 'bg-gradient-to-r from-violet-500/25 to-fuchsia-500/25 text-violet-200 border border-violet-400/40 shadow-glow-violet'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Github className="w-4 h-4" />
+                <span>GitHub Repository</span>
+              </button>
+            </div>
+
+            {/* TAB 1: ZIP Archive Upload Area */}
+            {activeTab === 'zip' && (
+              <div className="space-y-5">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -252,191 +225,243 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                   className="hidden"
                 />
 
-                <div className="space-y-4">
-                  <div className="w-16 h-16 mx-auto rounded-3xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-lg">
-                    {selectedFile ? (
-                      <FileArchive className="w-8 h-8 text-emerald-400" />
-                    ) : (
-                      <UploadCloud className="w-8 h-8 text-cyan-400" />
-                    )}
+                {!selectedFile ? (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-300 group ${
+                      isDragging
+                        ? 'border-cyan-400 bg-cyan-500/10 scale-[1.01]'
+                        : 'border-slate-700/70 hover:border-cyan-500/50 bg-slate-900/40 hover:bg-slate-900/60'
+                    }`}
+                  >
+                    <div className="w-16 h-16 mx-auto rounded-3xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform shadow-lg">
+                      <UploadCloud className="w-8 h-8" />
+                    </div>
+                    <div className="mt-4 space-y-1">
+                      <p className="text-sm sm:text-base font-bold text-white">
+                        Drop project ZIP archive here, or <span className="text-cyan-400 underline underline-offset-4">browse</span>
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        Supports Node.js, Python, React, Vite, FastAPI, Express, and polyglot mono-repos up to 50MB
+                      </p>
+                    </div>
                   </div>
-
-                  {selectedFile ? (
-                    <div className="space-y-1">
-                      <p className="font-bold text-white text-base sm:text-lg">{selectedFile.name}</p>
-                      <p className="text-xs text-slate-400 font-mono">
-                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Archive Verified
-                      </p>
-                      <p className="text-xs text-cyan-400 font-semibold pt-1 underline">Click to choose another file</p>
+                ) : (
+                  <div className="p-5 rounded-2xl glass-surface-elevated border border-cyan-500/30 flex items-center justify-between shadow-glass-md">
+                    <div className="flex items-center space-x-3.5 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 flex-shrink-0">
+                        <FileArchive className="w-6 h-6" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-white text-sm truncate">{selectedFile.name}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB • Ready for Static Inspection
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="font-bold text-slate-100 text-base sm:text-lg">
-                        Drag and drop your project ZIP file here
-                      </p>
-                      <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                        Supports polyglot full-stack, React, Python FastAPI, Express, and BaaS architectures (up to 50MB)
-                      </p>
-                      <button
-                        type="button"
-                        className="mt-3 px-5 py-2.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold hover:bg-slate-700 transition-colors border border-slate-700/80 shadow-glass-sm"
-                      >
-                        Browse Files
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              <div className="p-4 rounded-2xl glass-surface-subtle border border-white/5 text-xs text-slate-400 space-y-1 flex items-start space-x-3">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  <span className="font-semibold text-slate-200">Security Guarantee:</span> Source code is strictly inspected statically via AST and symbol parsers. Scripts and binaries are never executed.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Option B: GitHub Repository */}
-          {activeTab === 'github' && (
-            <div className="space-y-5">
-              <GlassInput
-                label="Public GitHub Repository URL"
-                type="url"
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-                placeholder="https://github.com/owner/repository"
-                icon={<Github className="w-4 h-4 text-slate-400" />}
-              />
-
-              {/* Sample Repository Shortcuts */}
-              <div className="space-y-2 pt-1">
-                <p className="text-xs text-slate-400 font-medium">Or select an example open-source repository:</p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    'https://github.com/i-am-abhinash/Smart-news-Digest',
-                    'https://github.com/expressjs/express',
-                    'https://github.com/vitejs/vite',
-                  ].map((example) => (
                     <button
-                      key={example}
                       type="button"
-                      onClick={() => setRepoUrl(example)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/40 text-cyan-300 hover:text-cyan-200 text-xs font-mono transition-colors"
+                      onClick={() => setSelectedFile(null)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                      title="Remove selected file"
                     >
-                      {example.replace('https://github.com/', '')}
+                      <X className="w-5 h-5" />
                     </button>
-                  ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 2: GitHub Repository URL */}
+            {activeTab === 'github' && (
+              <div className="space-y-4">
+                <GlassInput
+                  value={repoUrl}
+                  onChange={(e) => {
+                    setRepoUrl(e.target.value);
+                    setErrorMessage(null);
+                  }}
+                  placeholder="https://github.com/owner/repository"
+                  label="Public GitHub Repository URL"
+                  icon={<Github className="w-4 h-4 text-violet-400" />}
+                />
+
+                {/* Sample Repositories */}
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Or try a sample repository:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { name: 'Smart-news-Digest (FastAPI + React)', url: 'https://github.com/i-am-abhinash/Smart-news-Digest' },
+                      { name: 'ClubAttendance (React + Firestore BaaS)', url: 'https://github.com/i-am-abhinash/ExaPro' },
+                    ].map((sample) => (
+                      <button
+                        key={sample.url}
+                        type="button"
+                        onClick={() => setRepoUrl(sample.url)}
+                        className="text-xs px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-violet-500/50 text-slate-300 hover:text-violet-300 font-mono transition-colors"
+                      >
+                        {sample.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Submit Button */}
-          <GlassButton
-            variant="primary"
-            size="lg"
-            loading={isSubmitting}
-            onClick={handleStartAnalysis}
-            disabled={
-              isSubmitting ||
-              (activeTab === 'zip' && !selectedFile) ||
-              (activeTab === 'github' && !repoUrl.trim())
-            }
-            className="w-full mt-2"
-            icon={<ArrowRight className="w-5 h-5 text-slate-950" />}
-          >
-            Analyze & Generate DOCX Documentation
-          </GlassButton>
-        </GlassCard>
-      ) : (
-        /* Real Analysis Stepper Card */
-        <GlassCard elevation="floating" className="p-8 sm:p-12 space-y-8">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-white tracking-tight">Project Evaluation in Progress</h2>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-mono">{statusMessage}</p>
-          </div>
-
-          {/* Animated Progress Bar */}
-          <div className="space-y-2">
-            <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-white/5 p-0.5">
-              <motion.div
-                className="bg-gradient-to-r from-cyan-400 via-sky-400 to-violet-500 h-2 rounded-full shadow-lg shadow-cyan-500/50"
-                style={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-            <div className="flex justify-between text-xs text-slate-400 font-mono font-medium">
-              <span>Status: {projectStatus?.toUpperCase()}</span>
-              <span>{progressPercent}% Complete</span>
-            </div>
-          </div>
-
-          {/* Stepper Stages */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            {[
-              { title: '1. Ingestion', desc: 'Secure archive extraction & tree build', icon: FileArchive },
-              { title: '2. Inspection', desc: 'Dependencies, routes & runtimes', icon: Cpu },
-              { title: '3. Architecture', desc: 'Diagram synthesis & AI narrative', icon: Sparkles },
-              { title: '4. DOCX Report', desc: 'Camera-ready Word file build', icon: FileText },
-            ].map((step, idx) => {
-              const state = getStageState(idx);
-              const StepIcon = step.icon;
-              return (
-                <div
-                  key={step.title}
-                  className={`p-4 rounded-2xl border transition-all duration-300 ${
-                    state === 'completed'
-                      ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
-                      : state === 'active'
-                      ? 'bg-cyan-950/30 border-cyan-400/60 text-cyan-200 shadow-glow-cyan'
-                      : 'bg-slate-900/30 border-white/5 text-slate-500'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 mb-1.5">
-                    {state === 'completed' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    ) : state === 'active' ? (
-                      <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                    ) : (
-                      <StepIcon className="w-4 h-4 text-slate-500" />
-                    )}
-                    <span className="font-bold text-xs">{step.title}</span>
-                  </div>
-                  <p className="text-[10px] leading-relaxed opacity-80">{step.desc}</p>
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/40 flex items-start space-x-3 text-xs text-red-200">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold">Submission error</p>
+                  <p>{errorMessage}</p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            )}
 
-          {/* Completed State Actions */}
-          {projectStatus === 'completed' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="pt-4 flex flex-col sm:flex-row gap-4 justify-center items-center"
-            >
+            {/* Start Button */}
+            <div className="pt-4 flex items-center justify-end">
               <GlassButton
                 variant="primary"
                 size="lg"
                 icon={<ArrowRight className="w-5 h-5 text-slate-950" />}
+                onClick={handleStartAnalysis}
+                disabled={activeTab === 'zip' ? !selectedFile : !repoUrl.trim()}
+              >
+                Launch Codebase Examination
+              </GlassButton>
+            </div>
+          </div>
+        )}
+
+        {/* 2. Processing Pipeline Live Stepper */}
+        {(isSubmitting || (projectStatus && projectStatus !== 'completed' && projectStatus !== 'failed')) && (
+          <div className="py-8 space-y-8 max-w-xl mx-auto">
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 mx-auto rounded-3xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-300 shadow-glow-cyan animate-pulse">
+                <Cpu className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-black text-white">Inspecting Architecture & Codebase</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                {statusMessage || 'Analyzing repository manifests, AST structure, and service routes...'}
+              </p>
+            </div>
+
+            {/* Glowing Luminous Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-slate-400">Pipeline Execution</span>
+                <span className="text-cyan-400 font-bold">{progressPercent}%</span>
+              </div>
+              <div className="h-2.5 w-full bg-slate-900 rounded-full overflow-hidden border border-white/5 p-0.5">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-violet-500 rounded-full transition-all duration-500 shadow-glow-cyan"
+                  style={{ width: `${Math.max(5, progressPercent)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* 4 Pipeline Stages */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              {pipelineStages.map((stage) => {
+                const isDone = progressPercent >= stage.pct;
+                const isCurrent = progressPercent >= stage.pct - 25 && progressPercent < stage.pct;
+                return (
+                  <div
+                    key={stage.key}
+                    className={`p-3 rounded-xl border transition-all text-xs flex items-center space-x-2.5 ${
+                      isDone
+                        ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
+                        : isCurrent
+                        ? 'bg-cyan-950/30 border-cyan-400/50 text-cyan-200 shadow-glow-cyan'
+                        : 'bg-slate-900/40 border-white/5 text-slate-500'
+                    }`}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    ) : isCurrent ? (
+                      <Loader2 className="w-4 h-4 text-cyan-400 animate-spin flex-shrink-0" />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border border-slate-700 flex-shrink-0" />
+                    )}
+                    <span className="font-semibold truncate">{stage.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 3. Completed State Card */}
+        {projectStatus === 'completed' && activeProjectId && (
+          <div className="py-8 text-center space-y-6 max-w-lg mx-auto">
+            <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-xl shadow-emerald-500/20">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-2xl font-black text-white">Project Examination Complete</h2>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Repository evaluation finished successfully. Verified architecture diagram and 14-section DOCX report generated.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <GlassButton
+                variant="primary"
+                size="md"
+                icon={<ArrowRight className="w-4 h-4 text-slate-950" />}
                 onClick={() => onComplete(activeProjectId)}
               >
-                View Full Report & Diagram
+                Preview Technical Report
               </GlassButton>
 
               <a
                 href={getDownloadDocxUrl(activeProjectId)}
                 download
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 text-sm font-semibold transition-colors shadow-glass-sm"
+                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-cyan-300 border border-cyan-500/40 text-xs sm:text-sm font-bold transition-colors shadow-glass-sm"
               >
-                <Download className="w-4 h-4 text-cyan-400" />
-                <span>Download DOCX Directly</span>
+                <Download className="w-4 h-4" />
+                <span>Download DOCX</span>
               </a>
-            </motion.div>
-          )}
-        </GlassCard>
-      )}
+            </div>
+          </div>
+        )}
+
+        {/* 4. Failed State Card */}
+        {projectStatus === 'failed' && (
+          <div className="py-8 text-center space-y-6 max-w-lg mx-auto">
+            <div className="w-16 h-16 mx-auto rounded-3xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-xl shadow-rose-500/20">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-2xl font-black text-white">Examination Failed</h2>
+              <p className="text-xs text-rose-200 leading-relaxed">{errorMessage || 'Analysis encountered an error.'}</p>
+            </div>
+
+            <GlassButton
+              variant="secondary"
+              size="md"
+              icon={<RefreshCw className="w-4 h-4" />}
+              onClick={() => {
+                setProjectStatus(null);
+                setActiveProjectId(null);
+                setErrorMessage(null);
+                setIsSubmitting(false);
+              }}
+            >
+              Try Again
+            </GlassButton>
+          </div>
+        )}
+      </GlassCard>
     </div>
   );
 };
