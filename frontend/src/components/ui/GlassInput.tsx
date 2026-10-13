@@ -11,29 +11,29 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
     return (
       <div className="w-full space-y-1.5">
         {label && (
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+          <label className="block text-xs font-bold text-graphite-800 tracking-tight">
             {label}
           </label>
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-muted">
               {icon}
             </div>
           )}
           <input
             ref={ref}
-            className={`w-full py-2.5 rounded-xl bg-slate-900/80 border text-slate-100 placeholder-slate-500 text-xs sm:text-sm backdrop-blur-md transition-all focus:outline-none focus:ring-1 ${
+            className={`w-full py-2.5 rounded-xl bg-white/90 border text-graphite placeholder-slate-muted/70 text-xs sm:text-sm backdrop-blur-sm transition-all focus:outline-none focus:ring-2 ${
               icon ? 'pl-10' : 'pl-3.5'
             } pr-3.5 ${
               error
-                ? 'border-red-500/50 focus:border-red-400 focus:ring-red-400'
-                : 'border-slate-700/60 hover:border-slate-600/80 focus:border-cyan-400/80 focus:ring-cyan-400/50 focus:bg-slate-900'
+                ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
+                : 'border-black/[0.09] hover:border-black/[0.18] focus:border-cobalt focus:ring-cobalt/15 focus:bg-white'
             } ${className}`}
             {...props}
           />
         </div>
-        {error && <p className="text-[11px] text-red-400 font-medium">{error}</p>}
+        {error && <p className="text-[11px] text-rose-600 font-medium">{error}</p>}
       </div>
     );
   }

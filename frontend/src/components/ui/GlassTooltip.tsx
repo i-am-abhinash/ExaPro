@@ -34,7 +34,7 @@ export const GlassTooltip: React.FC<GlassTooltipProps> = ({
       {isVisible && (
         <div
           role="tooltip"
-          className={`absolute z-50 whitespace-nowrap px-2.5 py-1 text-[11px] font-medium text-slate-200 glass-surface-elevated border border-white/10 rounded-lg shadow-glass-md pointer-events-none transition-opacity duration-200 ${positionClasses[position]}`}
+          className={`absolute z-50 whitespace-nowrap px-2.5 py-1 text-[11px] font-semibold text-graphite bg-white/95 backdrop-blur-md border border-black/[0.08] rounded-lg shadow-glass-md pointer-events-none transition-opacity duration-200 ${positionClasses[position]}`}
         >
           {content}
         </div>

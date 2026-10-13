@@ -16,7 +16,6 @@ export const App: React.FC = () => {
   const [submissionInitialType, setSubmissionInitialType] = useState<'zip' | 'github'>('zip');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [hasSeenLanding, setHasSeenLanding] = useState<boolean>(false);
-  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
   const [health, setHealth] = useState<IHealthStatus | null>(null);
   const [recentProjects, setRecentProjects] = useState<IProjectListItem[]>([]);
@@ -73,17 +72,17 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-midnight-950 text-slate-100 flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Dynamic 3D Ambient Background Canvas */}
+    <div className="relative min-h-screen bg-ivory text-graphite flex flex-col justify-between selection:bg-cobalt/20 selection:text-cobalt">
+      {/* Warm Ambient Canvas */}
       <AmbientBackground />
 
       <div className="relative z-10 flex-1 flex flex-col">
-        {/* Navbar is displayed when not on the pure initial landing screen */}
+        {/* Navbar is displayed when not on the opening landing screen */}
         {currentTab !== 'landing' && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
           >
             <Navbar
               currentTab={currentTab}
@@ -105,9 +104,9 @@ export const App: React.FC = () => {
                 animate={{ opacity: 1 }}
                 exit={{
                   opacity: 0,
-                  scale: 0.96,
-                  y: -20,
-                  transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+                  scale: 0.98,
+                  y: -10,
+                  transition: { duration: 0.3, ease: 'easeOut' },
                 }}
               >
                 <LandingView
@@ -122,10 +121,10 @@ export const App: React.FC = () => {
             {currentTab === 'dashboard' && (
               <motion.div
                 key="dashboard-view"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.45, ease: 'easeOut' }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <DashboardView
                   onStartSubmission={handleStartSubmission}
@@ -140,10 +139,10 @@ export const App: React.FC = () => {
             {currentTab === 'new' && (
               <motion.div
                 key="submission-view"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <SubmissionView
                   initialType={submissionInitialType}
@@ -156,10 +155,10 @@ export const App: React.FC = () => {
             {currentTab === 'history' && (
               <motion.div
                 key="history-view"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <HistoryView
                   onViewReport={handleViewReport}
@@ -175,10 +174,10 @@ export const App: React.FC = () => {
             {currentTab === 'report' && selectedProjectId && (
               <motion.div
                 key="report-view"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <ReportPreviewView
                   projectId={selectedProjectId}
@@ -190,20 +189,18 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Glass Footer */}
-      <footer className="relative z-10 border-t border-white/5 bg-midnight-950/90 backdrop-blur-md py-6 text-xs text-slate-500">
+      {/* Global Minimalist Footer */}
+      <footer className="relative z-10 border-t border-black/[0.06] bg-white/70 backdrop-blur-md py-6 text-xs text-slate-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <span className="font-black text-slate-300">EXAPRO</span>
+            <span className="font-bold text-graphite">EXAPRO</span>
             <span>•</span>
             <span>AI-Powered Software Architecture Evaluator & Technical Documentation Engine</span>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 font-mono">
-            <span>React 18 + Vite</span>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-muted font-mono">
+            <span>Modern Editorial Minimalism</span>
             <span>•</span>
-            <span>Tailwind Glassmorphism</span>
-            <span>•</span>
-            <span>Node.js + Python FastAPI Inspection</span>
+            <span>Light Glassmorphism</span>
             <span>•</span>
             <span>Word DOCX + SVG Topology</span>
           </div>

@@ -43,32 +43,32 @@ export const GlassModal: React.FC<GlassModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          {/* Backdrop Blur Overlay */}
+          {/* Frosted Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+            className="fixed inset-0 bg-graphite-950/30 backdrop-blur-sm"
           />
 
           {/* Modal Container */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`relative w-full ${maxWidthClasses[maxWidth]} rounded-3xl glass-surface-elevated border border-slate-700/80 p-6 sm:p-8 shadow-2xl z-10 space-y-6`}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 320 }}
+            className={`relative w-full ${maxWidthClasses[maxWidth]} rounded-3xl bg-white/95 backdrop-blur-xl border border-black/[0.08] p-6 sm:p-8 shadow-glass-xl z-10 space-y-6`}
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                {title && <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>}
-                {description && <p className="text-xs text-slate-400 leading-relaxed">{description}</p>}
+                {title && <h3 className="text-lg font-bold text-graphite tracking-tight">{title}</h3>}
+                {description && <p className="text-xs text-slate-muted leading-relaxed">{description}</p>}
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-slate-muted hover:text-graphite hover:bg-black/[0.05] transition-colors"
                 title="Close modal"
               >
                 <X className="w-5 h-5" />
@@ -79,7 +79,7 @@ export const GlassModal: React.FC<GlassModalProps> = ({
             <div className="space-y-4">{children}</div>
 
             {/* Footer */}
-            {footer && <div className="pt-4 border-t border-white/5">{footer}</div>}
+            {footer && <div className="pt-4 border-t border-black/[0.06]">{footer}</div>}
           </motion.div>
         </div>
       )}
