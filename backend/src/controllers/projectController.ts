@@ -49,14 +49,17 @@ export async function uploadZipProject(req: Request, res: Response): Promise<voi
 async function processZipProjectAsync(projectId: string, uploadedZipPath: string): Promise<void> {
   let extractPath = '';
   try {
-    const project = await Project.findById(projectId);
-    if (!project) return;
+    const initialProject = await Project.findById(projectId);
+    if (!initialProject) return;
 
     // 1. Inspecting / Extraction
-    project.status = 'inspecting';
-    project.progress = 25;
-    project.statusMessage = 'Safely decompressing and filtering archive files...';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        status: 'inspecting',
+        progress: 25,
+        statusMessage: 'Safely decompressing and filtering archive files...',
+      },
+    });
 
     const extracted = extractZipSafely(uploadedZipPath, projectId);
     extractPath = extracted.extractPath;
@@ -69,47 +72,65 @@ async function processZipProjectAsync(projectId: string, uploadedZipPath: string
     }
 
     // 2. Analyzing Codebase
-    project.status = 'analyzing';
-    project.progress = 50;
-    project.statusMessage = 'Inspecting project manifests, routes, schemas, and source tree...';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        status: 'analyzing',
+        progress: 50,
+        statusMessage: 'Inspecting project manifests, routes, schemas, and source tree...',
+      },
+    });
 
-    const analysis = analyzeProjectDirectory(extracted.rootDir, project.projectName);
+    const analysis = analyzeProjectDirectory(extracted.rootDir, initialProject.projectName);
 
     // 3. Architecture & Documentation Generation
-    project.status = 'generating_docx';
-    project.progress = 75;
-    project.statusMessage = 'Synthesizing architecture diagram and compiling DOCX report...';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        status: 'generating_docx',
+        progress: 75,
+        statusMessage: 'Synthesizing architecture diagram and compiling DOCX report...',
+      },
+    });
 
     const diagram = await generateProjectArchitecture(analysis);
     const docResult = await generateProjectDocumentation(analysis, diagram.description);
 
-    project.projectName = analysis.projectName;
-    project.detectedTechnologies = analysis.detectedTechnologies;
-    project.inspectedFiles = analysis.inspectedFiles;
-    project.totalFilesCount = analysis.totalFilesCount;
-    project.components = analysis.components;
-    project.databaseSchemas = analysis.databaseSchemas;
-    project.apiEndpoints = analysis.apiEndpoints;
-    project.architectureDiagramSvg = diagram.svg;
-    project.architectureDescription = diagram.description;
-    project.documentation = docResult.sections;
-    project.usedAiFallback = docResult.usedAiFallback;
-    project.aiProviderUsed = docResult.aiProviderUsed;
-    project.aiModelUsed = docResult.aiModelUsed;
-    project.structuredAnalysis = analysis;
+    const docxProject = await Project.findByIdAndUpdate(
+      projectId,
+      {
+        $set: {
+          projectName: analysis.projectName,
+          detectedTechnologies: analysis.detectedTechnologies,
+          inspectedFiles: analysis.inspectedFiles,
+          totalFilesCount: analysis.totalFilesCount,
+          components: analysis.components,
+          databaseSchemas: analysis.databaseSchemas,
+          apiEndpoints: analysis.apiEndpoints,
+          architectureDiagramSvg: diagram.svg,
+          architectureDescription: diagram.description,
+          documentation: docResult.sections,
+          usedAiFallback: docResult.usedAiFallback,
+          aiProviderUsed: docResult.aiProviderUsed,
+          aiModelUsed: docResult.aiModelUsed,
+          structuredAnalysis: analysis,
+        },
+      },
+      { new: true }
+    );
+    if (!docxProject) return;
 
     // 4. Generate DOCX
-    const docxMeta = await generateDocxReport(project, analysis, diagram.pngBuffer);
-    project.reportFilePath = docxMeta.filePath;
-    project.reportFileName = docxMeta.fileName;
-    project.reportFileSize = docxMeta.fileSize;
+    const docxMeta = await generateDocxReport(docxProject, analysis, diagram.pngBuffer);
 
-    project.status = 'completed';
-    project.progress = 100;
-    project.statusMessage = 'Project analysis and DOCX documentation generated successfully.';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        reportFilePath: docxMeta.filePath,
+        reportFileName: docxMeta.fileName,
+        reportFileSize: docxMeta.fileSize,
+        status: 'completed',
+        progress: 100,
+        statusMessage: 'Project analysis and DOCX documentation generated successfully.',
+      },
+    });
   } catch (err: any) {
     console.error(`[Process ZIP] Error processing project ${projectId}:`, err);
     await Project.findByIdAndUpdate(projectId, {
@@ -168,64 +189,82 @@ export async function submitGitHubProject(req: Request, res: Response): Promise<
 async function processGitHubProjectAsync(projectId: string, repoUrl: string): Promise<void> {
   let extractPath = '';
   try {
-    const project = await Project.findById(projectId);
-    if (!project) return;
+    const initialProject = await Project.findById(projectId);
+    if (!initialProject) return;
 
     // 1. Fetching Remote Metadata & Tree
-    project.status = 'inspecting';
-    project.progress = 25;
-    project.statusMessage = 'Retrieving repository metadata and file tree via GitHub API...';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        status: 'inspecting',
+        progress: 25,
+        statusMessage: 'Retrieving repository metadata and file tree via GitHub API...',
+      },
+    });
 
     const ghRepo = await fetchGitHubRepo(repoUrl, projectId);
     extractPath = ghRepo.rootDir;
 
-    project.branch = ghRepo.defaultBranch;
-    project.commitSha = ghRepo.commitSha;
-    await project.save();
-
-    // 2. Analyzing Codebase
-    project.status = 'analyzing';
-    project.progress = 50;
-    project.statusMessage = 'Analyzing downloaded source files, manifests, and component structure...';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        branch: ghRepo.defaultBranch,
+        commitSha: ghRepo.commitSha,
+        status: 'analyzing',
+        progress: 50,
+        statusMessage: 'Analyzing downloaded source files, manifests, and component structure...',
+      },
+    });
 
     const analysis = analyzeProjectDirectory(ghRepo.rootDir, ghRepo.repo);
 
     // 3. Architecture & Documentation Generation
-    project.status = 'generating_docx';
-    project.progress = 75;
-    project.statusMessage = 'Synthesizing architecture diagram and compiling DOCX report...';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        status: 'generating_docx',
+        progress: 75,
+        statusMessage: 'Synthesizing architecture diagram and compiling DOCX report...',
+      },
+    });
 
     const diagram = await generateProjectArchitecture(analysis);
     const docResult = await generateProjectDocumentation(analysis, diagram.description);
 
-    project.projectName = analysis.projectName || ghRepo.repo;
-    project.detectedTechnologies = analysis.detectedTechnologies;
-    project.inspectedFiles = ghRepo.inspectedFilePaths.concat(analysis.inspectedFiles);
-    project.totalFilesCount = ghRepo.allFilePaths.length;
-    project.components = analysis.components;
-    project.databaseSchemas = analysis.databaseSchemas;
-    project.apiEndpoints = analysis.apiEndpoints;
-    project.architectureDiagramSvg = diagram.svg;
-    project.architectureDescription = diagram.description;
-    project.documentation = docResult.sections;
-    project.usedAiFallback = docResult.usedAiFallback;
-    project.aiProviderUsed = docResult.aiProviderUsed;
-    project.aiModelUsed = docResult.aiModelUsed;
-    project.structuredAnalysis = analysis;
+    const docxProject = await Project.findByIdAndUpdate(
+      projectId,
+      {
+        $set: {
+          projectName: analysis.projectName || ghRepo.repo,
+          detectedTechnologies: analysis.detectedTechnologies,
+          inspectedFiles: ghRepo.inspectedFilePaths.concat(analysis.inspectedFiles),
+          totalFilesCount: ghRepo.allFilePaths.length,
+          components: analysis.components,
+          databaseSchemas: analysis.databaseSchemas,
+          apiEndpoints: analysis.apiEndpoints,
+          architectureDiagramSvg: diagram.svg,
+          architectureDescription: diagram.description,
+          documentation: docResult.sections,
+          usedAiFallback: docResult.usedAiFallback,
+          aiProviderUsed: docResult.aiProviderUsed,
+          aiModelUsed: docResult.aiModelUsed,
+          structuredAnalysis: analysis,
+        },
+      },
+      { new: true }
+    );
+    if (!docxProject) return;
 
     // 4. Generate DOCX
-    const docxMeta = await generateDocxReport(project, analysis, diagram.pngBuffer);
-    project.reportFilePath = docxMeta.filePath;
-    project.reportFileName = docxMeta.fileName;
-    project.reportFileSize = docxMeta.fileSize;
+    const docxMeta = await generateDocxReport(docxProject, analysis, diagram.pngBuffer);
 
-    project.status = 'completed';
-    project.progress = 100;
-    project.statusMessage = 'Project analysis and DOCX documentation generated successfully.';
-    await project.save();
+    await Project.findByIdAndUpdate(projectId, {
+      $set: {
+        reportFilePath: docxMeta.filePath,
+        reportFileName: docxMeta.fileName,
+        reportFileSize: docxMeta.fileSize,
+        status: 'completed',
+        progress: 100,
+        statusMessage: 'Project analysis and DOCX documentation generated successfully.',
+      },
+    });
   } catch (err: any) {
     console.error(`[Process GitHub] Error processing GitHub repo ${projectId}:`, err);
     await Project.findByIdAndUpdate(projectId, {

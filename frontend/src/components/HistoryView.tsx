@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
   Search,
@@ -9,10 +10,17 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  ExternalLink,
+  Plus,
+  Filter,
 } from 'lucide-react';
 import { IProjectListItem } from '../types';
 import { fetchProjects, deleteProject, getDownloadDocxUrl } from '../services/api';
+import { TiltCard } from './ui/TiltCard';
+import { GlassCard } from './ui/GlassCard';
+import { GlassButton } from './ui/GlassButton';
+import { GlassBadge } from './ui/GlassBadge';
+import { GlassInput } from './ui/GlassInput';
+import { GlassModal } from './ui/GlassModal';
 
 interface HistoryViewProps {
   onViewReport: (id: string) => void;
@@ -23,7 +31,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
   const [projects, setProjects] = useState<IProjectListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
+  
+  // Delete confirmation modal state
+  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadProjects = async () => {
     try {
@@ -41,154 +53,207 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
     loadProjects();
   }, []);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete the evaluation for "${name}"?`)) {
-      return;
-    }
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete) return;
     try {
-      setDeletingId(id);
-      await deleteProject(id);
-      setProjects((prev) => prev.filter((p) => p._id !== id));
+      setIsDeleting(true);
+      await deleteProject(projectToDelete.id);
+      setProjects((prev) => prev.filter((p) => p._id !== projectToDelete.id));
+      setProjectToDelete(null);
     } catch (err: any) {
       alert(`Delete failed: ${err.message}`);
     } finally {
-      setDeletingId(null);
+      setIsDeleting(false);
     }
   };
 
   const filteredProjects = projects.filter((p) => {
     const q = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       p.projectName.toLowerCase().includes(q) ||
       (p.repositoryUrl && p.repositoryUrl.toLowerCase().includes(q)) ||
       (p.uploadedFileName && p.uploadedFileName.toLowerCase().includes(q)) ||
-      p.detectedTechnologies.languages.some((l) => l.toLowerCase().includes(q))
-    );
+      p.detectedTechnologies.languages.some((l) => l.toLowerCase().includes(q));
+
+    if (!matchesSearch) return false;
+
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'completed') return p.status === 'completed';
+    if (statusFilter === 'failed') return p.status === 'failed';
+    if (statusFilter === 'processing') return p.status !== 'completed' && p.status !== 'failed';
+
+    return true;
   });
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
+    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Project Documentation History</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Browse and reopen previously generated project reports and DOCX deliverables
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-white tracking-tight">Project History</h1>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Browse, inspect, and export previously evaluated software repositories and DOCX reports
           </p>
         </div>
 
-        <button
+        <GlassButton
+          variant="primary"
+          size="md"
+          icon={<Plus className="w-4 h-4 text-slate-950" />}
           onClick={onNewAnalysis}
-          className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 transition-all self-start sm:self-auto"
+          className="self-start sm:self-auto"
         >
-          + New Evaluation
-        </button>
+          New Evaluation
+        </GlassButton>
       </div>
 
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Filter by project name, GitHub URL, or technology..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
-        />
-      </div>
+      {/* Search & Filter Bar */}
+      <GlassCard elevation="flat" className="p-4 sm:p-5 flex flex-col md:flex-row items-center gap-4">
+        <div className="w-full md:flex-1">
+          <GlassInput
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by project name, GitHub URL, or technology..."
+            icon={<Search className="w-4 h-4 text-slate-400" />}
+          />
+        </div>
 
-      {/* History List */}
+        {/* Filter Pills */}
+        <div className="flex items-center space-x-1.5 self-start md:self-auto overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          {[
+            { id: 'all', label: 'All Projects' },
+            { id: 'completed', label: 'Completed' },
+            { id: 'processing', label: 'Analyzing' },
+            { id: 'failed', label: 'Failed' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setStatusFilter(tab.id as any)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                statusFilter === tab.id
+                  ? 'bg-slate-800 text-cyan-300 border border-cyan-500/30 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* History Grid */}
       {loading ? (
-        <div className="py-20 text-center space-y-3">
-          <div className="w-8 h-8 mx-auto border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs text-slate-400">Loading project records from MongoDB...</p>
+        <div className="py-24 text-center space-y-4">
+          <div className="w-10 h-10 mx-auto border-3 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-mono text-slate-400">Loading evaluation archives from MongoDB...</p>
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="glass-panel rounded-2xl border border-slate-800 p-12 text-center space-y-3">
-          <FileText className="w-10 h-10 mx-auto text-slate-600" />
-          <p className="text-sm font-semibold text-slate-300">
-            {searchQuery ? 'No matching projects found' : 'No documentation history recorded'}
-          </p>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            {searchQuery ? 'Try adjusting your search criteria.' : 'Submit a new repository or project archive to begin.'}
-          </p>
-        </div>
+        <GlassCard elevation="flat" className="p-16 text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500">
+            <FileText className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-slate-200">
+              {searchQuery ? 'No matching projects found' : 'No documentation history recorded'}
+            </p>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+              {searchQuery
+                ? 'Try adjusting your search query or switching the status filter.'
+                : 'Submit a new repository or project archive to generate an evaluation.'}
+            </p>
+          </div>
+          {!searchQuery && (
+            <GlassButton variant="primary" size="sm" onClick={onNewAnalysis}>
+              Examine First Project
+            </GlassButton>
+          )}
+        </GlassCard>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((p) => (
-            <div
+            <TiltCard
               key={p._id}
-              className="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-slate-700/80 transition-all space-y-4 flex flex-col justify-between"
+              elevation="elevated"
+              className="p-6 space-y-5 flex flex-col justify-between"
             >
-              <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/60 flex items-center justify-center text-cyan-400">
+              <div className="space-y-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-cyan-400 flex-shrink-0">
                       <FileText className="w-4 h-4" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-white text-sm truncate max-w-[170px]">{p.projectName}</h3>
-                      <p className="text-[10px] text-slate-500">{new Date(p.createdAt).toLocaleDateString()}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-white text-sm truncate" title={p.projectName}>
+                        {p.projectName}
+                      </h3>
+                      <p className="text-[10px] text-slate-500 font-mono">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
 
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      p.status === 'completed'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : p.status === 'failed'
-                        ? 'bg-red-500/10 text-red-400 border border-red-500/30'
-                        : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                    }`}
-                  >
-                    {p.status.toUpperCase()}
-                  </span>
+                  {p.status === 'completed' ? (
+                    <GlassBadge variant="emerald" dot size="sm">
+                      Ready
+                    </GlassBadge>
+                  ) : p.status === 'failed' ? (
+                    <GlassBadge variant="rose" dot size="sm">
+                      Failed
+                    </GlassBadge>
+                  ) : (
+                    <GlassBadge variant="cyan" dot pulse size="sm">
+                      Analyzing
+                    </GlassBadge>
+                  )}
                 </div>
 
-                <div className="text-xs text-slate-400 space-y-1">
+                <div className="text-xs text-slate-400 space-y-1 pt-1">
                   <div className="flex items-center space-x-1.5 truncate">
                     {p.submissionType === 'github' ? (
                       <Github className="w-3.5 h-3.5 flex-shrink-0 text-slate-500" />
                     ) : (
                       <UploadCloud className="w-3.5 h-3.5 flex-shrink-0 text-slate-500" />
                     )}
-                    <span className="truncate">{p.repositoryUrl || p.uploadedFileName}</span>
+                    <span className="truncate text-slate-300 font-mono text-[11px]">
+                      {p.repositoryUrl || p.uploadedFileName}
+                    </span>
                   </div>
                   {p.commitSha && (
-                    <p className="text-[11px] font-mono text-slate-500">Rev: {p.commitSha}</p>
+                    <p className="text-[10px] font-mono text-slate-500">Rev: {p.commitSha}</p>
                   )}
                 </div>
 
-                {/* Tech chips */}
-                <div className="flex flex-wrap gap-1">
+                {/* Tech Chips */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
                   {p.detectedTechnologies.languages.map((l) => (
-                    <span key={l} className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700/80 text-[10px] font-mono text-cyan-300">
+                    <GlassBadge key={l} variant="neutral" size="sm">
                       {l}
-                    </span>
+                    </GlassBadge>
                   ))}
                   {p.detectedTechnologies.frameworks.slice(0, 2).map((f) => (
-                    <span key={f} className="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/80 text-[10px] text-slate-300">
+                    <GlassBadge key={f} variant="violet" size="sm">
                       {f}
-                    </span>
+                    </GlassBadge>
                   ))}
                 </div>
               </div>
 
-              {/* Action buttons */}
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   {p.status === 'completed' && (
                     <>
-                      <button
+                      <GlassButton
+                        variant="secondary"
+                        size="sm"
                         onClick={() => onViewReport(p._id)}
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 text-xs font-semibold transition-colors"
                       >
                         Preview
-                      </button>
+                      </GlassButton>
                       <a
                         href={getDownloadDocxUrl(p._id)}
                         download
-                        className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-colors"
+                        className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-colors shadow-sm"
                         title="Download DOCX"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -198,18 +263,50 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                 </div>
 
                 <button
-                  onClick={() => handleDelete(p._id, p.projectName)}
-                  disabled={deletingId === p._id}
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/20 transition-colors"
+                  onClick={() => setProjectToDelete({ id: p._id, name: p.projectName })}
+                  className="p-2 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-950/20 transition-colors"
                   title="Delete record"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </div>
+            </TiltCard>
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Glass Modal */}
+      <GlassModal
+        isOpen={Boolean(projectToDelete)}
+        onClose={() => setProjectToDelete(null)}
+        title="Confirm Deletion"
+        description="Are you sure you want to permanently remove this evaluation record and its generated deliverables?"
+      >
+        <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 text-xs text-slate-300 font-mono">
+          Project: <span className="text-white font-bold">{projectToDelete?.name}</span>
+        </div>
+
+        <div className="flex items-center justify-end space-x-3 pt-2">
+          <GlassButton
+            variant="ghost"
+            size="md"
+            onClick={() => setProjectToDelete(null)}
+            disabled={isDeleting}
+          >
+            Cancel
+          </GlassButton>
+
+          <GlassButton
+            variant="danger"
+            size="md"
+            loading={isDeleting}
+            onClick={handleConfirmDelete}
+            icon={<Trash2 className="w-4 h-4" />}
+          >
+            Delete Evaluation
+          </GlassButton>
+        </div>
+      </GlassModal>
     </div>
   );
 };
