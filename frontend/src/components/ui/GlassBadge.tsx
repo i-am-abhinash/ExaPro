@@ -2,7 +2,7 @@ import React from 'react';
 
 export interface GlassBadgeProps {
   children: React.ReactNode;
-  variant?: 'lime' | 'cobalt' | 'neutral' | 'amber' | 'rose';
+  variant?: 'lime' | 'cobalt' | 'neutral' | 'amber' | 'rose' | 'warning' | 'success' | 'error';
   size?: 'sm' | 'md';
   dot?: boolean;
   pulse?: boolean;
@@ -22,29 +22,38 @@ export const GlassBadge: React.FC<GlassBadgeProps> = ({
     md: 'px-3 py-1 text-xs gap-2 font-medium',
   };
 
-  const variantClasses = {
-    lime: 'bg-lime-light text-lime-dark border border-lime/40',
-    cobalt: 'bg-cobalt-light text-cobalt border border-cobalt/20',
-    neutral: 'bg-black/[0.04] text-graphite-800 border border-black/[0.07]',
-    amber: 'bg-amber-50 text-amber-800 border border-amber-200/80',
-    rose: 'bg-rose-50 text-rose-800 border border-rose-200/80',
+  const variantClasses: Record<string, string> = {
+    lime: 'bg-status-success-bg text-status-success border border-status-success-border',
+    success: 'bg-status-success-bg text-status-success border border-status-success-border',
+    amber: 'bg-amber/10 text-amber border border-amber/30',
+    cobalt: 'bg-amber/15 text-amber border border-amber/30',
+    neutral: 'bg-white/[0.06] text-cream-secondary border border-white/[0.08]',
+    warning: 'bg-status-warning-bg text-status-warning border border-status-warning-border',
+    rose: 'bg-status-error-bg text-status-error border border-status-error-border',
+    error: 'bg-status-error-bg text-status-error border border-status-error-border',
   };
 
-  const dotColorClasses = {
-    lime: 'bg-lime-dark',
-    cobalt: 'bg-cobalt',
-    neutral: 'bg-slate-400',
-    amber: 'bg-amber-500',
-    rose: 'bg-rose-500',
+  const dotColorClasses: Record<string, string> = {
+    lime: 'bg-status-success',
+    success: 'bg-status-success',
+    amber: 'bg-amber',
+    cobalt: 'bg-amber',
+    neutral: 'bg-cream-muted',
+    warning: 'bg-status-warning',
+    rose: 'bg-status-error',
+    error: 'bg-status-error',
   };
+
+  const resolvedVariantClass = variantClasses[variant] || variantClasses.neutral;
+  const resolvedDotClass = dotColorClasses[variant] || dotColorClasses.neutral;
 
   return (
     <span
-      className={`inline-flex items-center rounded-full select-none tracking-tight shadow-sm ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      className={`inline-flex items-center rounded-full select-none tracking-tight shadow-sm ${sizeClasses[size]} ${resolvedVariantClass} ${className}`}
     >
       {dot && (
         <span
-          className={`w-1.5 h-1.5 rounded-full ${dotColorClasses[variant]} ${pulse ? 'animate-pulse' : ''}`}
+          className={`w-1.5 h-1.5 rounded-full ${resolvedDotClass} ${pulse ? 'animate-pulse' : ''}`}
         />
       )}
       <span>{children}</span>

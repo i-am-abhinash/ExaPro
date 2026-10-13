@@ -72,8 +72,8 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-ivory text-graphite flex flex-col justify-between selection:bg-cobalt/20 selection:text-cobalt">
-      {/* Warm Ambient Canvas */}
+    <div className="relative min-h-screen bg-obsidian text-cream-primary flex flex-col justify-between selection:bg-amber/25 selection:text-amber">
+      {/* Dark Ambient Canvas */}
       <AmbientBackground />
 
       <div className="relative z-10 flex-1 flex flex-col">
@@ -190,19 +190,19 @@ export const App: React.FC = () => {
       </div>
 
       {/* Global Minimalist Footer */}
-      <footer className="relative z-10 border-t border-black/[0.06] bg-white/70 backdrop-blur-md py-6 text-xs text-slate-muted">
+      <footer className="relative z-10 border-t border-white/[0.08] bg-obsidian-card/80 backdrop-blur-md py-6 text-xs text-cream-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-graphite">EXAPRO</span>
+            <span className="font-bold text-cream-primary">EXAPRO</span>
             <span>•</span>
             <span>AI-Powered Software Architecture Evaluator & Technical Documentation Engine</span>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-muted font-mono">
-            <span>Modern Editorial Minimalism</span>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-cream-muted font-mono">
+            <span>Obsidian + Amber Workspace</span>
             <span>•</span>
-            <span>Light Glassmorphism</span>
+            <span>Dark Spatial Glass</span>
             <span>•</span>
-            <span>Word DOCX + SVG Topology</span>
+            <span>Camera-Ready DOCX</span>
           </div>
         </div>
       </footer>
