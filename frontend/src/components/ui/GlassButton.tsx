@@ -29,21 +29,21 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
 
   const variantClasses = {
     primary:
-      'bg-electric hover:bg-electric-hover active:bg-electric-active text-white font-bold shadow-electric-sm hover:shadow-electric-md border border-electric/40 transition-all duration-200',
+      'bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#090D16] font-extrabold shadow-aurora-sm hover:shadow-aurora-md border border-aurora/40 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]',
     secondary:
-      'bg-graphite-elevated hover:bg-graphite-card active:bg-graphite-secondary text-cool-primary border border-white/[0.10] hover:border-white/[0.18] shadow-glass-sm transition-all duration-200',
+      'glass-tile-interactive text-cool-primary border border-white/[0.12] hover:border-aurora/40 transition-all duration-200',
     outline:
-      'bg-graphite-secondary/80 hover:bg-graphite-elevated text-cool-primary border border-white/[0.10] hover:border-electric/40 shadow-glass-sm transition-all duration-200',
+      'bg-[rgba(28,38,60,0.48)] backdrop-blur-md hover:bg-[rgba(39,51,78,0.65)] text-cool-primary border border-white/[0.10] hover:border-aurora/40 transition-all duration-200',
     ghost:
       'bg-transparent hover:bg-white/[0.08] active:bg-white/[0.12] text-cool-muted hover:text-cool-primary border border-transparent transition-colors',
     danger:
-      'bg-status-error-bg hover:bg-status-error-bg/80 active:bg-status-error-bg text-status-error border border-status-error-border shadow-glass-sm transition-colors',
+      'bg-status-error-bg hover:bg-status-error-bg/80 active:bg-status-error-bg text-status-error border border-status-error-border transition-colors',
   };
 
   return (
     <motion.button
-      whileHover={disabled || loading ? {} : { y: -1 }}
-      whileTap={disabled || loading ? {} : { scale: 0.98 }}
+      whileHover={disabled || loading ? {} : { y: -1.5, transition: { duration: 0.15 } }}
+      whileTap={disabled || loading ? {} : { scale: 0.97, y: 1 }}
       disabled={disabled || loading}
       className={`inline-flex items-center justify-center transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}

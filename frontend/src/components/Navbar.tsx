@@ -19,7 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onReturnToLanding,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-graphite/85 backdrop-blur-xl border-b border-white/[0.10] shadow-glass-sm">
+    <header className="sticky top-0 z-40 glass-nav-header">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand / Logo */}
         <div
@@ -28,22 +28,22 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <motion.div
             layoutId="brand-logo-icon"
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            className="w-9 h-9 rounded-xl bg-electric flex items-center justify-center text-white shadow-electric-sm transition-transform duration-200"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-9 h-9 rounded-xl bg-aurora flex items-center justify-center text-[#090D16] shadow-aurora-sm transition-transform duration-200"
           >
-            <Layers className="w-5 h-5 text-white" />
+            <Layers className="w-5 h-5 text-[#090D16]" />
           </motion.div>
 
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <motion.span
                 layoutId="brand-examine-title"
-                className="font-extrabold text-lg sm:text-xl tracking-tight text-cool-primary group-hover:text-electric transition-colors"
+                className="font-extrabold text-lg sm:text-xl tracking-tight text-cool-primary group-hover:text-aurora transition-colors"
               >
                 EXAPRO
               </motion.span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-electric/15 text-electric border border-electric/30">
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-aurora/15 text-aurora border border-aurora/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                 PRO DOCX
               </span>
             </div>
@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onReturnToLanding}
             className={`p-2 rounded-xl text-xs font-semibold transition-all ${
               currentTab === 'landing'
-                ? 'bg-graphite-elevated text-cool-primary border border-white/[0.12] shadow-sm'
+                ? 'glass-tile-interactive text-cool-primary border border-white/[0.14] shadow-sm'
                 : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
             }`}
             title="Overview & Landing"
@@ -77,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('dashboard')}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
               currentTab === 'dashboard'
-                ? 'bg-graphite-elevated text-cool-primary border border-white/[0.12] shadow-sm'
+                ? 'glass-tile-interactive text-cool-primary border border-white/[0.14] shadow-sm'
                 : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
             }`}
           >
@@ -89,8 +89,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('new')}
             className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               currentTab === 'new'
-                ? 'bg-electric text-white shadow-electric-sm border border-electric/40'
-                : 'text-electric bg-electric/15 hover:bg-electric/25 border border-electric/30'
+                ? 'bg-aurora text-[#090D16] shadow-aurora-sm border border-aurora/40'
+                : 'text-aurora bg-aurora/15 hover:bg-aurora/25 border border-aurora/35 shadow-sm'
             }`}
           >
             <PlusCircle className="w-4 h-4" />
@@ -101,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('history')}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
               currentTab === 'history'
-                ? 'bg-graphite-elevated text-cool-primary border border-white/[0.12] shadow-sm'
+                ? 'glass-tile-interactive text-cool-primary border border-white/[0.14] shadow-sm'
                 : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
             }`}
           >
@@ -128,7 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {health?.geminiConfigured ? (
-            <GlassBadge variant="electric" dot size="sm">
+            <GlassBadge variant="aurora" dot size="sm">
               Gemini AI
             </GlassBadge>
           ) : (

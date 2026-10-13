@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --bg-main: #222831;
-    --bg-secondary: #272F39;
-    --bg-elevated: #303946;
-    --bg-card: #36414F;
-    --text-primary: #F4F6FA;
-    --text-secondary: #C0C8D4;
-    --text-muted: #98A4B5;
-    --accent-primary: #6C8CFF;
-    --accent-hover: #8AA2FF;
-    --accent-secondary: #B4A0FF;
-    --status-success: #8BD7B0;
-    --status-warning: #F0C477;
-    --status-error: #F18A91;
-    --border-subtle: rgba(255, 255, 255, 0.10);
+    --bg-base: #090D16;
+    --bg-secondary: #0E1422;
+    --surface-nav: rgba(15, 21, 35, 0.78);
+    --surface-glass-primary: rgba(28, 38, 60, 0.48);
+    --surface-glass-elevated: rgba(39, 51, 78, 0.58);
+    --surface-interactive: rgba(75, 94, 143, 0.22);
+    --text-primary: #E9EDFF;
+    --text-secondary: #AAB5CD;
+    --text-muted: #7886A3;
+    --accent-aurora: #8295FF;
+    --accent-aurora-hover: #A1AFFF;
+    --status-success: #83D9B0;
+    --status-warning: #F0C779;
+    --status-error: #FF8998;
+    --border-glass: rgba(255, 255, 255, 0.10);
   }
 
   body {
-    background-color: #222831;
-    background-image: radial-gradient(ellipse 90% 55% at 50% 0%, #2A3340 0%, #222831 100%);
-    color: #F4F6FA;
+    background-color: #090D16;
+    color: #E9EDFF;
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
@@ -31,95 +31,139 @@
   }
 }
 
-/* Custom graphite scrollbar */
+/* Custom midnight scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #222831;
+  background: #090D16;
 }
 ::-webkit-scrollbar-thumb {
-  background: #36414F;
+  background: rgba(39, 51, 78, 0.65);
   border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #445163;
+  background: rgba(75, 94, 143, 0.85);
 }
 
-/* Subtle graphite grid pattern */
-.bg-grid-graphite {
-  background-size: 32px 32px;
+/* Subtle Midnight Aurora Technical Grid Texture */
+.bg-grid-midnight {
+  background-size: 36px 36px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
 }
 
-/* Distinct Hero Panel (Visibly lighter than graphite base for clear depth) */
-.hero-panel {
-  background: rgba(54, 65, 79, 0.90);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 20px 48px -10px rgba(10, 14, 20, 0.60), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+/* ========================================================
+   GENUINE MIDNIGHT AURORA GLASSMORPHISM SYSTEM
+   ======================================================== */
+
+/* 1. Visibly Translucent Hero Glass Panel with Indigo Tint & Illuminated Top Edge */
+.glass-hero {
+  background: linear-gradient(135deg, rgba(39, 51, 78, 0.58) 0%, rgba(28, 38, 60, 0.42) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 24px 60px -12px rgba(4, 7, 14, 0.70),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 24px rgba(130, 149, 255, 0.06);
 }
 
-/* Refined Glassmorphism Surfaces */
-.glass-panel {
-  background: rgba(48, 57, 70, 0.82);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+/* 2. Primary Translucent Glass Card (rgba(28, 38, 60, 0.48)) */
+.glass-panel,
+.glass-card {
+  background: rgba(28, 38, 60, 0.48);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 8px 30px -4px rgba(15, 20, 28, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 12px 36px -4px rgba(4, 7, 14, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11);
 }
 
-.glass-panel-elevated {
-  background: rgba(54, 65, 79, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* 3. Elevated Glass Surface (rgba(39, 51, 78, 0.58)) */
+.glass-panel-elevated,
+.glass-card-elevated {
+  background: linear-gradient(145deg, rgba(39, 51, 78, 0.62) 0%, rgba(32, 43, 68, 0.52) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: 0 14px 38px -4px rgba(12, 16, 23, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 18px 48px -6px rgba(4, 7, 14, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 18px rgba(130, 149, 255, 0.05);
 }
 
+/* 4. Subtle Translucent Glass (for secondary containers & overlays) */
 .glass-panel-subtle {
-  background: rgba(39, 47, 57, 0.70);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(20, 28, 46, 0.42);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 16px -2px rgba(15, 20, 28, 0.35);
+  box-shadow: 
+    0 6px 20px -2px rgba(4, 7, 14, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
+/* 5. Interactive Glass Tiles (Upload options, action cards, rows) */
+.glass-tile-interactive,
 .glass-panel-interactive {
-  background: rgba(48, 57, 70, 0.82);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: rgba(75, 94, 143, 0.22);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 6px 22px -2px rgba(15, 20, 28, 0.40);
+  box-shadow: 
+    0 8px 24px -3px rgba(4, 7, 14, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.glass-tile-interactive:hover,
 .glass-panel-interactive:hover {
-  background: rgba(54, 65, 79, 0.95);
-  border-color: rgba(108, 140, 255, 0.45);
-  box-shadow: 0 14px 36px -4px rgba(12, 16, 23, 0.60), 0 0 24px -4px rgba(108, 140, 255, 0.22);
+  background: rgba(90, 115, 175, 0.35);
+  border-color: rgba(130, 149, 255, 0.45);
+  box-shadow: 
+    0 16px 40px -4px rgba(4, 7, 14, 0.65),
+    0 0 24px -2px rgba(130, 149, 255, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
   transform: translateY(-2px);
 }
-
-/* Solid Opaque Surface for Technical Content and Reading Tables */
-.workspace-card {
-  background: #272F39;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 6px 24px -2px rgba(15, 20, 28, 0.45);
+.glass-tile-interactive:active,
+.glass-panel-interactive:active {
+  transform: translateY(0);
 }
 
-/* Fallback for non-supporting browsers */
-@supports not (backdrop-filter: blur(1px)) {
-  .hero-panel,
-  .glass-panel,
-  .glass-panel-elevated,
-  .glass-panel-subtle,
-  .glass-panel-interactive {
-    background: #303946 !important;
-  }
+/* 6. Statistics Tiles inside Hero */
+.glass-stat-tile {
+  background: rgba(39, 51, 78, 0.38);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 
+    0 6px 18px -2px rgba(4, 7, 14, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+/* 7. Translucent Navigation Bar Header */
+.glass-nav-header {
+  background: rgba(15, 21, 35, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 20px -2px rgba(4, 7, 14, 0.45);
+}
+
+/* 8. Technical Document Reading Container */
+.workspace-card {
+  background: rgba(28, 38, 60, 0.48);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 
+    0 10px 32px -4px rgba(4, 7, 14, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
 /* 3D Perspective Containers */

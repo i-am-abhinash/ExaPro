@@ -106,7 +106,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         <GlassButton
           variant="primary"
           size="md"
-          icon={<Plus className="w-4 h-4 text-white" />}
+          icon={<Plus className="w-4 h-4 text-[#090D16]" />}
           onClick={onNewAnalysis}
           className="self-start sm:self-auto"
         >
@@ -115,7 +115,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-graphite-secondary border border-white/[0.10] shadow-glass-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl glass-card flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="w-full md:w-96">
           <GlassInput
             value={searchQuery}
@@ -139,7 +139,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                 onClick={() => setStatusFilter(tab.id as any)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   statusFilter === tab.id
-                    ? 'bg-graphite-card text-cool-primary border border-white/[0.12] shadow-sm'
+                    ? 'glass-tile-interactive text-cool-primary border border-white/[0.14] shadow-sm'
                     : 'text-cool-muted hover:text-cool-primary hover:bg-white/[0.06]'
                 }`}
               >
@@ -149,11 +149,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           </div>
 
           {/* Grid vs Table View Toggle */}
-          <div className="hidden sm:flex items-center p-1 rounded-xl bg-graphite-elevated border border-white/[0.10]">
+          <div className="hidden sm:flex items-center p-1 rounded-xl bg-[rgba(15,21,35,0.70)] border border-white/[0.10] backdrop-blur-md">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
-                viewMode === 'grid' ? 'bg-graphite-secondary text-cool-primary shadow-sm border border-white/[0.10]' : 'text-cool-muted hover:text-cool-primary'
+                viewMode === 'grid' ? 'glass-tile-interactive text-cool-primary shadow-sm border border-white/[0.12]' : 'text-cool-muted hover:text-cool-primary'
               }`}
               title="Grid View"
             >
@@ -162,7 +162,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
             <button
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
-                viewMode === 'table' ? 'bg-graphite-secondary text-cool-primary shadow-sm border border-white/[0.10]' : 'text-cool-muted hover:text-cool-primary'
+                viewMode === 'table' ? 'glass-tile-interactive text-cool-primary shadow-sm border border-white/[0.12]' : 'text-cool-muted hover:text-cool-primary'
               }`}
               title="Table View"
             >
@@ -183,7 +183,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           title="No evaluations found"
           description="You haven't examined any repositories yet. Start by uploading a ZIP or specifying a GitHub URL."
           actionText="Examine First Project"
-          actionIcon={<Plus className="w-4 h-4 text-white" />}
+          actionIcon={<Plus className="w-4 h-4 text-[#090D16]" />}
           onAction={onNewAnalysis}
         />
       ) : filteredProjects.length === 0 ? (
@@ -194,7 +194,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
               setSearchQuery('');
               setStatusFilter('all');
             }}
-            className="text-xs text-electric hover:underline font-semibold"
+            className="text-xs text-aurora hover:underline font-semibold"
           >
             Clear all filters
           </button>
@@ -205,16 +205,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           {filteredProjects.map((project) => (
             <TiltCard
               key={project._id}
-              elevation="elevated"
-              className="p-6 flex flex-col justify-between space-y-4 bg-graphite-elevated border border-white/[0.12] shadow-card-elevated hover:shadow-card-strong transition-all duration-200"
+              elevation="floating"
+              className="p-6 flex flex-col justify-between space-y-4"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-graphite-secondary border border-white/[0.10] flex items-center justify-center text-cool-primary flex-shrink-0 shadow-sm">
+                  <div className="w-10 h-10 rounded-xl glass-stat-tile flex items-center justify-center text-cool-primary flex-shrink-0 shadow-sm">
                     {project.submissionType === 'github' ? (
                       <Github className="w-5 h-5 text-cool-primary" />
                     ) : (
-                      <UploadCloud className="w-5 h-5 text-electric" />
+                      <UploadCloud className="w-5 h-5 text-aurora" />
                     )}
                   </div>
 
@@ -227,7 +227,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                       Failed
                     </GlassBadge>
                   ) : (
-                    <GlassBadge variant="electric" dot pulse size="sm">
+                    <GlassBadge variant="aurora" dot pulse size="sm">
                       Analyzing...
                     </GlassBadge>
                   )}
@@ -282,10 +282,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                       <a
                         href={getDownloadDocxUrl(project._id)}
                         download
-                        className="p-1.5 rounded-lg bg-electric/15 hover:bg-electric/25 text-electric border border-electric/30 transition-colors"
+                        className="p-1.5 rounded-lg bg-aurora/15 hover:bg-aurora/25 text-aurora border border-aurora/35 transition-colors"
                         title="Download DOCX Report"
                       >
-                        <Download className="w-4 h-4 text-electric" />
+                        <Download className="w-4 h-4 text-aurora" />
                       </a>
                     </>
                   )}
@@ -304,10 +304,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         </div>
       ) : (
         /* 2. Compact Table View */
-        <div className="rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated overflow-hidden">
+        <div className="rounded-3xl glass-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-graphite-elevated/90 text-cool-muted border-b border-white/[0.10] uppercase tracking-wider font-bold text-[11px]">
+              <thead className="bg-[rgba(15,21,35,0.70)] text-cool-muted border-b border-white/[0.09] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
                 <tr>
                   <th className="py-3.5 px-6">Project Name</th>
                   <th className="py-3.5 px-6">Source</th>
@@ -319,10 +319,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
               </thead>
               <tbody className="divide-y divide-white/[0.06] text-cool-primary">
                 {filteredProjects.map((proj) => (
-                  <tr key={proj._id} className="hover:bg-graphite-elevated/50 transition-colors">
+                  <tr key={proj._id} className="hover:bg-[rgba(75,94,143,0.18)] transition-colors">
                     <td className="py-4 px-6 font-semibold">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-lg bg-graphite-elevated border border-white/[0.10] flex items-center justify-center text-electric flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[rgba(39,51,78,0.50)] border border-white/[0.10] flex items-center justify-center text-aurora flex-shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <span className="truncate max-w-[200px] font-bold text-cool-primary">{proj.projectName}</span>
@@ -352,7 +352,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                           Failed
                         </GlassBadge>
                       ) : (
-                        <GlassBadge variant="electric" dot pulse size="sm">
+                        <GlassBadge variant="aurora" dot pulse size="sm">
                           {proj.statusMessage || 'Analyzing...'}
                         </GlassBadge>
                       )}
@@ -373,9 +373,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                           <a
                             href={getDownloadDocxUrl(proj._id)}
                             download
-                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-electric hover:bg-electric-hover text-white text-xs font-bold shadow-electric-sm transition-colors"
+                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#090D16] text-xs font-bold shadow-aurora-sm transition-colors"
                           >
-                            <Download className="w-3.5 h-3.5 text-white" />
+                            <Download className="w-3.5 h-3.5 text-[#090D16]" />
                             <span>DOCX</span>
                           </a>
                         </>

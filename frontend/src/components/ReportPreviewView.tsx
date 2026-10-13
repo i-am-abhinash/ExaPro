@@ -52,7 +52,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
   if (loading) {
     return (
       <div className="py-32 text-center space-y-4 max-w-md mx-auto">
-        <div className="w-12 h-12 mx-auto border-3 border-electric border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 mx-auto border-3 border-aurora border-t-transparent rounded-full animate-spin" />
         <p className="text-cool-primary font-semibold text-sm">Loading Project Evaluation Report...</p>
       </div>
     );
@@ -61,7 +61,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
   if (error || !report) {
     return (
       <div className="max-w-2xl mx-auto py-20 text-center space-y-4">
-        <div className="p-8 rounded-3xl bg-graphite-secondary border border-status-error-border shadow-glass-sm space-y-4">
+        <div className="p-8 rounded-3xl glass-card border border-status-error-border shadow-glass-sm space-y-4">
           <p className="font-bold text-status-error text-lg">Unable to load report</p>
           <p className="text-xs sm:text-sm text-cool-muted">{error || 'Project report record was not found'}</p>
           <GlassButton variant="secondary" size="md" onClick={onBack}>
@@ -91,7 +91,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
       {/* Top Bar Navigation & Actions Card */}
-      <div className="p-6 rounded-3xl bg-graphite-elevated border border-white/[0.12] shadow-card-elevated">
+      <div className="p-6 rounded-3xl glass-card-elevated">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center space-x-3">
@@ -110,7 +110,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-cool-muted pl-8">
               <span className="inline-flex items-center space-x-1.5 font-medium text-cool-primary">
-                {report.submissionType === 'github' ? <Github className="w-3.5 h-3.5 text-cool-primary" /> : <UploadCloud className="w-3.5 h-3.5 text-electric" />}
+                {report.submissionType === 'github' ? <Github className="w-3.5 h-3.5 text-cool-primary" /> : <UploadCloud className="w-3.5 h-3.5 text-aurora" />}
                 <span className="font-mono">{report.repositoryUrl || report.uploadedFileName}</span>
               </span>
               {report.commitSha && (
@@ -125,9 +125,9 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             <a
               href={getDownloadDocxUrl(report.projectId)}
               download
-              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-electric hover:bg-electric-hover active:bg-electric-active text-white font-bold text-sm shadow-electric-sm hover:shadow-electric-md border border-electric/40 transition-all transform hover:-translate-y-0.5"
+              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#090D16] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/40 transition-all transform hover:-translate-y-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
             >
-              <Download className="w-4 h-4 text-white" />
+              <Download className="w-4 h-4 text-[#090D16]" />
               <span>Download DOCX Report</span>
             </a>
           </div>
@@ -138,7 +138,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Table of Contents Sidebar */}
         <div className="lg:col-span-1 space-y-2 sticky top-20">
-          <div className="p-4 rounded-2xl bg-graphite-secondary border border-white/[0.10] shadow-glass-sm space-y-1.5">
+          <div className="p-4 rounded-2xl glass-card space-y-1.5">
             <h3 className="text-xs font-bold text-cool-muted uppercase tracking-wider px-3 py-1.5">
               Report Sections
             </h3>
@@ -156,7 +156,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
                     }}
                     className={`w-full text-left flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-electric/15 text-electric border border-electric/30 font-bold shadow-sm'
+                        ? 'bg-aurora/15 text-aurora border border-aurora/35 font-bold shadow-sm'
                         : 'text-cool-muted hover:text-cool-primary hover:bg-white/[0.06]'
                     }`}
                   >
@@ -172,10 +172,10 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
         {/* High-Contrast Document Content View */}
         <div className="lg:col-span-3 space-y-8">
           {/* SECTION 5: SYSTEM ARCHITECTURE DIAGRAM */}
-          <div id="section-architecture" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-6">
+          <div id="section-architecture" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-6">
             <div className="flex items-center justify-between border-b border-white/[0.10] pb-4">
               <div>
-                <GlassBadge variant="electric" dot size="sm" className="mb-2">
+                <GlassBadge variant="aurora" dot size="sm" className="mb-2">
                   Figure 6.1 Synthesized Architecture
                 </GlassBadge>
                 <h2 className="text-xl sm:text-2xl font-black text-cool-primary tracking-tight">5. System Architecture & Component Diagram</h2>
@@ -184,7 +184,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             </div>
 
             {/* Embedded High-Resolution SVG Canvas */}
-            <div className="rounded-2xl overflow-hidden bg-graphite border border-white/[0.10] p-4 sm:p-6 shadow-inner">
+            <div className="rounded-2xl overflow-hidden bg-[rgba(9,13,22,0.75)] border border-white/[0.10] p-4 sm:p-6 shadow-inner backdrop-blur-md">
               <div
                 className="w-full overflow-x-auto flex justify-center py-2"
                 dangerouslySetInnerHTML={{ __html: report.architectureDiagramSvg }}
@@ -192,13 +192,13 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             </div>
 
             {/* Architecture Narrative */}
-            <div className="p-5 rounded-2xl bg-graphite border border-white/[0.10] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal">
+            <div className="p-5 rounded-2xl bg-[rgba(15,21,35,0.60)] border border-white/[0.10] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal backdrop-blur-sm">
               {report.architectureDescription}
             </div>
           </div>
 
           {/* SECTION 1: EXECUTIVE SUMMARY */}
-          <div id="section-summary" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-summary" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">1. Executive Summary & Project Profile</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.executiveSummary}
@@ -206,7 +206,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 2: PROJECT OVERVIEW */}
-          <div id="section-overview" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-overview" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">2. Project Overview & Capabilities</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.projectOverview}
@@ -214,41 +214,41 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 3: TECHNOLOGY STACK */}
-          <div id="section-tech" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-6">
+          <div id="section-tech" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-6">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">3. Technology Stack & Dependencies</h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-2xl bg-graphite-elevated border border-white/[0.10]">
+              <div className="p-3.5 rounded-2xl glass-stat-tile">
                 <span className="text-[10px] text-cool-muted uppercase font-bold tracking-wider">Languages</span>
                 <p className="text-xs font-bold text-cool-primary mt-1 font-mono">
                   {report.detectedTechnologies.languages.join(', ') || 'Auto-detected'}
                 </p>
               </div>
-              <div className="p-3.5 rounded-2xl bg-graphite-elevated border border-white/[0.10]">
+              <div className="p-3.5 rounded-2xl glass-stat-tile">
                 <span className="text-[10px] text-cool-muted uppercase font-bold tracking-wider">Frontend</span>
-                <p className="text-xs font-bold text-electric mt-1">
+                <p className="text-xs font-bold text-aurora mt-1">
                   {report.detectedTechnologies.frontend.join(', ') || 'N/A'}
                 </p>
               </div>
-              <div className="p-3.5 rounded-2xl bg-graphite-elevated border border-white/[0.10]">
+              <div className="p-3.5 rounded-2xl glass-stat-tile">
                 <span className="text-[10px] text-cool-muted uppercase font-bold tracking-wider">Authentication</span>
                 <p className="text-xs font-bold text-cool-primary mt-1">
                   {report.detectedTechnologies.auth?.join(', ') || 'None declared'}
                 </p>
               </div>
-              <div className="p-3.5 rounded-2xl bg-graphite-elevated border border-white/[0.10]">
+              <div className="p-3.5 rounded-2xl glass-stat-tile">
                 <span className="text-[10px] text-cool-muted uppercase font-bold tracking-wider">Database & Storage</span>
                 <p className="text-xs font-bold text-status-success mt-1">
                   {report.detectedTechnologies.database.join(', ') || 'None declared'}
                 </p>
               </div>
-              <div className="p-3.5 rounded-2xl bg-graphite-elevated border border-white/[0.10]">
+              <div className="p-3.5 rounded-2xl glass-stat-tile">
                 <span className="text-[10px] text-cool-muted uppercase font-bold tracking-wider">Server Runtime</span>
                 <p className="text-xs font-bold text-cool-primary mt-1">
                   {report.detectedTechnologies.backend.join(', ') || 'None (Client BaaS / SPA)'}
                 </p>
               </div>
-              <div className="p-3.5 rounded-2xl bg-graphite-elevated border border-white/[0.10]">
+              <div className="p-3.5 rounded-2xl glass-stat-tile">
                 <span className="text-[10px] text-cool-muted uppercase font-bold tracking-wider">Build Tools</span>
                 <p className="text-xs font-bold text-cool-primary mt-1">
                   {report.detectedTechnologies.buildTools.join(', ') || 'Standard'}
@@ -262,15 +262,15 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 4: PROJECT STRUCTURE */}
-          <div id="section-structure" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-structure" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">4. Directory Structure (ASCII Code Tree)</h2>
-            <div className="bg-graphite p-5 rounded-2xl border border-white/[0.10] font-mono text-[11px] text-cool-primary overflow-x-auto leading-relaxed max-h-96">
+            <div className="bg-[rgba(9,13,22,0.75)] p-5 rounded-2xl border border-white/[0.10] font-mono text-[11px] text-cool-primary overflow-x-auto leading-relaxed max-h-96 backdrop-blur-md">
               <pre>{report.documentation.projectStructureTree}</pre>
             </div>
           </div>
 
           {/* SECTION 6: MODULE & COMPONENT DETAILS */}
-          <div id="section-modules" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-modules" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">6. Module & Component Details</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.moduleDetails}
@@ -278,7 +278,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 7: DATA FLOW */}
-          <div id="section-dataflow" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-dataflow" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">7. Data Flow & Communication</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.dataFlowDescription}
@@ -286,7 +286,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 8: DATABASE DESIGN */}
-          <div id="section-database" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-database" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">8. Database Design & Schemas</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.databaseDesignDescription}
@@ -294,7 +294,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 9: API DOCUMENTATION */}
-          <div id="section-api" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-api" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">9. API Documentation & Endpoints</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.apiDocumentationDescription}
@@ -302,7 +302,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 10: SETUP & EXECUTION */}
-          <div id="section-setup" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-setup" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">10. Setup & Execution Guide</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.setupAndExecutionInstructions}
@@ -310,7 +310,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 11: TESTING & QUALITY */}
-          <div id="section-testing" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-testing" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">11. Testing & Quality Verification</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.testingAndQualityDescription}
@@ -318,7 +318,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 12: LIMITATIONS */}
-          <div id="section-limitations" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-limitations" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">12. Limitations & Observations</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.limitationsAndObservations}
@@ -326,7 +326,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* SECTION 13: APPENDIX */}
-          <div id="section-appendix" className="p-6 sm:p-8 rounded-3xl bg-graphite-secondary border border-white/[0.10] shadow-card-elevated space-y-4">
+          <div id="section-appendix" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">13. Appendix & File Inventory</h2>
             <div className="text-xs sm:text-sm text-cool-secondary leading-relaxed whitespace-pre-line">
               {report.documentation.appendix}
@@ -334,7 +334,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           </div>
 
           {/* Bottom Export Action Card */}
-          <div className="p-8 rounded-3xl bg-graphite-elevated border border-white/[0.12] shadow-card-elevated flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-8 rounded-3xl glass-card-elevated flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
               <h3 className="text-lg font-bold text-cool-primary">Camera-Ready Document Package</h3>
               <p className="text-xs sm:text-sm text-cool-muted">
@@ -344,9 +344,9 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             <a
               href={getDownloadDocxUrl(report.projectId)}
               download
-              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-electric hover:bg-electric-hover active:bg-electric-active text-white font-bold text-sm shadow-electric-sm hover:shadow-electric-md border border-electric/40 transition-all transform hover:-translate-y-0.5 flex-shrink-0"
+              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#090D16] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/40 transition-all transform hover:-translate-y-0.5 flex-shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
             >
-              <Download className="w-4 h-4 text-white" />
+              <Download className="w-4 h-4 text-[#090D16]" />
               <span>Download DOCX Report</span>
             </a>
           </div>

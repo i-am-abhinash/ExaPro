@@ -33,11 +33,11 @@ export const LandingView: React.FC<LandingViewProps> = ({
         transition={{ duration: 0.5, delay: 0.1 }}
         className="flex items-center space-x-3 pt-2"
       >
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-graphite-secondary/90 border border-white/[0.10] text-xs font-semibold text-cool-primary shadow-glass-sm">
-          <span className="w-2 h-2 rounded-full bg-electric animate-subtle-pulse" />
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[rgba(15,21,35,0.70)] border border-white/[0.12] text-xs font-semibold text-cool-primary shadow-glass-sm backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-aurora animate-subtle-pulse" />
           <span className="tracking-wide uppercase text-[11px] text-cool-secondary">ExaPro Evaluation Platform</span>
           <span className="text-cool-muted/40">•</span>
-          <span className="text-cool-muted font-mono text-[10px]">v2.5 Graphite + Electric</span>
+          <span className="text-cool-muted font-mono text-[10px]">Midnight Aurora Glass</span>
         </div>
       </motion.div>
 
@@ -49,10 +49,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.15, type: 'spring', stiffness: 260 }}
-          className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-electric flex items-center justify-center text-white shadow-electric-md group cursor-pointer"
+          className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-aurora flex items-center justify-center text-[#090D16] shadow-aurora-md group cursor-pointer"
           onClick={onGetStarted}
         >
-          <Layers className="w-8 h-8 sm:w-10 sm:h-10 text-white group-hover:scale-105 transition-transform duration-300" />
+          <Layers className="w-8 h-8 sm:w-10 sm:h-10 text-[#090D16] group-hover:scale-105 transition-transform duration-300" />
         </motion.div>
 
         {/* Central Heading: "Examine Project" */}
@@ -64,7 +64,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-5xl sm:text-7xl lg:text-8xl font-black text-cool-primary tracking-tight leading-[1.05] select-none"
           >
-            Examine <span className="text-electric">Project</span>
+            Examine <span className="text-aurora">Project</span>
           </motion.h1>
 
           <motion.p
@@ -87,10 +87,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
         >
           <button
             onClick={onGetStarted}
-            className="group px-8 py-4 sm:px-10 sm:py-4.5 rounded-2xl bg-electric hover:bg-electric-hover active:bg-electric-active text-white font-bold text-base sm:text-lg shadow-electric-md hover:shadow-electric-sm border border-electric/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center space-x-3 cursor-pointer"
+            className="group px-8 py-4 sm:px-10 sm:py-4.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#090D16] font-extrabold text-base sm:text-lg shadow-aurora-md hover:shadow-aurora-sm border border-aurora/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center space-x-3 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
           >
             <span>Get Started</span>
-            <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5 text-[#090D16] group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
 
@@ -104,21 +104,21 @@ export const LandingView: React.FC<LandingViewProps> = ({
           <span className="text-[11px] uppercase tracking-wider text-cool-muted font-bold">Instant Ingestion:</span>
           <button
             onClick={() => onDirectUpload('zip')}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-graphite-elevated hover:bg-graphite-card border border-white/[0.10] hover:border-electric/40 text-cool-primary font-semibold shadow-glass-sm transition-all"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl glass-tile-interactive text-cool-primary font-semibold transition-all"
           >
-            <UploadCloud className="w-3.5 h-3.5 text-electric" />
+            <UploadCloud className="w-3.5 h-3.5 text-aurora" />
             <span>Upload ZIP Archive</span>
           </button>
           <button
             onClick={() => onDirectUpload('github')}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-graphite-elevated hover:bg-graphite-card border border-white/[0.10] hover:border-electric/40 text-cool-primary font-semibold shadow-glass-sm transition-all"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl glass-tile-interactive text-cool-primary font-semibold transition-all"
           >
             <Github className="w-3.5 h-3.5 text-cool-primary" />
             <span>Import GitHub Repository</span>
           </button>
         </motion.div>
 
-        {/* Software Analysis Demonstration Strip */}
+        {/* Software Analysis Demonstration Strip - Elevated Glass Panels */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,9 +126,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
           className="pt-6 max-w-3xl mx-auto"
         >
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-left">
-            <div className="p-4 rounded-2xl bg-graphite-elevated/90 backdrop-blur-md border border-white/[0.12] shadow-glass-sm space-y-1">
-              <div className="flex items-center space-x-2 text-electric font-mono text-[11px] font-bold">
-                <Cpu className="w-4 h-4 text-electric" />
+            <div className="p-4 rounded-2xl glass-card-elevated space-y-1">
+              <div className="flex items-center space-x-2 text-aurora font-mono text-[11px] font-bold">
+                <Cpu className="w-4 h-4 text-aurora" />
                 <span>01. Static AST Tree</span>
               </div>
               <p className="text-xs text-cool-secondary leading-relaxed">
@@ -136,9 +136,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-graphite-elevated/90 backdrop-blur-md border border-white/[0.12] shadow-glass-sm space-y-1">
-              <div className="flex items-center space-x-2 text-electric font-mono text-[11px] font-bold">
-                <Sparkles className="w-4 h-4 text-electric" />
+            <div className="p-4 rounded-2xl glass-card-elevated space-y-1">
+              <div className="flex items-center space-x-2 text-aurora font-mono text-[11px] font-bold">
+                <Sparkles className="w-4 h-4 text-aurora" />
                 <span>02. Topology Synthesis</span>
               </div>
               <p className="text-xs text-cool-secondary leading-relaxed">
@@ -146,7 +146,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-graphite-elevated/90 backdrop-blur-md border border-white/[0.12] shadow-glass-sm space-y-1">
+            <div className="p-4 rounded-2xl glass-card-elevated space-y-1">
               <div className="flex items-center space-x-2 text-status-success font-mono text-[11px] font-bold">
                 <CheckCircle2 className="w-4 h-4 text-status-success" />
                 <span>03. Zero Hallucinations</span>
@@ -164,10 +164,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.7 }}
-        className="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-cool-muted border-t border-white/[0.10] pt-6"
+        className="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-cool-muted border-t border-white/[0.09] pt-6"
       >
         <div className="flex items-center space-x-2">
-          <Binary className="w-4 h-4 text-electric" />
+          <Binary className="w-4 h-4 text-aurora" />
           <span className="font-semibold text-cool-primary">Autonomous Codebase Intelligence</span>
           <span className="text-cool-muted/40">•</span>
           <span>Polyglot Fullstack & BaaS Architecture Support</span>
@@ -185,7 +185,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
           )}
 
           {health?.geminiConfigured ? (
-            <GlassBadge variant="electric" dot size="sm">
+            <GlassBadge variant="aurora" dot size="sm">
               Gemini AI Active
             </GlassBadge>
           ) : (

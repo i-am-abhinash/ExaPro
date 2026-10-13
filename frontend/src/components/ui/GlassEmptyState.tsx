@@ -22,7 +22,7 @@ export const GlassEmptyState: React.FC<GlassEmptyStateProps> = ({
 }) => {
   return (
     <div className={`py-16 px-6 text-center space-y-4 max-w-md mx-auto ${className}`}>
-      <div className="w-14 h-14 mx-auto rounded-2xl bg-graphite-elevated border border-white/[0.10] shadow-glass-sm flex items-center justify-center text-cool-muted">
+      <div className="w-14 h-14 mx-auto rounded-2xl glass-stat-tile flex items-center justify-center text-cool-muted shadow-glass-sm">
         {icon}
       </div>
       <div className="space-y-1.5">

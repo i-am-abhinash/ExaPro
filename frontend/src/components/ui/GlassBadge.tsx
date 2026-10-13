@@ -2,7 +2,7 @@ import React from 'react';
 
 export interface GlassBadgeProps {
   children: React.ReactNode;
-  variant?: 'lime' | 'cobalt' | 'neutral' | 'amber' | 'rose' | 'warning' | 'success' | 'error' | 'electric' | 'lavender';
+  variant?: 'lime' | 'cobalt' | 'neutral' | 'amber' | 'rose' | 'warning' | 'success' | 'error' | 'electric' | 'aurora' | 'lavender';
   size?: 'sm' | 'md';
   dot?: boolean;
   pulse?: boolean;
@@ -23,22 +23,24 @@ export const GlassBadge: React.FC<GlassBadgeProps> = ({
   };
 
   const variantClasses: Record<string, string> = {
-    electric: 'bg-electric/15 text-electric border border-electric/30',
-    cobalt: 'bg-electric/15 text-electric border border-electric/30',
-    lavender: 'bg-lavender/15 text-lavender border border-lavender/30',
-    lime: 'bg-status-success-bg text-status-success border border-status-success-border',
-    success: 'bg-status-success-bg text-status-success border border-status-success-border',
-    warning: 'bg-status-warning-bg text-status-warning border border-status-warning-border',
-    amber: 'bg-status-warning-bg text-status-warning border border-status-warning-border',
-    rose: 'bg-status-error-bg text-status-error border border-status-error-border',
-    error: 'bg-status-error-bg text-status-error border border-status-error-border',
-    neutral: 'bg-white/[0.08] text-cool-secondary border border-white/[0.10]',
+    aurora: 'bg-aurora/15 text-aurora border border-aurora/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm',
+    electric: 'bg-aurora/15 text-aurora border border-aurora/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm',
+    cobalt: 'bg-aurora/15 text-aurora border border-aurora/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm',
+    lavender: 'bg-[#B4A0FF]/15 text-[#B4A0FF] border border-[#B4A0FF]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm',
+    lime: 'bg-status-success-bg text-status-success border border-status-success-border backdrop-blur-sm',
+    success: 'bg-status-success-bg text-status-success border border-status-success-border backdrop-blur-sm',
+    warning: 'bg-status-warning-bg text-status-warning border border-status-warning-border backdrop-blur-sm',
+    amber: 'bg-status-warning-bg text-status-warning border border-status-warning-border backdrop-blur-sm',
+    rose: 'bg-status-error-bg text-status-error border border-status-error-border backdrop-blur-sm',
+    error: 'bg-status-error-bg text-status-error border border-status-error-border backdrop-blur-sm',
+    neutral: 'bg-white/[0.08] text-cool-secondary border border-white/[0.10] backdrop-blur-sm',
   };
 
   const dotColorClasses: Record<string, string> = {
-    electric: 'bg-electric',
-    cobalt: 'bg-electric',
-    lavender: 'bg-lavender',
+    aurora: 'bg-aurora',
+    electric: 'bg-aurora',
+    cobalt: 'bg-aurora',
+    lavender: 'bg-[#B4A0FF]',
     lime: 'bg-status-success',
     success: 'bg-status-success',
     warning: 'bg-status-warning',

@@ -3,38 +3,58 @@ import { motion } from 'framer-motion';
 
 export const AmbientBackground: React.FC = () => {
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-graphite">
-      {/* Subtle Restrained Radial Gradient - Lighter at Top-Center */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,#2B3542_0%,transparent_80%)]" />
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#090D16]">
+      {/* 1. Deep Midnight Base with Restrained Navy Gradient */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 90% 65% at 50% -10%, #0E172B 0%, #090D16 100%)',
+        }}
+      />
 
-      {/* Graphite Grid Overlay */}
-      <div className="absolute inset-0 bg-grid-graphite opacity-70" />
+      {/* 2. Technical Subtle Texture Grid */}
+      <div className="absolute inset-0 bg-grid-midnight opacity-80" />
 
-      {/* Subtle Electric-Blue Ambient Glow behind Hero Area */}
+      {/* 3. Primary Soft Indigo-Blue Aurora Light behind the Hero / Command Center */}
       <motion.div
-        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[680px] h-[550px] rounded-full bg-electric/[0.055] blur-[150px]"
+        className="absolute -top-28 left-1/2 -translate-x-1/2 w-[820px] h-[580px] rounded-full blur-[140px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(95, 120, 235, 0.20) 0%, rgba(65, 85, 195, 0.12) 50%, transparent 80%)',
+        }}
         animate={{
-          scale: [1, 1.05, 1],
-          opacity: [0.7, 0.9, 0.7],
+          scale: [1, 1.06, 1],
+          opacity: [0.85, 1, 0.85],
         }}
         transition={{
-          duration: 18,
+          duration: 20,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
       />
 
-      {/* Soft Secondary Lavender Ambient Ambiance */}
+      {/* 4. Secondary Faint Violet-Indigo Aurora Light Source Offset to the Right */}
       <motion.div
-        className="absolute top-1/2 -right-40 w-[550px] h-[550px] rounded-full bg-lavender/[0.035] blur-[160px]"
+        className="absolute top-1/3 -right-36 w-[620px] h-[620px] rounded-full blur-[150px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(120, 95, 220, 0.12) 0%, rgba(85, 110, 235, 0.08) 50%, transparent 80%)',
+        }}
         animate={{
-          x: [0, -25, 15, 0],
+          x: [0, -30, 15, 0],
           y: [0, 25, -20, 0],
+          opacity: [0.75, 0.95, 0.75],
         }}
         transition={{
-          duration: 24,
+          duration: 26,
           repeat: Infinity,
           ease: 'easeInOut',
+        }}
+      />
+
+      {/* 5. Delicate Bottom-Left Cyan-Teal Sub-glow for Color Richness behind Glass */}
+      <div
+        className="absolute -bottom-32 -left-28 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none opacity-60"
+        style={{
+          background: 'radial-gradient(circle, rgba(65, 145, 215, 0.10) 0%, transparent 70%)',
         }}
       />
     </div>

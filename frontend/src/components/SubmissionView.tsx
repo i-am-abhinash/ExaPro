@@ -155,7 +155,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
       {/* Workflow Header */}
       <div className="text-center space-y-2">
-        <GlassBadge variant="electric" dot size="sm">
+        <GlassBadge variant="aurora" dot size="sm">
           Guided Ingestion Workflow
         </GlassBadge>
         <h1 className="text-3xl sm:text-4xl font-black text-cool-primary tracking-tight">
@@ -166,12 +166,12 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         </p>
       </div>
 
-      {/* Main Guided Form Container */}
-      <div className="rounded-3xl bg-graphite-elevated border border-white/[0.12] shadow-card-elevated p-6 sm:p-10 relative overflow-hidden">
+      {/* Main Guided Form Container - Elevated Aurora Glass */}
+      <div className="rounded-3xl glass-card-elevated p-6 sm:p-10 relative overflow-hidden">
         {/* 1. Selection Tabs */}
         {!isSubmitting && projectStatus !== 'completed' && (
           <div className="space-y-6">
-            <div className="flex p-1.5 rounded-2xl bg-graphite-secondary border border-white/[0.10] max-w-md mx-auto">
+            <div className="flex p-1.5 rounded-2xl bg-[rgba(15,21,35,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => {
@@ -180,11 +180,11 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 }}
                 className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition-all ${
                   activeTab === 'zip'
-                    ? 'bg-graphite-card text-cool-primary shadow-sm border border-white/[0.12]'
+                    ? 'glass-tile-interactive text-cool-primary shadow-sm border border-white/[0.14]'
                     : 'text-cool-muted hover:text-cool-primary'
                 }`}
               >
-                <UploadCloud className="w-4 h-4 text-electric" />
+                <UploadCloud className="w-4 h-4 text-aurora" />
                 <span>ZIP Archive</span>
               </button>
 
@@ -196,7 +196,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 }}
                 className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition-all ${
                   activeTab === 'github'
-                    ? 'bg-graphite-card text-cool-primary shadow-sm border border-white/[0.12]'
+                    ? 'glass-tile-interactive text-cool-primary shadow-sm border border-white/[0.14]'
                     : 'text-cool-muted hover:text-cool-primary'
                 }`}
               >
@@ -224,16 +224,16 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     onClick={() => fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 group ${
                       isDragging
-                        ? 'border-electric bg-electric/10 scale-[1.01]'
-                        : 'border-white/[0.14] hover:border-electric/50 bg-graphite-secondary/50 hover:bg-graphite-secondary'
+                        ? 'border-aurora bg-aurora/10 scale-[1.01]'
+                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(20,28,46,0.40)] hover:bg-[rgba(28,38,60,0.55)] backdrop-blur-md'
                     }`}
                   >
-                    <div className="w-16 h-16 mx-auto rounded-2xl bg-graphite-card border border-white/[0.10] shadow-glass-sm flex items-center justify-center text-electric group-hover:scale-105 transition-transform">
+                    <div className="w-16 h-16 mx-auto rounded-2xl glass-stat-tile flex items-center justify-center text-aurora group-hover:scale-105 transition-transform shadow-glass-sm">
                       <UploadCloud className="w-8 h-8" />
                     </div>
                     <div className="mt-4 space-y-1">
                       <p className="text-sm sm:text-base font-bold text-cool-primary">
-                        Drop project ZIP archive here, or <span className="text-electric underline underline-offset-4">browse</span>
+                        Drop project ZIP archive here, or <span className="text-aurora underline underline-offset-4">browse</span>
                       </p>
                       <p className="text-xs text-cool-muted">
                         Supports Node.js, Python, React, Vite, FastAPI, Express, and polyglot mono-repos up to 50MB
@@ -241,9 +241,9 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-5 rounded-2xl bg-graphite-secondary border border-white/[0.10] flex items-center justify-between">
+                  <div className="p-5 rounded-2xl glass-tile-interactive flex items-center justify-between">
                     <div className="flex items-center space-x-3.5 min-w-0">
-                      <div className="w-12 h-12 rounded-xl bg-electric/15 text-electric flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-aurora/15 text-aurora flex items-center justify-center flex-shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
                         <FileArchive className="w-6 h-6" />
                       </div>
                       <div className="min-w-0">
@@ -257,7 +257,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setSelectedFile(null)}
-                      className="p-2 rounded-xl text-cool-muted hover:text-status-error hover:bg-white/[0.06] transition-colors"
+                      className="p-2 rounded-xl text-cool-muted hover:text-status-error hover:bg-white/[0.08] transition-colors"
                       title="Remove file"
                     >
                       <X className="w-5 h-5" />
@@ -295,7 +295,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                         key={sample.url}
                         type="button"
                         onClick={() => setRepoUrl(sample.url)}
-                        className="text-xs px-3 py-1.5 rounded-xl bg-graphite-secondary border border-white/[0.10] hover:border-electric/40 text-cool-primary font-mono transition-colors"
+                        className="text-xs px-3 py-1.5 rounded-xl glass-tile-interactive text-cool-primary font-mono transition-colors"
                       >
                         {sample.name}
                       </button>
@@ -307,7 +307,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
 
             {/* Error Message */}
             {errorMessage && (
-              <div className="p-4 rounded-xl bg-status-error-bg border border-status-error-border flex items-start space-x-3 text-xs text-status-error">
+              <div className="p-4 rounded-xl bg-status-error-bg border border-status-error-border flex items-start space-x-3 text-xs text-status-error backdrop-blur-sm">
                 <AlertCircle className="w-4 h-4 text-status-error flex-shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-bold">Submission error</p>
@@ -321,7 +321,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               <GlassButton
                 variant="primary"
                 size="lg"
-                icon={<ArrowRight className="w-5 h-5 text-white" />}
+                icon={<ArrowRight className="w-5 h-5 text-[#090D16]" />}
                 onClick={handleStartAnalysis}
                 disabled={activeTab === 'zip' ? !selectedFile : !repoUrl.trim()}
               >
@@ -335,8 +335,8 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         {(isSubmitting || (projectStatus && projectStatus !== 'completed' && projectStatus !== 'failed')) && (
           <div className="py-8 space-y-8 max-w-xl mx-auto">
             <div className="text-center space-y-2">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-electric/15 text-electric flex items-center justify-center animate-pulse shadow-electric-sm">
-                <Cpu className="w-7 h-7 text-electric" />
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-aurora/15 text-aurora flex items-center justify-center animate-pulse shadow-aurora-sm">
+                <Cpu className="w-7 h-7 text-aurora" />
               </div>
               <h3 className="text-2xl font-black text-cool-primary tracking-tight">Inspecting Architecture & Codebase</h3>
               <p className="text-xs sm:text-sm text-cool-muted leading-relaxed font-mono">
@@ -348,11 +348,11 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-mono">
                 <span className="text-cool-muted">Pipeline Execution</span>
-                <span className="text-electric font-bold">{progressPercent}%</span>
+                <span className="text-aurora font-bold">{progressPercent}%</span>
               </div>
-              <div className="h-2.5 w-full bg-graphite-secondary rounded-full overflow-hidden p-0.5 border border-white/[0.10]">
+              <div className="h-2.5 w-full bg-[rgba(15,21,35,0.60)] rounded-full overflow-hidden p-0.5 border border-white/[0.10]">
                 <div
-                  className="h-full bg-electric rounded-full transition-all duration-500 shadow-sm"
+                  className="h-full bg-aurora rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.max(5, progressPercent)}%` }}
                 />
               </div>
@@ -366,18 +366,18 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 return (
                   <div
                     key={stage.key}
-                    className={`p-3.5 rounded-xl border transition-all text-xs flex items-center space-x-3 ${
+                    className={`p-3.5 rounded-xl border transition-all text-xs flex items-center space-x-3 backdrop-blur-sm ${
                       isDone
                         ? 'bg-status-success-bg border-status-success-border text-status-success font-medium'
                         : isCurrent
-                        ? 'bg-electric/15 border-electric/40 text-electric font-bold shadow-sm'
-                        : 'bg-graphite-secondary border-white/[0.08] text-cool-muted'
+                        ? 'bg-aurora/15 border-aurora/40 text-aurora font-bold shadow-sm'
+                        : 'bg-[rgba(20,28,46,0.45)] border-white/[0.08] text-cool-muted'
                     }`}
                   >
                     {isDone ? (
                       <CheckCircle2 className="w-4 h-4 text-status-success flex-shrink-0" />
                     ) : isCurrent ? (
-                      <Loader2 className="w-4 h-4 text-electric animate-spin flex-shrink-0" />
+                      <Loader2 className="w-4 h-4 text-aurora animate-spin flex-shrink-0" />
                     ) : (
                       <div className="w-4 h-4 rounded-full border border-white/[0.2] flex-shrink-0" />
                     )}
@@ -392,7 +392,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         {/* 3. Completed State Card */}
         {projectStatus === 'completed' && activeProjectId && (
           <div className="py-8 text-center space-y-6 max-w-lg mx-auto">
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-status-success-bg border border-status-success-border flex items-center justify-center text-status-success shadow-sm">
+            <div className="w-16 h-16 mx-auto rounded-3xl bg-status-success-bg border border-status-success-border flex items-center justify-center text-status-success shadow-sm backdrop-blur-md">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
@@ -415,9 +415,9 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               <a
                 href={getDownloadDocxUrl(activeProjectId)}
                 download
-                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-electric hover:bg-electric-hover text-white border border-electric/40 text-xs sm:text-sm font-bold shadow-electric-sm transition-colors"
+                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#090D16] border border-aurora/40 text-xs sm:text-sm font-bold shadow-aurora-sm transition-colors"
               >
-                <Download className="w-4 h-4 text-white" />
+                <Download className="w-4 h-4 text-[#090D16]" />
                 <span>Download DOCX</span>
               </a>
             </div>
@@ -427,7 +427,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         {/* 4. Failed State Card */}
         {projectStatus === 'failed' && (
           <div className="py-8 text-center space-y-6 max-w-lg mx-auto">
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-status-error-bg border border-status-error-border flex items-center justify-center text-status-error shadow-sm">
+            <div className="w-16 h-16 mx-auto rounded-3xl bg-status-error-bg border border-status-error-border flex items-center justify-center text-status-error shadow-sm backdrop-blur-md">
               <AlertCircle className="w-8 h-8" />
             </div>
 
