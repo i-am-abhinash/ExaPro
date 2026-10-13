@@ -24,8 +24,9 @@ export async function generateProjectDocumentation(
     try {
       console.log('[AI Service] Attempting AI documentation enhancement with Google Gemini...');
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const modelName = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: modelName,
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.2,
@@ -79,9 +80,9 @@ Respond strictly in JSON matching this schema:
       if (validated.success) {
         aiResponse = validated.data;
         aiProviderUsed = 'Google Gemini';
-        aiModelUsed = 'gemini-1.5-flash';
+        aiModelUsed = modelName;
         usedAiFallback = false;
-        console.log('[AI Service] Successfully generated AI documentation via Google Gemini.');
+        console.log(`[AI Service] Successfully generated AI documentation via Google Gemini (${modelName}).`);
       } else {
         console.warn('[AI Service] Gemini response failed schema validation. Falling back to deterministic generator.');
       }
