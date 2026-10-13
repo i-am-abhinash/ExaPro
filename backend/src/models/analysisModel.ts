@@ -69,12 +69,27 @@ export interface CoverageReport {
   coveragePercentage: number;
   isPartial: boolean;
   limitationNotice: string;
+  excludedDirectories: string[];
+  inventoryReconciled: boolean;
 }
 
 export interface ModuleAnalysis {
   name: string;
   path: string;
-  type: 'page' | 'ui_component' | 'context' | 'service' | 'hook' | 'utility' | 'route_handler' | 'model' | 'config' | 'test' | 'other';
+  type:
+    | 'entry_point'
+    | 'page'
+    | 'ui_component'
+    | 'context'
+    | 'service'
+    | 'hook'
+    | 'utility'
+    | 'route_handler'
+    | 'model'
+    | 'config'
+    | 'script'
+    | 'test'
+    | 'other';
   exports: string[];
   importedServices: string[];
   hooksUsed: string[];
@@ -83,24 +98,36 @@ export interface ModuleAnalysis {
   responsibilities: string[];
   evidenceSources: string[];
   confidence: ConfidenceLevel;
+  lineCount?: number;
+}
+
+export interface FirestoreCollectionDetail {
+  name: string;
+  category: 'active_sdk_reference' | 'security_rule_only' | 'dynamic_unresolved' | 'orm_model';
+  observedOperations: string[]; // e.g. ['read/query', 'create/write'] for SDK, or ['permission_rule_declared']
+  fields: Array<{ name: string; type: string; required?: boolean }>;
+  isSchemaFullyInferred: boolean;
+  evidenceSources: string[];
+  confidence: ConfidenceLevel;
+  limitations?: string;
+  runtimeUsageEstablished: boolean;
 }
 
 export interface DatabaseAnalysis {
   databaseType: 'cloud_firestore' | 'mongodb' | 'postgresql' | 'mysql' | 'sqlite' | 'redis' | 'none_detected' | 'unclear';
   sdkUsed: string[];
   isBaaS: boolean;
-  detectedCollectionsOrTables: Array<{
-    name: string;
-    source: 'sdk_reference' | 'security_rules' | 'orm_model';
-    operations: string[]; // e.g. ['read', 'query', 'write', 'update', 'delete']
-    fields: Array<{ name: string; type: string; required?: boolean }>;
-    isSchemaFullyInferred: boolean;
-    evidenceSources: string[];
-  }>;
+  activeSdkCollections: FirestoreCollectionDetail[];
+  ruleOnlyCollectionPaths: FirestoreCollectionDetail[];
+  unresolvedOrDynamicPaths: FirestoreCollectionDetail[];
+  detectedCollectionsOrTables: FirestoreCollectionDetail[]; // backward compatibility
   securityRules?: {
     rulesFilePath: string;
     rulesSnippet: string;
     scope: string;
+    isStaticallyInspected: boolean;
+    deploymentVerified: boolean;
+    analysisNote?: string;
   };
   summary: string;
   schemaConfidence: 'none' | 'partial' | 'inferred' | 'full';
@@ -129,6 +156,13 @@ export interface ApiAnalysis {
   summary: string;
 }
 
+export interface LanguageInventory {
+  language: string;
+  role: 'primary_application_runtime' | 'markup_styling' | 'offline_utility_script' | 'build_configuration' | 'other';
+  fileCount: number;
+  evidenceFiles: string[];
+}
+
 export interface StructuredProjectModel {
   projectName: string;
   projectDescription: string;
@@ -136,7 +170,9 @@ export interface StructuredProjectModel {
   coverage: CoverageReport;
   findings: Finding[];
   technologies: {
+    primaryRuntime: string;
     languages: string[];
+    sourceLanguages: LanguageInventory[];
     frontend: string[];
     backend: string[];
     database: string[];

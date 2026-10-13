@@ -8,8 +8,10 @@ import {
   CoverageReport,
   ModuleAnalysis,
   DatabaseAnalysis,
+  FirestoreCollectionDetail,
   ApiAnalysis,
   StructuredProjectModel,
+  LanguageInventory,
   FindingStatus,
   EvidenceLevel,
   ConfidenceLevel,
@@ -22,7 +24,7 @@ import {
 } from '../models/Project';
 
 export interface AnalysisResult extends StructuredProjectModel {
-  // Backwards compatibility mappings for older handlers
+  // Backwards compatibility mappings for older views/handlers
   detectedTechnologies: IDetectedTechnologies;
   components: IProjectComponent[];
   databaseSchemas: IDatabaseSchemaInfo[];
@@ -47,6 +49,7 @@ const POLICY_IGNORED_DIRS = new Set([
   '.idea',
   '.vscode',
   '__pycache__',
+  '.firebase',
 ]);
 
 const POLICY_IGNORED_EXTS = new Set([
@@ -83,10 +86,12 @@ const MAX_TOTAL_FILES_TO_INSPECT = 150;
 
 export function analyzeProjectDirectory(rootDir: string, defaultName: string): AnalysisResult {
   const allDiscoveredFiles: string[] = [];
-  const skippedByPolicy: string[] = [];
+  const excludedDirectoriesSet = new Set<string>();
+  const skippedByPolicyFiles: string[] = [];
   const unreadableFiles: string[] = [];
   const sizeExceededFiles: string[] = [];
   const inspectedFiles: string[] = [];
+  const cappedOmittedFiles: string[] = [];
   const findings: Finding[] = [];
   const limitations: string[] = [];
 
@@ -95,7 +100,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     let entries: fs.Dirent[] = [];
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch (err: any) {
+    } catch {
       unreadableFiles.push(relBase || dir);
       return;
     }
@@ -107,16 +112,12 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       if (entry.isDirectory()) {
         const lower = entry.name.toLowerCase();
         if (POLICY_IGNORED_DIRS.has(lower)) {
-          skippedByPolicy.push(relPath + '/');
+          excludedDirectoriesSet.add(entry.name);
           continue;
         }
         scanDir(fullPath, relPath);
       } else if (entry.isFile()) {
         allDiscoveredFiles.push(relPath);
-        const ext = path.extname(entry.name).toLowerCase();
-        if (POLICY_IGNORED_EXTS.has(ext)) {
-          skippedByPolicy.push(relPath);
-        }
       }
     }
   }
@@ -124,10 +125,15 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   scanDir(rootDir);
 
   // File candidate ranking for static inspection
-  const candidateFiles = allDiscoveredFiles.filter((p) => {
-    const ext = path.extname(p).toLowerCase();
-    return !POLICY_IGNORED_EXTS.has(ext);
-  });
+  const candidateFiles: string[] = [];
+  for (const relPath of allDiscoveredFiles) {
+    const ext = path.extname(relPath).toLowerCase();
+    if (POLICY_IGNORED_EXTS.has(ext)) {
+      skippedByPolicyFiles.push(relPath);
+    } else {
+      candidateFiles.push(relPath);
+    }
+  }
 
   function filePriority(p: string): number {
     const base = path.basename(p).toLowerCase();
@@ -143,12 +149,15 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   }
 
   const sortedCandidates = [...candidateFiles].sort((a, b) => filePriority(b) - filePriority(a));
-  const inspectableSubset = sortedCandidates.slice(0, MAX_TOTAL_FILES_TO_INSPECT);
-  const cappedOmittedCount = sortedCandidates.length > MAX_TOTAL_FILES_TO_INSPECT ? sortedCandidates.length - MAX_TOTAL_FILES_TO_INSPECT : 0;
+  const inspectableCandidates = sortedCandidates.slice(0, MAX_TOTAL_FILES_TO_INSPECT);
+  const cappedCandidates = sortedCandidates.slice(MAX_TOTAL_FILES_TO_INSPECT);
+  for (const c of cappedCandidates) {
+    cappedOmittedFiles.push(c);
+  }
 
   // Read file contents cache
   const fileContents = new Map<string, string>();
-  for (const relPath of inspectableSubset) {
+  for (const relPath of inspectableCandidates) {
     const fullPath = path.join(rootDir, relPath);
     try {
       const stats = fs.statSync(fullPath);
@@ -163,6 +172,15 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       unreadableFiles.push(relPath);
     }
   }
+
+  // Reconciled inventory assertion
+  const reconciledTotal =
+    inspectedFiles.length +
+    skippedByPolicyFiles.length +
+    sizeExceededFiles.length +
+    unreadableFiles.length +
+    cappedOmittedFiles.length;
+  const isInventoryReconciled = reconciledTotal === allDiscoveredFiles.length;
 
   // 2. Package manifest inspection
   let detectedProjectName = defaultName;
@@ -197,7 +215,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
           }
         }
       } catch (err: any) {
-        limitations.push(`Error parsing package.json at ${relPath}: ${err.message}`);
+        limitations.push(`Notice: package.json at ${relPath} could not be parsed as valid JSON: ${err.message}`);
       }
     }
   }
@@ -213,16 +231,54 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   const testTools = new Set<string>();
   const packageManagers = new Set<string>();
 
-  // A. Languages from extensions and manifests
-  for (const f of inspectedFiles) {
+  // A. Language inventory with counts and roles
+  const langCounts: Record<string, { count: number; files: string[] }> = {};
+  for (const f of allDiscoveredFiles) {
     const ext = path.extname(f).toLowerCase();
-    if (ext === '.ts' || ext === '.tsx') languages.add('TypeScript');
-    if (ext === '.js' || ext === '.jsx' || ext === '.mjs' || ext === '.cjs') languages.add('JavaScript');
-    if (ext === '.py') languages.add('Python');
-    if (ext === '.java') languages.add('Java');
-    if (ext === '.go') languages.add('Go');
-    if (ext === '.html') languages.add('HTML');
-    if (ext === '.css' || ext === '.scss') languages.add('CSS');
+    let lang = '';
+    if (ext === '.ts' || ext === '.tsx') lang = 'TypeScript';
+    else if (ext === '.js' || ext === '.jsx' || ext === '.mjs' || ext === '.cjs') lang = 'JavaScript';
+    else if (ext === '.py') lang = 'Python';
+    else if (ext === '.java') lang = 'Java';
+    else if (ext === '.go') lang = 'Go';
+    else if (ext === '.html') lang = 'HTML';
+    else if (ext === '.css' || ext === '.scss' || ext === '.sass') lang = 'CSS';
+    else if (ext === '.json') lang = 'JSON';
+
+    if (lang) {
+      languages.add(lang);
+      if (!langCounts[lang]) langCounts[lang] = { count: 0, files: [] };
+      langCounts[lang].count++;
+      if (langCounts[lang].files.length < 5) langCounts[lang].files.push(f);
+    }
+  }
+
+  const sourceLanguages: LanguageInventory[] = Object.entries(langCounts).map(([lang, info]) => {
+    let role: LanguageInventory['role'] = 'other';
+    if (lang === 'JavaScript' || lang === 'TypeScript') {
+      role = 'primary_application_runtime';
+    } else if (lang === 'HTML' || lang === 'CSS') {
+      role = 'markup_styling';
+    } else if (lang === 'Python') {
+      // If Python files are only in scripts or standalone files
+      role = 'offline_utility_script';
+    } else if (lang === 'JSON') {
+      role = 'build_configuration';
+    }
+    return {
+      language: lang,
+      role,
+      fileCount: info.count,
+      evidenceFiles: info.files,
+    };
+  });
+
+  // Determine primary application runtime
+  let primaryRuntime = 'Client-Side Web Application';
+  if (languages.has('TypeScript')) {
+    primaryRuntime = 'TypeScript / Browser (Vite SPA)';
+  } else if (languages.has('JavaScript')) {
+    primaryRuntime = 'JavaScript (ES Modules) / Browser (Vite SPA)';
   }
 
   // B. Manifest lockfiles
@@ -243,7 +299,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       value: 'Client UI Framework',
       status: 'confirmed',
       evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('react')),
-      evidenceLevel: declaredDeps.has('react') ? 'imported_in_code' : 'imported_in_code',
+      evidenceLevel: 'imported_in_code',
       detectionRule: 'React import in source code and package.json manifest',
       confidence: 'high',
     });
@@ -317,7 +373,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         return c.includes('firebase/firestore') || f.includes('firestore.rules') || f.includes('firebase.json');
       }),
       evidenceLevel: 'imported_in_code',
-      detectionRule: 'firebase/firestore SDK operations and firestore.rules security configuration',
+      detectionRule: 'firebase/firestore SDK operations and firestore.rules configuration',
       confidence: 'high',
     });
   }
@@ -327,11 +383,10 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   }
 
   if (hasFirebaseConfig) {
-    frameworks.add('Firebase Hosting & Tools');
+    frameworks.add('Firebase Hosting (Configured)');
   }
 
-  // E. Server Frameworks (Express / Fastify / Nest) - STRICT PROOF REQUIRED
-  // A server framework must NOT be inferred merely because JS/TS files exist or scripts/ exist!
+  // E. Server Frameworks (Express) - STRICT PROOF REQUIRED
   const hasExpressDep = declaredDeps.has('express');
   const hasExpressImport =
     allCodeText.includes("from 'express'") ||
@@ -350,6 +405,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   if ((hasExpressDep || hasExpressImport) && hasExpressServerCall) {
     backend.add('Express');
     hasConfirmedServer = true;
+    primaryRuntime = 'Node.js / Express Server';
     findings.push({
       id: 'TECH-EXPRESS',
       category: 'server_framework',
@@ -379,7 +435,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     });
   }
 
-  // MongoDB / Mongoose - STRICT PROOF REQUIRED
+  // MongoDB / Mongoose
   const hasMongooseDep = declaredDeps.has('mongoose') || declaredDeps.has('mongodb');
   const hasMongooseImport = allCodeText.includes('mongoose') || allCodeText.includes('from "mongoose"');
   if (hasMongooseDep && hasMongooseImport) {
@@ -397,95 +453,124 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     });
   }
 
-  // 4. Database Analysis (Firestore & Mongoose Schemas)
-  const detectedCollections: Array<{
-    name: string;
-    source: 'sdk_reference' | 'security_rules' | 'orm_model';
-    operations: string[];
-    fields: Array<{ name: string; type: string; required?: boolean }>;
-    isSchemaFullyInferred: boolean;
-    evidenceSources: string[];
-  }> = [];
-
+  // 4. Database Analysis: Clear separation of Active SDK Collections vs Security Rules Paths
+  const activeSdkCollections: FirestoreCollectionDetail[] = [];
+  const ruleOnlyCollectionPaths: FirestoreCollectionDetail[] = [];
+  const unresolvedOrDynamicPaths: FirestoreCollectionDetail[] = [];
   const legacyDatabaseSchemas: IDatabaseSchemaInfo[] = [];
 
-  // A. Parse Firestore Collections from SDK calls: collection(db, 'name')
+  // A. Parse Firestore Collections from client SDK calls: collection(db, 'name')
   for (const [relPath, code] of fileContents.entries()) {
+    // 1. Literal collection references: collection(db, 'name')
     const collMatches = code.matchAll(/collection\(\s*[^,]+,\s*['"`]([a-zA-Z0-9_-]+)['"`]\)/g);
     for (const cm of collMatches) {
       const collName = cm[1];
-      let existing = detectedCollections.find((c) => c.name.toLowerCase() === collName.toLowerCase());
+      let existing = activeSdkCollections.find((c) => c.name.toLowerCase() === collName.toLowerCase());
       if (!existing) {
         existing = {
           name: collName,
-          source: 'sdk_reference',
-          operations: [],
+          category: 'active_sdk_reference',
+          observedOperations: [],
           fields: [],
           isSchemaFullyInferred: false,
           evidenceSources: [],
+          confidence: 'high',
+          runtimeUsageEstablished: true,
         };
-        detectedCollections.push(existing);
+        activeSdkCollections.push(existing);
       }
       if (!existing.evidenceSources.includes(relPath)) existing.evidenceSources.push(relPath);
 
-      // Detect operations in this file
-      if (code.includes('getDocs') || code.includes('getDoc') || code.includes('onSnapshot')) {
-        if (!existing.operations.includes('read/query')) existing.operations.push('read/query');
+      if (code.includes('getDocs') || code.includes('getDoc') || code.includes('onSnapshot') || code.includes('query(')) {
+        if (!existing.observedOperations.includes('read/query')) existing.observedOperations.push('read/query');
       }
       if (code.includes('setDoc') || code.includes('addDoc')) {
-        if (!existing.operations.includes('create/write')) existing.operations.push('create/write');
+        if (!existing.observedOperations.includes('create/write')) existing.observedOperations.push('create/write');
       }
       if (code.includes('updateDoc')) {
-        if (!existing.operations.includes('update')) existing.operations.push('update');
+        if (!existing.observedOperations.includes('update')) existing.observedOperations.push('update');
       }
       if (code.includes('deleteDoc')) {
-        if (!existing.operations.includes('delete')) existing.operations.push('delete');
+        if (!existing.observedOperations.includes('delete')) existing.observedOperations.push('delete');
       }
     }
 
-    // Direct doc references: doc(db, 'users', ...)
+    // 2. Direct doc references: doc(db, 'users', ...)
     const docMatches = code.matchAll(/doc\(\s*[^,]+,\s*['"`]([a-zA-Z0-9_-]+)['"`]/g);
     for (const dm of docMatches) {
       const collName = dm[1];
-      let existing = detectedCollections.find((c) => c.name.toLowerCase() === collName.toLowerCase());
+      let existing = activeSdkCollections.find((c) => c.name.toLowerCase() === collName.toLowerCase());
       if (!existing) {
         existing = {
           name: collName,
-          source: 'sdk_reference',
-          operations: ['read/write'],
+          category: 'active_sdk_reference',
+          observedOperations: ['read/write'],
           fields: [],
           isSchemaFullyInferred: false,
           evidenceSources: [relPath],
+          confidence: 'high',
+          runtimeUsageEstablished: true,
         };
-        detectedCollections.push(existing);
+        activeSdkCollections.push(existing);
       } else if (!existing.evidenceSources.includes(relPath)) {
         existing.evidenceSources.push(relPath);
+      }
+    }
+
+    // 3. Dynamic collection references: collection(db, variable)
+    const dynamicMatches = code.matchAll(/collection\(\s*[^,]+,\s*([a-zA-Z0-9_]+)\s*\)/g);
+    for (const dm of dynamicMatches) {
+      const varName = dm[1];
+      if (varName !== 'db' && !varName.startsWith("'") && !varName.startsWith('"')) {
+        if (!unresolvedOrDynamicPaths.some((u) => u.name === varName)) {
+          unresolvedOrDynamicPaths.push({
+            name: `[Dynamic: ${varName}]`,
+            category: 'dynamic_unresolved',
+            observedOperations: ['dynamic_query_mutation'],
+            fields: [],
+            isSchemaFullyInferred: false,
+            evidenceSources: [relPath],
+            confidence: 'low',
+            limitations: `Collection path is constructed dynamically via variable '${varName}' at runtime.`,
+            runtimeUsageEstablished: true,
+          });
+        }
       }
     }
   }
 
   // B. Parse firestore.rules for declared security rules scope
-  let securityRulesInfo: { rulesFilePath: string; rulesSnippet: string; scope: string } | undefined;
+  let securityRulesInfo: DatabaseAnalysis['securityRules'];
   for (const [relPath, code] of fileContents.entries()) {
     if (relPath.endsWith('firestore.rules')) {
       const matchRules = code.matchAll(/match\s+\/([a-zA-Z0-9_-]+)\/\{[a-zA-Z0-9_]+\}/g);
       for (const mr of matchRules) {
         const collName = mr[1];
-        if (!detectedCollections.some((c) => c.name.toLowerCase() === collName.toLowerCase())) {
-          detectedCollections.push({
+        const isAlreadyActive = activeSdkCollections.some((c) => c.name.toLowerCase() === collName.toLowerCase());
+        if (!isAlreadyActive && !ruleOnlyCollectionPaths.some((c) => c.name.toLowerCase() === collName.toLowerCase())) {
+          ruleOnlyCollectionPaths.push({
             name: collName,
-            source: 'security_rules',
-            operations: ['access_controlled_via_rules'],
+            category: 'security_rule_only',
+            observedOperations: ['permission_rule_declared'],
             fields: [],
             isSchemaFullyInferred: false,
             evidenceSources: [relPath],
+            confidence: 'medium',
+            limitations:
+              'Declared in firestore.rules security permissions; no corresponding client SDK queries or mutations observed in inspected application source code.',
+            runtimeUsageEstablished: false,
           });
         }
       }
+
       securityRulesInfo = {
         rulesFilePath: relPath,
-        rulesSnippet: code.substring(0, 400).trim(),
-        scope: `Security rules configure read/write permissions for ${detectedCollections.map((c) => c.name).join(', ')}.`,
+        rulesSnippet: code.substring(0, 450).trim(),
+        scope: `Security rules configure authorization boundaries for ${activeSdkCollections.map((c) => c.name).concat(ruleOnlyCollectionPaths.map((c) => c.name)).join(', ')}.`,
+        isStaticallyInspected: true,
+        deploymentVerified: false,
+        analysisNote:
+          'Security rules file exists and was inspected statically. Remote deployment status and live Firebase cloud security enforcement cannot be confirmed via static code analysis.',
       };
     }
   }
@@ -512,20 +597,28 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         fields: detectedFields.length > 0 ? detectedFields : [{ name: 'id', type: 'ObjectId' }],
       });
 
-      detectedCollections.push({
+      activeSdkCollections.push({
         name: modelName,
-        source: 'orm_model',
-        operations: ['CRUD'],
+        category: 'orm_model',
+        observedOperations: ['CRUD'],
         fields: detectedFields,
         isSchemaFullyInferred: detectedFields.length > 0,
         evidenceSources: [relPath],
+        confidence: 'high',
+        runtimeUsageEstablished: true,
       });
     }
   }
 
-  // Create legacy mappings for backwards-compatible views
-  if (legacyDatabaseSchemas.length === 0 && detectedCollections.length > 0) {
-    for (const c of detectedCollections) {
+  // Combine collections for backward compatibility
+  const allDetectedCollections = [
+    ...activeSdkCollections,
+    ...ruleOnlyCollectionPaths,
+    ...unresolvedOrDynamicPaths,
+  ];
+
+  if (legacyDatabaseSchemas.length === 0 && activeSdkCollections.length > 0) {
+    for (const c of activeSdkCollections) {
       legacyDatabaseSchemas.push({
         modelName: c.name.charAt(0).toUpperCase() + c.name.slice(1),
         filePath: c.evidenceSources[0] || 'firebase/firestore',
@@ -542,13 +635,18 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       : 'none_detected',
     sdkUsed: Array.from(database),
     isBaaS: database.has('Cloud Firestore (Firebase)'),
-    detectedCollectionsOrTables: detectedCollections,
+    activeSdkCollections,
+    ruleOnlyCollectionPaths,
+    unresolvedOrDynamicPaths,
+    detectedCollectionsOrTables: allDetectedCollections,
     securityRules: securityRulesInfo,
     summary:
-      detectedCollections.length > 0
-        ? `Database integration active via ${Array.from(database).join(', ')}. Detected ${detectedCollections.length} collections/tables (${detectedCollections.map((c) => c.name).join(', ')}). Schema structure is partially inferred from client SDK operations and rules.`
-        : 'No dedicated database or ORM schemas detected in inspected project files.',
-    schemaConfidence: legacyDatabaseSchemas.some((s) => s.fields.length > 1) ? 'partial' : detectedCollections.length > 0 ? 'partial' : 'none',
+      activeSdkCollections.length > 0
+        ? `Database integration active via Cloud Firestore. Detected ${activeSdkCollections.length} active application collections queried/mutated in code (${activeSdkCollections.map((c) => c.name).join(', ')}). An additional ${ruleOnlyCollectionPaths.length} collection paths are declared in security rules (${ruleOnlyCollectionPaths.map((c) => c.name).join(', ')}) without observed client application operations.`
+        : database.has('MongoDB')
+        ? `Database integration active via MongoDB / Mongoose. Detected ${legacyDatabaseSchemas.length} Mongoose models (${legacyDatabaseSchemas.map((s) => s.modelName).join(', ')}).`
+        : 'No dedicated database models or client datastore operations detected in inspected project files.',
+    schemaConfidence: activeSdkCollections.length > 0 ? 'partial' : 'none',
   };
 
   // 5. API & Communication Analysis
@@ -557,7 +655,6 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   const externalHttpCalls: Array<{ method: string; urlPattern: string; filePath: string }> = [];
 
   for (const [relPath, code] of fileContents.entries()) {
-    // Only detect server REST routes if file actually sets up an Express route
     if (hasConfirmedServer) {
       const routeMatches = code.matchAll(/(router|app)\.(get|post|put|delete|patch)\(\s*['"`]([^'"`]+)['"`]/g);
       for (const rm of routeMatches) {
@@ -590,7 +687,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       });
     }
 
-    // External fetch / axios calls
+    // External fetch calls
     const fetchMatches = code.matchAll(/fetch\(\s*['"`](https?:\/\/[^'"`]+)['"`]/g);
     for (const fm of fetchMatches) {
       externalHttpCalls.push({
@@ -615,13 +712,13 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     externalHttpCalls,
     summary:
       serverRestEndpoints.length > 0
-        ? `Application declares ${serverRestEndpoints.length} custom server REST endpoints.`
+        ? `Application operates an Express HTTP server declaring ${serverRestEndpoints.length} REST endpoints.`
         : clientSdkOperations.length > 0
-        ? `Application communicates directly with cloud backend services via client SDK calls (Firebase Authentication & Cloud Firestore). No custom Express REST endpoints are required or declared.`
-        : 'No network API endpoints or client SDK operations detected in inspected files.',
+        ? 'Application communicates directly with cloud backend services via client SDK calls (Firebase Authentication & Cloud Firestore). No custom Express REST endpoints are required or declared.'
+        : 'No network API endpoints or client SDK operations detected.',
   };
 
-  // 6. Detailed Module Analysis (replacing generic repetitive descriptions)
+  // 6. Deep Module Classification & Evidence-Based Responsibility Generation
   const modules: ModuleAnalysis[] = [];
   const legacyComponents: IProjectComponent[] = [];
 
@@ -629,70 +726,127 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     const ext = path.extname(relPath).toLowerCase();
     if (!['.js', '.jsx', '.ts', '.tsx', '.py'].includes(ext)) continue;
 
-    const lower = relPath.toLowerCase();
     const baseName = path.basename(relPath, ext);
+    const lowerRel = relPath.toLowerCase();
 
-    // Determine module type
+    // Classification
     let modType: ModuleAnalysis['type'] = 'other';
-    if (lower.includes('/pages/') || lower.includes('/views/')) modType = 'page';
-    else if (lower.includes('/context/')) modType = 'context';
-    else if (lower.includes('/services/')) modType = 'service';
-    else if (lower.includes('/hooks/')) modType = 'hook';
-    else if (lower.includes('/utils/')) modType = 'utility';
-    else if (lower.includes('/routes/')) modType = 'route_handler';
-    else if (lower.includes('/models/')) modType = 'model';
-    else if (lower.includes('/components/')) modType = 'ui_component';
+    if (baseName === 'main' || baseName === 'index' || baseName === 'server' || baseName === 'App') {
+      modType = 'entry_point';
+    } else if (lowerRel.includes('/pages/') || lowerRel.includes('/views/') || baseName.endsWith('Page')) {
+      modType = 'page';
+    } else if (lowerRel.includes('/components/')) {
+      modType = 'ui_component';
+    } else if (lowerRel.includes('/context/') || code.includes('createContext')) {
+      modType = 'context';
+    } else if (lowerRel.includes('/services/')) {
+      modType = 'service';
+    } else if (lowerRel.includes('/hooks/') || baseName.startsWith('use')) {
+      modType = 'hook';
+    } else if (lowerRel.includes('/routes/')) {
+      modType = 'route_handler';
+    } else if (lowerRel.includes('/models/')) {
+      modType = 'model';
+    } else if (lowerRel.includes('/scripts/') || ext === '.py') {
+      modType = 'script';
+    } else if (baseName.includes('config') || ext === '.json') {
+      modType = 'config';
+    } else if (lowerRel.includes('test') || baseName.endsWith('.test') || baseName.endsWith('.spec')) {
+      modType = 'test';
+    } else if (lowerRel.includes('/utils/') || lowerRel.includes('/helpers/')) {
+      modType = 'utility';
+    }
 
-    // Scan exports
-    const exportMatches = code.matchAll(/export\s+(?:default\s+)?(?:const|function|class)\s+([a-zA-Z0-9_]+)/g);
-    const exports = Array.from(exportMatches).map((m) => m[1]);
-    if (code.includes('export default') && !exports.includes('default')) exports.push('default');
+    // Extract function exports
+    const exports: string[] = [];
+    const exportFuncMatches = code.matchAll(/export\s+(async\s+)?function\s+([a-zA-Z0-9_]+)/g);
+    for (const ef of exportFuncMatches) exports.push(ef[2]);
 
-    // Scan imported services and hooks
+    const exportConstMatches = code.matchAll(/export\s+const\s+([a-zA-Z0-9_]+)\s*=/g);
+    for (const ec of exportConstMatches) exports.push(ec[1]);
+
+    if (code.includes('export default')) {
+      exports.push(`default (${baseName})`);
+    }
+
+    // Extract imported modules
+    const importedServices: string[] = [];
+    const importMatches = code.matchAll(/import\s+.*?\s+from\s+['"]([^'"]+)['"]/g);
+    for (const im of importMatches) {
+      const impPath = im[1];
+      if (!impPath.startsWith('.') && !impPath.startsWith('react') && !importedServices.includes(impPath)) {
+        importedServices.push(impPath);
+      } else if (impPath.startsWith('.')) {
+        const impBase = path.basename(impPath);
+        if (!importedServices.includes(impBase)) importedServices.push(impBase);
+      }
+    }
+
+    // Extract React hooks
     const hooksUsed: string[] = [];
     ['useState', 'useEffect', 'useContext', 'useAuth', 'useNavigate', 'useParams', 'useMemo', 'useCallback'].forEach((h) => {
       if (code.includes(h)) hooksUsed.push(h);
     });
 
-    const importedServices: string[] = [];
-    ['authService', 'attendanceService', 'memberService', 'teamService', 'configService', 'firebase', 'api'].forEach((s) => {
-      if (code.includes(s)) importedServices.push(s);
-    });
-
+    // Extract integrations
     const externalIntegrations: string[] = [];
-    if (code.includes('firebase')) externalIntegrations.push('Firebase SDK');
+    if (code.includes('firebase/auth') || code.includes('getAuth')) externalIntegrations.push('Firebase Auth');
+    if (code.includes('firebase/firestore') || code.includes('getFirestore')) externalIntegrations.push('Cloud Firestore');
     if (code.includes('recharts')) externalIntegrations.push('Recharts');
     if (code.includes('xlsx')) externalIntegrations.push('SheetJS (XLSX)');
 
-    // Formulate evidence-based role & responsibilities
+    // Generate specific, non-generic responsibilities
     let role = '';
     const responsibilities: string[] = [];
 
-    if (modType === 'page') {
+    if (modType === 'entry_point') {
+      role = `Application bootstrap module mounting root components.`;
+      responsibilities.push(`Initializes application context and binds root React DOM element`);
+      if (code.includes('createBrowserRouter') || code.includes('<Router') || code.includes('<Routes')) {
+        responsibilities.push('Configures client-side routing hierarchy');
+      }
+    } else if (modType === 'page') {
       role = `Page view presenting ${baseName.replace(/([A-Z])/g, ' $1').trim()} interface.`;
-      responsibilities.push('Renders top-level view container');
-      if (hooksUsed.length > 0) responsibilities.push(`Manages view state with ${hooksUsed.slice(0, 3).join(', ')}`);
-      if (importedServices.length > 0) responsibilities.push(`Interacts with ${importedServices.join(', ')}`);
+      responsibilities.push(`Renders top-level view and layout elements for ${baseName}`);
+      if (hooksUsed.length > 0) responsibilities.push(`Manages view state using ${hooksUsed.slice(0, 3).join(', ')}`);
+      if (importedServices.length > 0) responsibilities.push(`Coordinates operations via ${importedServices.slice(0, 3).join(', ')}`);
     } else if (modType === 'context') {
-      role = `React Context state provider managing application-wide ${baseName.replace('Context', '')} state.`;
-      responsibilities.push('Exposes shared context hook to child components');
-      responsibilities.push('Maintains persistent reactive state across route transitions');
+      role = `React Context provider maintaining application-wide ${baseName.replace('Context', '')} state.`;
+      responsibilities.push(`Provides reactive state container and exposes context hooks to consumer components`);
+      if (externalIntegrations.length > 0) responsibilities.push(`Synchronizes auth and session state with ${externalIntegrations.join(', ')}`);
     } else if (modType === 'service') {
-      role = `Backend communication service handling ${baseName.replace('Service', '')} operations.`;
-      responsibilities.push('Abstracts SDK operations and business operations');
-      if (externalIntegrations.length > 0) responsibilities.push(`Integrates with ${externalIntegrations.join(', ')}`);
-    } else if (modType === 'hook') {
-      role = `Custom reusable React hook encapsulating ${baseName} logic.`;
-      responsibilities.push('Encapsulates component state and lifecycle side effects');
-    } else if (modType === 'utility') {
-      role = `Utility helper functions supporting ${baseName} transformations.`;
-      responsibilities.push('Data formatting and helper calculations');
+      role = `Data access and communication service for ${baseName.replace('Service', '')} operations.`;
+      if (exports.length > 0) {
+        responsibilities.push(`Exposes service operations: ${exports.filter((e) => !e.startsWith('default')).slice(0, 4).join(', ')}`);
+      }
+      if (externalIntegrations.length > 0) {
+        responsibilities.push(`Interfaces with ${externalIntegrations.join(', ')} via direct SDK calls`);
+      }
     } else if (modType === 'ui_component') {
-      role = `Reusable interface component rendering ${baseName}.`;
-      responsibilities.push('Presents UI controls and emits user interaction events');
+      role = `Reusable UI component rendering ${baseName} controls.`;
+      responsibilities.push(`Presents interface controls and emits user interaction events`);
+      if (hooksUsed.length > 0) responsibilities.push(`Maintains local interaction state (${hooksUsed.slice(0, 2).join(', ')})`);
+    } else if (modType === 'script') {
+      if (ext === '.py') {
+        role = `Offline Python utility script (${baseName}); not executed during application runtime.`;
+        responsibilities.push('Performs local file maintenance and offline formatting transformations');
+      } else {
+        role = `Administrative script for database maintenance or test execution.`;
+        responsibilities.push('Executes administrative workflow outside main application bundle');
+      }
+    } else if (modType === 'hook') {
+      role = `Custom React hook encapsulating reusable ${baseName} behavior.`;
+      responsibilities.push('Encapsulates component state and lifecycle side effects');
+    } else if (modType === 'config') {
+      role = `Tooling and build configuration file.`;
+      responsibilities.push(`Declares build and compiler settings for ${baseName}`);
     } else {
-      role = `Application source module: ${baseName}.`;
-      responsibilities.push('Provides application logic');
+      role = `Utility helper module providing shared transformation functions.`;
+      if (exports.length > 0) {
+        responsibilities.push(`Exports helper routines: ${exports.slice(0, 3).join(', ')}`);
+      } else {
+        responsibilities.push('Contains supporting utility logic');
+      }
     }
 
     const mod: ModuleAnalysis = {
@@ -707,6 +861,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       responsibilities,
       evidenceSources: [relPath],
       confidence: 'high',
+      lineCount: code.split('\n').length,
     };
     modules.push(mod);
 
@@ -726,8 +881,6 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
 
   let architectureType: ArchitectureModel['architectureType'] = 'frontend_spa_only';
 
-  // Node 1: Client UI Tier
-  const topPages = modules.filter((m) => m.type === 'page').map((m) => m.name).slice(0, 4);
   archNodes.push({
     id: 'client_ui',
     label: 'Client User Interface',
@@ -739,10 +892,8 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     tierNumber: 1,
   });
 
-  // Check architecture style
   if (hasConfirmedServer) {
     architectureType = 'client_server_db';
-    // Server Node
     archNodes.push({
       id: 'server_runtime',
       label: 'Server Application',
@@ -785,7 +936,6 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   } else if (auth.has('Firebase Authentication') || database.has('Cloud Firestore (Firebase)')) {
     architectureType = 'client_baas';
 
-    // Firebase Auth Node
     if (auth.has('Firebase Authentication')) {
       archNodes.push({
         id: 'firebase_auth',
@@ -807,7 +957,6 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       });
     }
 
-    // Cloud Firestore Node
     if (database.has('Cloud Firestore (Firebase)')) {
       archNodes.push({
         id: 'cloud_firestore',
@@ -815,7 +964,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         sublabel: 'NoSQL Document Store (BaaS)',
         category: 'baas_database',
         tech: 'Firebase Firestore SDK',
-        evidenceSources: detectedCollections.flatMap((c) => c.evidenceSources),
+        evidenceSources: activeSdkCollections.flatMap((c) => c.evidenceSources),
         isConfirmed: true,
         tierNumber: 2,
       });
@@ -825,7 +974,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         label: 'Firestore SDK (Queries & Mutations)',
         protocol: 'sdk_client',
         isConfirmed: true,
-        evidenceSources: detectedCollections.flatMap((c) => c.evidenceSources),
+        evidenceSources: activeSdkCollections.flatMap((c) => c.evidenceSources),
       });
     }
   } else {
@@ -837,9 +986,9 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     architectureType,
     architectureSummary:
       architectureType === 'client_baas'
-        ? `${detectedProjectName} implements a modern Serverless / BaaS architecture. The ${Array.from(frontend).join(', ') || 'React'} client application interfaces directly with managed cloud services (Firebase Authentication and Cloud Firestore) via client-side SDKs, operating securely without an intermediate custom Express server.`
+        ? `${detectedProjectName} implements a client-side Backend-as-a-Service (BaaS) architecture. The ${Array.from(frontend).join(', ') || 'React'} client application interfaces directly with managed cloud services (Firebase Authentication and Cloud Firestore) via client SDK calls without an intermediate custom Express server.`
         : architectureType === 'client_server_db'
-        ? `${detectedProjectName} implements a classic multi-tier architecture with a client interface, custom Express.js server routing tier, and ${Array.from(database).join(', ') || 'database'} persistence.`
+        ? `${detectedProjectName} implements a multi-tier client/server architecture with a client interface, custom Express.js server routing tier, and ${Array.from(database).join(', ') || 'database'} persistence.`
         : `${detectedProjectName} is structured as a client-side frontend application with no declared server backend or database tier.`,
     nodes: archNodes,
     edges: archEdges,
@@ -849,7 +998,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   // 8. Coverage Report
   const totalDiscovered = allDiscoveredFiles.length;
   const inspectedCount = inspectedFiles.length;
-  const skippedCount = skippedByPolicy.length;
+  const skippedCount = skippedByPolicyFiles.length;
   const coveragePercentage = totalDiscovered > 0 ? Math.round((inspectedCount / totalDiscovered) * 100) : 100;
   const isPartial = totalDiscovered > inspectedCount;
 
@@ -858,15 +1007,17 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     inspectedFilesCount: inspectedCount,
     inspectedFiles,
     skippedByPolicyCount: skippedCount,
-    skippedByPolicySample: skippedByPolicy.slice(0, 15),
+    skippedByPolicySample: skippedByPolicyFiles.slice(0, 15),
     unreadableFilesCount: unreadableFiles.length,
     sizeExceededFilesCount: sizeExceededFiles.length,
-    cappedOmittedFilesCount: cappedOmittedCount,
+    cappedOmittedFilesCount: cappedOmittedFiles.length,
     coveragePercentage,
     isPartial,
     limitationNotice: isPartial
-      ? `Analysis is based on ${inspectedCount} of ${totalDiscovered} total repository files (${coveragePercentage}% coverage). Static inspection excluded ${skippedCount} dependency/build/binary artifacts and prioritized core source modules. Inferences are bounded by this inspected subset.`
+      ? `Analysis is based on ${inspectedCount} of ${totalDiscovered} total repository files (${coveragePercentage}% coverage). Static inspection excluded ${skippedCount} non-code/binary artifacts, ${sizeExceededFiles.length} oversized files, and prioritized core source modules. Inferences are bounded by this inspected subset.`
       : `Full repository coverage achieved (${inspectedCount} of ${totalDiscovered} files analyzed).`,
+    excludedDirectories: Array.from(excludedDirectoriesSet),
+    inventoryReconciled: isInventoryReconciled,
   };
 
   // 9. Readme Content
@@ -896,12 +1047,14 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     projectName: detectedProjectName,
     projectDescription:
       projectDescription ||
-      `Software project built with ${Array.from(languages).join(', ') || 'modern web technologies'}.`,
+      `Software application built with ${primaryRuntime}.`,
     submissionType: 'zip',
     coverage: coverageReport,
     findings,
     technologies: {
+      primaryRuntime,
       languages: Array.from(languages),
+      sourceLanguages,
       frontend: Array.from(frontend),
       backend: Array.from(backend),
       database: Array.from(database),

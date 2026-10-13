@@ -196,14 +196,40 @@ async function runRegressionSuite() {
   assert(detectedCols.includes('attendance') || detectedCols.includes('users') || detectedCols.includes('members') || detectedCols.includes('teams'),
     'Real Firestore collections extracted from rules/SDK calls (found: ' + detectedCols.join(', ') + ')');
 
+  // Reconciled coverage accounting
+  assert(clubAnalysis.coverage.inventoryReconciled === true, 'Coverage accounting is strictly reconciled');
+  const sumCategories =
+    clubAnalysis.coverage.inspectedFilesCount +
+    clubAnalysis.coverage.skippedByPolicyCount +
+    clubAnalysis.coverage.sizeExceededFilesCount +
+    clubAnalysis.coverage.unreadableFilesCount +
+    clubAnalysis.coverage.cappedOmittedFilesCount;
+  assert(clubAnalysis.coverage.totalDiscoveredFiles === sumCategories, 'Total discovered files (' + clubAnalysis.coverage.totalDiscoveredFiles + ') equals sum of non-overlapping categories (' + sumCategories + ')');
+  assert(typeof clubAnalysis.coverage.limitationNotice === 'string', 'Limitation notice generated');
+
+  // Multi-signal language & primary runtime
+  assert(clubAnalysis.technologies.sourceLanguages.some(l => l.language === 'Python' && l.role === 'offline_utility_script'), 'Python correctly classified as offline utility script');
+  assert(clubAnalysis.technologies.primaryRuntime.includes('JavaScript') || clubAnalysis.technologies.primaryRuntime.includes('Browser'), 'Primary runtime correctly identified as JavaScript/Browser: ' + clubAnalysis.technologies.primaryRuntime);
+
+  // Separate Active SDK collections vs Security Rules paths
+  assert(clubAnalysis.database.activeSdkCollections.length > 0, 'Active SDK collections identified: ' + clubAnalysis.database.activeSdkCollections.map(c => c.name).join(', '));
+  assert(clubAnalysis.database.ruleOnlyCollectionPaths.length > 0, 'Rule-only collection paths identified: ' + clubAnalysis.database.ruleOnlyCollectionPaths.length + ' paths');
+  assert(clubAnalysis.database.activeSdkCollections.some(c => c.name === 'attendance'), 'attendance collection verified as active SDK collection');
+  assert(clubAnalysis.database.activeSdkCollections.every(c => c.runtimeUsageEstablished === true), 'All active SDK collections have runtimeUsageEstablished === true');
+  assert(clubAnalysis.database.ruleOnlyCollectionPaths.every(c => c.runtimeUsageEstablished === false), 'All rule-only paths have runtimeUsageEstablished === false');
+
+  // Verify Module responsibilities (no generic filler)
+  assert(clubAnalysis.modules.every(m => !m.responsibilities.includes('Provides application logic')), 'No generic "Provides application logic" filler in module responsibilities');
+  const attServiceMod = clubAnalysis.modules.find(m => m.name === 'attendanceService');
+  assert(Boolean(attServiceMod && attServiceMod.type === 'service'), 'attendanceService classified as service with specific responsibilities');
+
+  // Security claims verification
+  assert(clubAnalysis.database.securityRules?.isStaticallyInspected === true, 'Security rules statically inspected');
+  assert(clubAnalysis.database.securityRules?.deploymentVerified === false, 'Security rules deployment marked unverified');
+
   // Architecture Model assertion
   assert(clubAnalysis.architecture.architectureType === 'client_baas', 'Architecture type is client_baas');
   assert(clubAnalysis.api.communicationModel === 'client_baas_sdk', 'Communication pattern is client_baas_sdk');
-
-  // Coverage statistics & disclosure
-  assert(clubAnalysis.coverage.totalDiscoveredFiles > 0, 'Discovered total files tracked');
-  assert(clubAnalysis.coverage.inspectedFilesCount > 0, 'Inspected files tracked');
-  assert(typeof clubAnalysis.coverage.limitationNotice === 'string', 'Limitation notice generated');
 
   // Architecture Diagram Buffer
   assert(Boolean(clubProject.architectureDiagramSvg), 'Architecture diagram SVG/PNG buffer generated');
@@ -225,6 +251,9 @@ async function runRegressionSuite() {
   assert(docXmlText.includes('Cloud Firestore'), 'Cloud Firestore referenced in document.xml');
   assert(docXmlText.includes('Firebase Authentication'), 'Firebase Authentication referenced in document.xml');
   assert(!docXmlText.includes('Express API server') && !docXmlText.includes('four-tier server'), 'No hallucinated Express server claims in document.xml');
+  assert(!docXmlText.includes('operating securely'), 'No unsupported "operating securely" claims in document.xml');
+  assert(docXmlText.includes('Actively Referenced Application Collections'), 'Active collections section header present in document.xml');
+  assert(docXmlText.includes('Collection Paths Declared in Security Rules Only'), 'Rule-only collections section header present in document.xml');
 
   // --------------------------------------------------------------------------
   // TEST CASE 2: Express + MongoDB (TaskFlow)
