@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 
 export interface GlassButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'teal';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   icon?: React.ReactNode;
@@ -29,13 +29,15 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
 
   const variantClasses = {
     primary:
-      'bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#090D16] font-extrabold shadow-aurora-sm hover:shadow-aurora-md border border-aurora/40 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]',
+      'bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#17243F] font-extrabold shadow-aurora-sm hover:shadow-aurora-md border border-aurora/50 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]',
+    teal:
+      'bg-teal hover:bg-teal-hover active:bg-teal-active text-[#0A1F1C] font-extrabold shadow-teal-sm hover:shadow-teal-md border border-teal/50 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]',
     secondary:
-      'glass-tile-interactive text-cool-primary border border-white/[0.12] hover:border-aurora/40 transition-all duration-200',
+      'glass-tile-interactive text-cool-primary border border-white/[0.14] hover:border-aurora/50 transition-all duration-200',
     outline:
-      'bg-[rgba(28,38,60,0.48)] backdrop-blur-md hover:bg-[rgba(39,51,78,0.65)] text-cool-primary border border-white/[0.10] hover:border-aurora/40 transition-all duration-200',
+      'bg-[rgba(44,65,105,0.52)] backdrop-blur-md hover:bg-[rgba(58,82,128,0.70)] text-cool-primary border border-white/[0.13] hover:border-aurora/50 transition-all duration-200',
     ghost:
-      'bg-transparent hover:bg-white/[0.08] active:bg-white/[0.12] text-cool-muted hover:text-cool-primary border border-transparent transition-colors',
+      'bg-transparent hover:bg-white/[0.10] active:bg-white/[0.14] text-cool-muted hover:text-cool-primary border border-transparent transition-colors',
     danger:
       'bg-status-error-bg hover:bg-status-error-bg/80 active:bg-status-error-bg text-status-error border border-status-error-border transition-colors',
   };

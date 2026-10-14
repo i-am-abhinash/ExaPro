@@ -106,7 +106,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         <GlassButton
           variant="primary"
           size="md"
-          icon={<Plus className="w-4 h-4 text-[#090D16]" />}
+          icon={<Plus className="w-4 h-4 text-[#17243F]" />}
           onClick={onNewAnalysis}
           className="self-start sm:self-auto"
         >
@@ -140,7 +140,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   statusFilter === tab.id
                     ? 'glass-tile-interactive text-cool-primary border border-white/[0.14] shadow-sm'
-                    : 'text-cool-muted hover:text-cool-primary hover:bg-white/[0.06]'
+                    : 'text-cool-muted hover:text-cool-primary hover:bg-white/[0.08]'
                 }`}
               >
                 {tab.label}
@@ -149,7 +149,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           </div>
 
           {/* Grid vs Table View Toggle */}
-          <div className="hidden sm:flex items-center p-1 rounded-xl bg-[rgba(15,21,35,0.70)] border border-white/[0.10] backdrop-blur-md">
+          <div className="hidden sm:flex items-center p-1 rounded-xl bg-[rgba(25,40,68,0.78)] border border-white/[0.12] backdrop-blur-md">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
@@ -183,7 +183,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           title="No evaluations found"
           description="You haven't examined any repositories yet. Start by uploading a ZIP or specifying a GitHub URL."
           actionText="Examine First Project"
-          actionIcon={<Plus className="w-4 h-4 text-[#090D16]" />}
+          actionIcon={<Plus className="w-4 h-4 text-[#17243F]" />}
           onAction={onNewAnalysis}
         />
       ) : filteredProjects.length === 0 ? (
@@ -282,7 +282,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                       <a
                         href={getDownloadDocxUrl(project._id)}
                         download
-                        className="p-1.5 rounded-lg bg-aurora/15 hover:bg-aurora/25 text-aurora border border-aurora/35 transition-colors"
+                        className="p-1.5 rounded-lg bg-aurora/18 hover:bg-aurora/28 text-aurora border border-aurora/40 transition-colors"
                         title="Download DOCX Report"
                       >
                         <Download className="w-4 h-4 text-aurora" />
@@ -307,7 +307,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         <div className="rounded-3xl glass-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-[rgba(15,21,35,0.70)] text-cool-muted border-b border-white/[0.09] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
+              <thead className="bg-[rgba(25,40,68,0.78)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
                 <tr>
                   <th className="py-3.5 px-6">Project Name</th>
                   <th className="py-3.5 px-6">Source</th>
@@ -319,10 +319,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
               </thead>
               <tbody className="divide-y divide-white/[0.06] text-cool-primary">
                 {filteredProjects.map((proj) => (
-                  <tr key={proj._id} className="hover:bg-[rgba(75,94,143,0.18)] transition-colors">
+                  <tr key={proj._id} className="hover:bg-[rgba(100,125,190,0.18)] transition-colors">
                     <td className="py-4 px-6 font-semibold">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-lg bg-[rgba(39,51,78,0.50)] border border-white/[0.10] flex items-center justify-center text-aurora flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[rgba(58,82,128,0.50)] border border-white/[0.12] flex items-center justify-center text-aurora flex-shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <span className="truncate max-w-[200px] font-bold text-cool-primary">{proj.projectName}</span>
@@ -373,9 +373,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                           <a
                             href={getDownloadDocxUrl(proj._id)}
                             download
-                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#090D16] text-xs font-bold shadow-aurora-sm transition-colors"
+                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#17243F] text-xs font-bold shadow-aurora-sm transition-colors"
                           >
-                            <Download className="w-3.5 h-3.5 text-[#090D16]" />
+                            <Download className="w-3.5 h-3.5 text-[#17243F]" />
                             <span>DOCX</span>
                           </a>
                         </>

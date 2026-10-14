@@ -77,7 +77,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Column: Command & Ingestion */}
             <div className="lg:col-span-8 space-y-5">
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[rgba(15,21,35,0.60)] border border-white/[0.12] text-xs font-semibold text-cool-secondary shadow-sm backdrop-blur-md">
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[rgba(25,40,68,0.70)] border border-white/[0.14] text-xs font-semibold text-cool-secondary shadow-sm backdrop-blur-md">
                 <span className="w-2 h-2 rounded-full bg-aurora animate-subtle-pulse" />
                 <span>Examine Project Workspace</span>
               </div>
@@ -98,7 +98,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   className="p-4 rounded-2xl glass-tile-interactive cursor-pointer group"
                 >
                   <div className="flex items-center space-x-3.5">
-                    <div className="w-11 h-11 rounded-xl bg-aurora/15 text-aurora flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
+                    <div className="w-11 h-11 rounded-xl bg-aurora/20 text-aurora flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
                       <UploadCloud className="w-5 h-5" />
                     </div>
                     <div className="space-y-0.5 min-w-0">
@@ -117,8 +117,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   className="p-4 rounded-2xl glass-tile-interactive cursor-pointer group"
                 >
                   <div className="flex items-center space-x-3.5">
-                    <div className="w-11 h-11 rounded-xl bg-white/[0.08] text-cool-primary flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
-                      <Github className="w-5 h-5" />
+                    <div className="w-11 h-11 rounded-xl bg-teal/15 text-teal flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
+                      <Github className="w-5 h-5 text-teal" />
                     </div>
                     <div className="space-y-0.5 min-w-0">
                       <p className="text-sm font-bold text-cool-primary group-hover:text-aurora transition-colors">
@@ -162,7 +162,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <span className="font-semibold text-cool-primary text-[11px]">Database Instance</span>
                   </div>
                   {health?.database.isConnected ? (
-                    <GlassBadge variant="success" dot size="sm">
+                    <GlassBadge variant="teal" dot size="sm">
                       MongoDB Active
                     </GlassBadge>
                   ) : (
@@ -202,7 +202,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-aurora/15 text-aurora flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
+              <div className="w-10 h-10 rounded-xl bg-aurora/20 text-aurora flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
                 <Cpu className="w-5 h-5" />
               </div>
               <div className="space-y-1">
@@ -214,16 +214,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
               {/* Supported Models */}
               <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(15,21,35,0.50)] border border-white/[0.08] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   client_baas
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(15,21,35,0.50)] border border-white/[0.08] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   polyglot_fullstack
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(15,21,35,0.50)] border border-white/[0.08] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   client_server_db
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(15,21,35,0.50)] border border-white/[0.08] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   frontend_spa_only
                 </span>
               </div>
@@ -243,8 +243,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-white/[0.08] text-cool-primary flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
-                <FileText className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-violet/18 text-violet flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
+                <FileText className="w-5 h-5 text-violet" />
               </div>
               <div className="space-y-1">
                 <h3 className="font-bold text-cool-primary text-lg tracking-tight">14 Camera-Ready Sections</h3>
@@ -309,7 +309,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               title="No project evaluations yet"
               description="Submit a project ZIP archive or public GitHub repository to generate your first technical evaluation report."
               actionText="Examine First Project"
-              actionIcon={<UploadCloud className="w-4 h-4 text-[#090D16]" />}
+              actionIcon={<UploadCloud className="w-4 h-4 text-[#17243F]" />}
               onAction={() => onStartSubmission('zip')}
             />
           ) : filteredProjects.length === 0 ? (
@@ -319,7 +319,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-[rgba(15,21,35,0.70)] text-cool-muted border-b border-white/[0.09] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
+                <thead className="bg-[rgba(25,40,68,0.78)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
                   <tr>
                     <th className="py-3.5 px-6">Project Name</th>
                     <th className="py-3.5 px-6">Source</th>
@@ -331,10 +331,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </thead>
                 <tbody className="divide-y divide-white/[0.06] text-cool-primary">
                   {filteredProjects.map((proj) => (
-                    <tr key={proj._id} className="hover:bg-[rgba(75,94,143,0.18)] transition-colors group">
+                    <tr key={proj._id} className="hover:bg-[rgba(100,125,190,0.18)] transition-colors group">
                       <td className="py-4 px-6 font-semibold">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-lg bg-[rgba(39,51,78,0.50)] border border-white/[0.10] flex items-center justify-center text-aurora flex-shrink-0 group-hover:border-aurora/40 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-[rgba(58,82,128,0.50)] border border-white/[0.12] flex items-center justify-center text-aurora flex-shrink-0 group-hover:border-aurora/40 transition-colors">
                             <FileText className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -355,7 +355,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <span className="inline-flex items-center space-x-1.5 text-cool-secondary">
                           {proj.submissionType === 'github' ? (
                             <>
-                              <Github className="w-3.5 h-3.5 text-cool-primary flex-shrink-0" />
+                              <Github className="w-3.5 h-3.5 text-teal flex-shrink-0" />
                               <span className="truncate max-w-[140px] font-mono text-[11px]">GitHub</span>
                             </>
                           ) : (
@@ -415,9 +415,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             <a
                               href={getDownloadDocxUrl(proj._id)}
                               download
-                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#090D16] text-xs font-bold shadow-aurora-sm transition-colors"
+                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#17243F] text-xs font-bold shadow-aurora-sm transition-colors"
                             >
-                              <Download className="w-3.5 h-3.5 text-[#090D16]" />
+                              <Download className="w-3.5 h-3.5 text-[#17243F]" />
                               <span>DOCX</span>
                             </a>
                           </>

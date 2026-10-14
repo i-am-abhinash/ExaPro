@@ -72,8 +72,8 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#090D16] text-[#E9EDFF] flex flex-col justify-between selection:bg-aurora/25 selection:text-aurora">
-      {/* Midnight Aurora Background with layered light sources */}
+    <div className="relative min-h-screen bg-[#17243F] text-[#F4F6FF] flex flex-col justify-between selection:bg-aurora/30 selection:text-aurora">
+      {/* Midnight Sapphire Background with layered light sources */}
       <AmbientBackground />
 
       <div className="relative z-10 flex-1 flex flex-col">
@@ -190,7 +190,7 @@ export const App: React.FC = () => {
       </div>
 
       {/* Global Minimalist Footer */}
-      <footer className="relative z-10 border-t border-white/[0.09] bg-[rgba(15,21,35,0.78)] backdrop-blur-md py-6 text-xs text-cool-muted">
+      <footer className="relative z-10 border-t border-white/[0.12] bg-[rgba(25,40,68,0.78)] backdrop-blur-md py-6 text-xs text-cool-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
             <span className="font-bold text-cool-primary">EXAPRO</span>
@@ -198,7 +198,7 @@ export const App: React.FC = () => {
             <span>AI-Powered Software Architecture Evaluator & Technical Documentation Engine</span>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-[11px] text-cool-muted font-mono">
-            <span>Midnight Aurora Glass</span>
+            <span>Midnight Sapphire Glass</span>
             <span>•</span>
             <span>Translucent Layered Depth</span>
             <span>•</span>

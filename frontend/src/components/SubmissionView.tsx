@@ -200,7 +200,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     : 'text-cool-muted hover:text-cool-primary'
                 }`}
               >
-                <Github className="w-4 h-4 text-cool-primary" />
+                <Github className="w-4 h-4 text-teal" />
                 <span>GitHub Repository</span>
               </button>
             </div>
@@ -225,7 +225,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 group ${
                       isDragging
                         ? 'border-aurora bg-aurora/10 scale-[1.01]'
-                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(20,28,46,0.40)] hover:bg-[rgba(28,38,60,0.55)] backdrop-blur-md'
+                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(30,46,76,0.45)] hover:bg-[rgba(44,65,105,0.60)] backdrop-blur-md'
                     }`}
                   >
                     <div className="w-16 h-16 mx-auto rounded-2xl glass-stat-tile flex items-center justify-center text-aurora group-hover:scale-105 transition-transform shadow-glass-sm">
@@ -321,7 +321,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               <GlassButton
                 variant="primary"
                 size="lg"
-                icon={<ArrowRight className="w-5 h-5 text-[#090D16]" />}
+                icon={<ArrowRight className="w-5 h-5 text-[#17243F]" />}
                 onClick={handleStartAnalysis}
                 disabled={activeTab === 'zip' ? !selectedFile : !repoUrl.trim()}
               >
@@ -350,7 +350,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 <span className="text-cool-muted">Pipeline Execution</span>
                 <span className="text-aurora font-bold">{progressPercent}%</span>
               </div>
-              <div className="h-2.5 w-full bg-[rgba(15,21,35,0.60)] rounded-full overflow-hidden p-0.5 border border-white/[0.10]">
+              <div className="h-2.5 w-full bg-[rgba(25,40,68,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
                 <div
                   className="h-full bg-aurora rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.max(5, progressPercent)}%` }}
@@ -371,7 +371,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                         ? 'bg-status-success-bg border-status-success-border text-status-success font-medium'
                         : isCurrent
                         ? 'bg-aurora/15 border-aurora/40 text-aurora font-bold shadow-sm'
-                        : 'bg-[rgba(20,28,46,0.45)] border-white/[0.08] text-cool-muted'
+                        : 'bg-[rgba(30,46,76,0.45)] border-white/[0.10] text-cool-muted'
                     }`}
                   >
                     {isDone ? (
@@ -415,9 +415,9 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               <a
                 href={getDownloadDocxUrl(activeProjectId)}
                 download
-                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#090D16] border border-aurora/40 text-xs sm:text-sm font-bold shadow-aurora-sm transition-colors"
+                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#17243F] border border-aurora/50 text-xs sm:text-sm font-bold shadow-aurora-sm transition-colors"
               >
-                <Download className="w-4 h-4 text-[#090D16]" />
+                <Download className="w-4 h-4 text-[#17243F]" />
                 <span>Download DOCX</span>
               </a>
             </div>

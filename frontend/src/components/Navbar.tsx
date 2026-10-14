@@ -30,9 +30,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             layoutId="brand-logo-icon"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-9 h-9 rounded-xl bg-aurora flex items-center justify-center text-[#090D16] shadow-aurora-sm transition-transform duration-200"
+            className="w-9 h-9 rounded-xl bg-aurora flex items-center justify-center text-[#17243F] shadow-aurora-sm transition-transform duration-200"
           >
-            <Layers className="w-5 h-5 text-[#090D16]" />
+            <Layers className="w-5 h-5 text-[#17243F]" />
           </motion.div>
 
           <div className="flex flex-col">
@@ -43,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 EXAPRO
               </motion.span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-aurora/15 text-aurora border border-aurora/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-aurora/18 text-aurora border border-aurora/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
                 PRO DOCX
               </span>
             </div>
@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`p-2 rounded-xl text-xs font-semibold transition-all ${
               currentTab === 'landing'
                 ? 'glass-tile-interactive text-cool-primary border border-white/[0.14] shadow-sm'
-                : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
+                : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.08]'
             }`}
             title="Overview & Landing"
           >
@@ -78,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
               currentTab === 'dashboard'
                 ? 'glass-tile-interactive text-cool-primary border border-white/[0.14] shadow-sm'
-                : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.06]'
+                : 'text-cool-secondary hover:text-cool-primary hover:bg-white/[0.08]'
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -89,8 +89,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('new')}
             className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               currentTab === 'new'
-                ? 'bg-aurora text-[#090D16] shadow-aurora-sm border border-aurora/40'
-                : 'text-aurora bg-aurora/15 hover:bg-aurora/25 border border-aurora/35 shadow-sm'
+                ? 'bg-aurora text-[#17243F] shadow-aurora-sm border border-aurora/50'
+                : 'text-aurora bg-aurora/18 hover:bg-aurora/28 border border-aurora/40 shadow-sm'
             }`}
           >
             <PlusCircle className="w-4 h-4" />

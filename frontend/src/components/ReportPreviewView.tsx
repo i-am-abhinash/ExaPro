@@ -110,7 +110,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-cool-muted pl-8">
               <span className="inline-flex items-center space-x-1.5 font-medium text-cool-primary">
-                {report.submissionType === 'github' ? <Github className="w-3.5 h-3.5 text-cool-primary" /> : <UploadCloud className="w-3.5 h-3.5 text-aurora" />}
+                {report.submissionType === 'github' ? <Github className="w-3.5 h-3.5 text-teal" /> : <UploadCloud className="w-3.5 h-3.5 text-aurora" />}
                 <span className="font-mono">{report.repositoryUrl || report.uploadedFileName}</span>
               </span>
               {report.commitSha && (
@@ -125,9 +125,9 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             <a
               href={getDownloadDocxUrl(report.projectId)}
               download
-              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#090D16] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/40 transition-all transform hover:-translate-y-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
+              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#17243F] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/50 transition-all transform hover:-translate-y-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
             >
-              <Download className="w-4 h-4 text-[#090D16]" />
+              <Download className="w-4 h-4 text-[#17243F]" />
               <span>Download DOCX Report</span>
             </a>
           </div>
@@ -184,7 +184,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             </div>
 
             {/* Embedded High-Resolution SVG Canvas */}
-            <div className="rounded-2xl overflow-hidden bg-[rgba(9,13,22,0.75)] border border-white/[0.10] p-4 sm:p-6 shadow-inner backdrop-blur-md">
+            <div className="rounded-2xl overflow-hidden bg-[rgba(19,30,53,0.78)] border border-white/[0.12] p-4 sm:p-6 shadow-inner backdrop-blur-md">
               <div
                 className="w-full overflow-x-auto flex justify-center py-2"
                 dangerouslySetInnerHTML={{ __html: report.architectureDiagramSvg }}
@@ -192,7 +192,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             </div>
 
             {/* Architecture Narrative */}
-            <div className="p-5 rounded-2xl bg-[rgba(15,21,35,0.60)] border border-white/[0.10] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal backdrop-blur-sm">
+            <div className="p-5 rounded-2xl bg-[rgba(25,40,68,0.70)] border border-white/[0.12] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal backdrop-blur-sm">
               {report.architectureDescription}
             </div>
           </div>
@@ -264,7 +264,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           {/* SECTION 4: PROJECT STRUCTURE */}
           <div id="section-structure" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">4. Directory Structure (ASCII Code Tree)</h2>
-            <div className="bg-[rgba(9,13,22,0.75)] p-5 rounded-2xl border border-white/[0.10] font-mono text-[11px] text-cool-primary overflow-x-auto leading-relaxed max-h-96 backdrop-blur-md">
+            <div className="bg-[rgba(19,30,53,0.78)] p-5 rounded-2xl border border-white/[0.12] font-mono text-[11px] text-cool-primary overflow-x-auto leading-relaxed max-h-96 backdrop-blur-md">
               <pre>{report.documentation.projectStructureTree}</pre>
             </div>
           </div>
@@ -344,9 +344,9 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             <a
               href={getDownloadDocxUrl(report.projectId)}
               download
-              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#090D16] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/40 transition-all transform hover:-translate-y-0.5 flex-shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
+              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#17243F] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/50 transition-all transform hover:-translate-y-0.5 flex-shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
             >
-              <Download className="w-4 h-4 text-[#090D16]" />
+              <Download className="w-4 h-4 text-[#17243F]" />
               <span>Download DOCX Report</span>
             </a>
           </div>
