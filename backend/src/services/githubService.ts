@@ -11,6 +11,8 @@ export interface GitHubRepoMeta {
   rootDir: string;
   allFilePaths: string[];
   inspectedFilePaths: string[];
+  failedFilePaths: string[];
+  skippedFilePaths: string[];
 }
 
 const IGNORED_PATH_PREFIXES = [
@@ -159,24 +161,45 @@ export async function fetchGitHubRepo(repoUrl: string, uniqueId: string): Promis
   }
 
   const inspectedFilePaths: string[] = [];
+  const failedFilePaths: string[] = [];
+  const skippedFilePaths: string[] = [];
 
-  // Download files in chunks with raw github user content (fast and avoids heavy API rate quota on blobs)
+  // Record files skipped because of priority cap
+  if (sortedFiles.length > MAX_GITHUB_FILES_TO_DOWNLOAD) {
+    sortedFiles.slice(MAX_GITHUB_FILES_TO_DOWNLOAD).forEach((f) => skippedFilePaths.push(f.path));
+  }
+
+  // Download files in chunks with raw github user content
   const chunkSize = 8;
   for (let i = 0; i < filesToDownload.length; i += chunkSize) {
     const chunk = filesToDownload.slice(i, i + chunkSize);
     await Promise.all(
       chunk.map(async (fileItem) => {
         try {
+          // Path traversal safety validation
+          const cleanRel = fileItem.path.replace(/\\/g, '/').replace(/^\.\//, '');
+          const targetFilePath = path.resolve(targetExtractDir, cleanRel);
+          if (!targetFilePath.startsWith(targetExtractDir + path.sep)) {
+            console.warn(`[GitHub] Security: Path traversal blocked for remote file: ${fileItem.path}`);
+            failedFilePaths.push(fileItem.path);
+            return;
+          }
+
           const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${defaultBranch}/${fileItem.path}`;
           const fileRes = await fetch(rawUrl, {
             headers: GITHUB_TOKEN ? { Authorization: `token ${GITHUB_TOKEN}` } : {},
           });
-          if (!fileRes.ok) return;
+          if (!fileRes.ok) {
+            failedFilePaths.push(fileItem.path);
+            return;
+          }
 
           const content = await fileRes.text();
-          if (content.length > MAX_GITHUB_FILE_SIZE_BYTES) return;
+          if (content.length > MAX_GITHUB_FILE_SIZE_BYTES) {
+            skippedFilePaths.push(fileItem.path);
+            return;
+          }
 
-          const targetFilePath = path.resolve(targetExtractDir, fileItem.path);
           const parentDir = path.dirname(targetFilePath);
           if (!fs.existsSync(parentDir)) {
             fs.mkdirSync(parentDir, { recursive: true });
@@ -185,6 +208,7 @@ export async function fetchGitHubRepo(repoUrl: string, uniqueId: string): Promis
           fs.writeFileSync(targetFilePath, content, 'utf-8');
           inspectedFilePaths.push(fileItem.path);
         } catch (err: any) {
+          failedFilePaths.push(fileItem.path);
           console.warn(`[GitHub] Error downloading file ${fileItem.path}: ${err.message}`);
         }
       })
@@ -200,5 +224,7 @@ export async function fetchGitHubRepo(repoUrl: string, uniqueId: string): Promis
     rootDir: targetExtractDir,
     allFilePaths: validFiles.map((f) => f.path),
     inspectedFilePaths,
+    failedFilePaths,
+    skippedFilePaths,
   };
 }

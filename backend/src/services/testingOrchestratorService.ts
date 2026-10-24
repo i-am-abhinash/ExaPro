@@ -56,11 +56,11 @@ export async function runAutomatedTestingPipeline(
     extractedDir,
     analysis,
     planResult.testCases,
-    staticResult.findings
+    staticResult.faultFindings
   );
 
   // Combine static defect findings with runtime execution findings
-  const allFindings = [...staticResult.findings, ...sandboxResult.executionFindings];
+  const allFindings = [...staticResult.faultFindings, ...sandboxResult.executionFindings];
 
   // Assign projectId to all findings
   allFindings.forEach((f) => {

@@ -191,19 +191,52 @@ export interface IApiEndpointInfo {
   description?: string;
 }
 
+export interface IEvidenceFinding {
+  id: string;
+  title: string;
+  description: string;
+  severity: FindingSeverity;
+  confidence: FindingConfidence;
+  status: 'confirmed' | 'suspected' | 'informational' | 'needs-review';
+  category: string;
+  analysisType: 'deterministic' | 'compiler' | 'linter' | 'heuristic' | 'ai-assisted';
+  filePath?: string;
+  startLine?: number;
+  endLine?: number;
+  startColumn?: number;
+  endColumn?: number;
+  lineRange?: { start: number; end: number };
+  codeExcerpt?: string;
+  ruleId: string;
+  evidence: IFindingEvidence[];
+  reasoning: string;
+  impact: string;
+  recommendation: string;
+  limitations?: string;
+}
+
 export interface IDocumentationSections {
   executiveSummary: string;
   projectOverview: string;
+  purposeAndFunctionality?: string;
+  problemStatement?: string;
   technologyStackDescription: string;
   projectStructureTree: string;
   systemArchitectureDescription: string;
   moduleDetails: string;
+  entryPointsAndStartup?: string;
   dataFlowDescription: string;
-  databaseDesignDescription: string;
   apiDocumentationDescription: string;
+  databaseDesignDescription: string;
+  authImplementation?: string;
+  configurationAndEnvironment?: string;
   setupAndExecutionInstructions: string;
+  buildAndDevelopment?: string;
   testingAndQualityDescription: string;
+  externalIntegrations?: string;
+  securityObservations?: string;
   limitationsAndObservations: string;
+  coverageAndUnsupported?: string;
   appendix: string;
 }
 

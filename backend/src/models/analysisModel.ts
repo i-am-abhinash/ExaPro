@@ -2,6 +2,57 @@ export type FindingStatus = 'confirmed' | 'probable' | 'not_detected' | 'unknown
 export type EvidenceLevel = 'declared_in_manifest' | 'imported_in_code' | 'configured_in_file' | 'runtime_verified';
 export type ConfidenceLevel = 'high' | 'medium' | 'low';
 
+// 17-field Evidence Schema specified in Section 3.2
+export type EvidenceFindingSeverity = 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational';
+export type EvidenceFindingStatus = 'confirmed' | 'suspected' | 'informational' | 'needs-review';
+export type EvidenceFindingCategory =
+  | 'syntax'
+  | 'type'
+  | 'dependency'
+  | 'configuration'
+  | 'api'
+  | 'database'
+  | 'security'
+  | 'maintainability'
+  | 'startup'
+  | 'performance';
+
+export type EvidenceAnalysisType = 'deterministic' | 'compiler' | 'linter' | 'heuristic' | 'ai-assisted';
+
+export interface IEvidenceFindingItem {
+  id: string;
+  type: 'log' | 'screenshot' | 'http_response' | 'test_output' | 'code_snippet';
+  title: string;
+  data: string;
+  filePath?: string;
+  lineNumber?: number;
+  timestamp: string;
+}
+
+export interface IEvidenceFinding {
+  id: string;
+  title: string;
+  description: string;
+  severity: EvidenceFindingSeverity;
+  confidence: ConfidenceLevel;
+  status: EvidenceFindingStatus;
+  category: EvidenceFindingCategory;
+  analysisType: EvidenceAnalysisType;
+  filePath?: string;
+  startLine?: number;
+  endLine?: number;
+  startColumn?: number;
+  endColumn?: number;
+  lineRange?: { start: number; end: number };
+  codeExcerpt?: string;
+  ruleId: string;
+  evidence: IEvidenceFindingItem[];
+  reasoning: string;
+  impact: string;
+  recommendation: string;
+  limitations?: string;
+}
+
 export interface Finding {
   id: string;
   category:
@@ -57,6 +108,8 @@ export interface ArchitectureModel {
   inferences: string[];
 }
 
+export type AnalysisRunStatus = 'completed' | 'completed_with_warnings' | 'partial' | 'failed' | 'unsupported';
+
 export interface CoverageReport {
   totalDiscoveredFiles: number;
   inspectedFilesCount: number;
@@ -66,10 +119,30 @@ export interface CoverageReport {
   unreadableFilesCount: number;
   sizeExceededFilesCount: number;
   cappedOmittedFilesCount: number;
+  parseFailedFilesCount: number;
+  parseFailedFiles: string[];
+  unsupportedFilesCount: number;
+  unsupportedFiles: string[];
+  excludedDirectories: string[];
+  languagesAnalyzed: string[];
+  rulesExecuted: string[];
+  typeChecksPerformed: boolean;
+  dependencyChecksPerformed: boolean;
   coveragePercentage: number;
+  analysisStatus: AnalysisRunStatus;
+  findingsBySeverity: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+    informational: number;
+  };
+  findingsByCategory: Record<string, number>;
+  warnings: string[];
+  errors: string[];
+  partialReasons: string[];
   isPartial: boolean;
   limitationNotice: string;
-  excludedDirectories: string[];
   inventoryReconciled: boolean;
 }
 
@@ -197,5 +270,6 @@ export interface StructuredProjectModel {
   dependenciesList: Array<{ name: string; version: string; isDev: boolean }>;
   folderTree: string;
   readmeSnippet?: string;
+  sourceFindings: IEvidenceFinding[];
   limitations: string[];
 }

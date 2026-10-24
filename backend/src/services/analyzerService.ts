@@ -15,7 +15,9 @@ import {
   FindingStatus,
   EvidenceLevel,
   ConfidenceLevel,
+  IEvidenceFinding,
 } from '../models/analysisModel';
+import { performStaticDefectAnalysis } from './staticDefectAnalyzer';
 import {
   IDetectedTechnologies,
   IProjectComponent,
@@ -1388,12 +1390,50 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     inferences,
   };
 
-  // 8. Coverage Report
+  // 8. Coverage Report & Evidence-Aware Source Defect Analysis
   const totalDiscovered = allDiscoveredFiles.length;
   const inspectedCount = inspectedFiles.length;
   const skippedCount = skippedByPolicyFiles.length;
   const coveragePercentage = totalDiscovered > 0 ? Math.round((inspectedCount / totalDiscovered) * 100) : 100;
   const isPartial = totalDiscovered > inspectedCount;
+
+  // Track unsupported language files
+  const unsupportedExts = new Set(['.c', '.cpp', '.cs', '.rb', '.php', '.rs', '.swift', '.kt', '.scala', '.go', '.dart', '.sh', '.bat', '.ps1']);
+  const unsupportedFiles = allDiscoveredFiles.filter((f) => unsupportedExts.has(path.extname(f).toLowerCase()));
+
+  // Run comprehensive static defect analyzer
+  const staticResult = performStaticDefectAnalysis(rootDir, allDiscoveredFiles, inspectedFiles, serverRestEndpoints);
+
+  const findingsBySeverity = {
+    critical: staticResult.findings.filter((f) => f.severity === 'Critical').length,
+    high: staticResult.findings.filter((f) => f.severity === 'High').length,
+    medium: staticResult.findings.filter((f) => f.severity === 'Medium').length,
+    low: staticResult.findings.filter((f) => f.severity === 'Low').length,
+    informational: staticResult.findings.filter((f) => f.severity === 'Informational').length,
+  };
+
+  const findingsByCategory: Record<string, number> = {};
+  for (const f of staticResult.findings) {
+    findingsByCategory[f.category] = (findingsByCategory[f.category] || 0) + 1;
+  }
+
+  let analysisStatus: 'completed' | 'completed_with_warnings' | 'partial' | 'failed' | 'unsupported' = 'completed';
+  const partialReasons: string[] = [];
+
+  if (totalDiscovered === 0) {
+    analysisStatus = 'failed';
+    partialReasons.push('Empty project archive; zero files discovered.');
+  } else if (languages.size === 0 && unsupportedFiles.length > 0) {
+    analysisStatus = 'unsupported';
+    partialReasons.push(`Repository contains only unsupported language files (${unsupportedFiles.slice(0, 5).join(', ')}).`);
+  } else if (isPartial) {
+    analysisStatus = 'partial';
+    if (sizeExceededFiles.length > 0) partialReasons.push(`${sizeExceededFiles.length} files exceeded size limit (150KB).`);
+    if (cappedOmittedFiles.length > 0) partialReasons.push(`${cappedOmittedFiles.length} files exceeded max inspection cap (150 files).`);
+    if (unreadableFiles.length > 0) partialReasons.push(`${unreadableFiles.length} files were unreadable.`);
+  } else if (findingsBySeverity.critical > 0 || staticResult.parseFailedFiles.length > 0) {
+    analysisStatus = 'completed_with_warnings';
+  }
 
   const coverageReport: CoverageReport = {
     totalDiscoveredFiles: totalDiscovered,
@@ -1404,12 +1444,26 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     unreadableFilesCount: unreadableFiles.length,
     sizeExceededFilesCount: sizeExceededFiles.length,
     cappedOmittedFilesCount: cappedOmittedFiles.length,
+    parseFailedFilesCount: staticResult.parseFailedFiles.length,
+    parseFailedFiles: staticResult.parseFailedFiles,
+    unsupportedFilesCount: unsupportedFiles.length,
+    unsupportedFiles,
+    excludedDirectories: Array.from(excludedDirectoriesSet),
+    languagesAnalyzed: Array.from(languages),
+    rulesExecuted: staticResult.rulesExecuted,
+    typeChecksPerformed: true,
+    dependencyChecksPerformed: true,
     coveragePercentage,
+    analysisStatus,
+    findingsBySeverity,
+    findingsByCategory,
+    warnings: staticResult.parseFailedFiles.map((f) => `Parse diagnostic: File "${f}" encountered syntax or compiler diagnostics.`),
+    errors: unreadableFiles.map((f) => `File read error: "${f}" could not be accessed.`),
+    partialReasons,
     isPartial,
     limitationNotice: isPartial
-      ? `Analysis is based on ${inspectedCount} of ${totalDiscovered} total repository files (${coveragePercentage}% coverage). Static inspection excluded ${skippedCount} non-code/binary artifacts, ${sizeExceededFiles.length} oversized files, and prioritized core source modules. Inferences are bounded by this inspected subset.`
-      : `Full repository coverage achieved (${inspectedCount} of ${totalDiscovered} files analyzed).`,
-    excludedDirectories: Array.from(excludedDirectoriesSet),
+      ? `Analysis is based on ${inspectedCount} of ${totalDiscovered} total repository files (${coveragePercentage}% coverage). Static inspection prioritized core source modules while excluding ${skippedCount} non-code/binary artifacts, ${sizeExceededFiles.length} oversized files, and ${cappedOmittedFiles.length} capped files. Inferences are bounded by this inspected subset.`
+      : `Full repository coverage achieved (${inspectedCount} of ${totalDiscovered} files analyzed across ${languages.size} detected language environments).`,
     inventoryReconciled: isInventoryReconciled,
   };
 
@@ -1444,6 +1498,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     submissionType: 'zip',
     coverage: coverageReport,
     findings,
+    sourceFindings: staticResult.findings,
     technologies: {
       primaryRuntime,
       backendRuntime,

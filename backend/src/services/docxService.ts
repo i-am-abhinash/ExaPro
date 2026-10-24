@@ -812,30 +812,44 @@ export async function generateDocxReport(
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 7. Section 3: Project Purpose & Overview
-  const overviewElements = [
-    createH1('3. Project Overview and Functional Capabilities'),
-    ...parseMarkdownToElements(project.documentation.projectOverview),
+  // Section 1: Project Overview
+  const sec1Elements = [
+    createH1('1. Project Overview'),
+    ...parseMarkdownToElements(project.documentation.projectOverview || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 8. Section 4: Technology Stack Matrix
-  const techStackElements = [
+  // Section 2: Purpose and Apparent Functionality
+  const sec2Elements = [
+    createH1('2. Purpose and Apparent Functionality'),
+    ...parseMarkdownToElements(project.documentation.purposeAndFunctionality || project.documentation.projectOverview || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 3: Problem Statement and Intended Solution
+  const sec3Elements = [
+    createH1('3. Problem Statement and Intended Solution'),
+    ...parseMarkdownToElements(project.documentation.problemStatement || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 4: Technology Stack Matrix
+  const sec4Elements = [
     createH1('4. Verified Technology Stack & Runtime Matrix'),
     createBody('The following table details verified application runtimes, declared manifest packages, and observed SDK integrations:'),
-    ...parseMarkdownToElements(project.documentation.technologyStackDescription),
+    ...parseMarkdownToElements(project.documentation.technologyStackDescription || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 9. Section 5: Directory Structure & Code Organization
-  const structureElements = [
-    createH1('5. Directory Structure & Code Organization'),
-    ...parseMarkdownToElements(project.documentation.projectStructureTree),
+  // Section 5: Repository and Directory Structure
+  const sec5Elements = [
+    createH1('5. Repository and Directory Structure'),
+    ...parseMarkdownToElements(project.documentation.projectStructureTree || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 10. Section 6: System Architecture & Figure 6.1 Diagram
-  const architectureElements = [
+  // Section 6: System Architecture & Figure 6.1 Diagram
+  const sec6Elements = [
     createH1('6. System Architecture & Component Topology'),
     createBody('The architecture diagram below was synthesized dynamically from verified static component evidence and communication channels:'),
     new Paragraph({
@@ -867,64 +881,113 @@ export async function generateDocxReport(
         }),
       ],
     }),
-    ...parseMarkdownToElements(project.documentation.systemArchitectureDescription),
+    ...parseMarkdownToElements(project.documentation.systemArchitectureDescription || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 11. Section 7: Module and Component Analysis
-  const moduleElements = [
-    createH1('7. Module and Component Analysis'),
+  // Section 7: Major Modules and Responsibilities
+  const sec7Elements = [
+    createH1('7. Major Modules and Responsibilities'),
     createBody('Inspection of primary application modules, state containers, and data access services:'),
-    ...parseMarkdownToElements(project.documentation.moduleDetails),
+    ...parseMarkdownToElements(project.documentation.moduleDetails || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 12. Section 8: End-to-End Data Flow
-  const dataFlowElements = [
-    createH1('8. End-to-End Data Flow & Cloud Integration'),
-    ...parseMarkdownToElements(project.documentation.dataFlowDescription),
+  // Section 8: Application Entry Points & Startup Workflow
+  const sec8Elements = [
+    createH1('8. Application Entry Points & Startup Workflow'),
+    ...parseMarkdownToElements(project.documentation.entryPointsAndStartup || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 13. Section 9: Database Design & Datastore Analysis
-  const databaseElements = [
-    createH1('9. Database Design & Datastore Analysis'),
-    ...parseMarkdownToElements(project.documentation.databaseDesignDescription),
+  // Section 9: Internal Module Dependencies and Data Flow
+  const sec9Elements = [
+    createH1('9. Internal Module Dependencies and Data Flow'),
+    ...parseMarkdownToElements(project.documentation.dataFlowDescription || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 14. Section 10: API & Network Communication
-  const apiElements = [
-    createH1('10. API & Network Communication Analysis'),
-    ...parseMarkdownToElements(project.documentation.apiDocumentationDescription),
+  // Section 10: API Documentation
+  const sec10Elements = [
+    createH1('10. API & Network Communication Documentation'),
+    ...parseMarkdownToElements(project.documentation.apiDocumentationDescription || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 15. Section 11: Setup & Execution Guide
-  const setupElements = [
-    createH1('11. Setup, Configuration & Execution Guide'),
-    ...parseMarkdownToElements(project.documentation.setupAndExecutionInstructions),
+  // Section 11: Database Models, Schemas & Relationships
+  const sec11Elements = [
+    createH1('11. Database Models, Schemas & Relationships'),
+    ...parseMarkdownToElements(project.documentation.databaseDesignDescription || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 16. Section 12: Testing & Quality Verification
-  const testingElements = [
-    createH1('12. Testing Infrastructure & Quality Verification'),
-    ...parseMarkdownToElements(project.documentation.testingAndQualityDescription),
+  // Section 12: Authentication and Authorization Implementation
+  const sec12Elements = [
+    createH1('12. Authentication and Authorization Implementation'),
+    ...parseMarkdownToElements(project.documentation.authImplementation || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 17. Section 13: Technical Findings & Limitations
-  const limitationElements = [
-    createH1('13. Technical Findings, Security & Limitations'),
-    ...parseMarkdownToElements(project.documentation.limitationsAndObservations),
+  // Section 13: Configuration and Environment Variables
+  const sec13Elements = [
+    createH1('13. Configuration & Environment Variables (Redacted)'),
+    ...parseMarkdownToElements(project.documentation.configurationAndEnvironment || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
-  // 18. Section 14: Appendix & Detailed Inventories
+  // Section 14: Installation and Setup Instructions
+  const sec14Elements = [
+    createH1('14. Installation and Setup Instructions'),
+    ...parseMarkdownToElements(project.documentation.setupAndExecutionInstructions || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 15: Build and Development Commands
+  const sec15Elements = [
+    createH1('15. Build and Development Commands'),
+    ...parseMarkdownToElements(project.documentation.buildAndDevelopment || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 16: Testing Setup & Discovered Test Files
+  const sec16Elements = [
+    createH1('16. Testing Setup & Discovered Test Files'),
+    ...parseMarkdownToElements(project.documentation.testingAndQualityDescription || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 17: External Integrations
+  const sec17Elements = [
+    createH1('17. External Integrations & Cloud Services'),
+    ...parseMarkdownToElements(project.documentation.externalIntegrations || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 18: Security-Relevant Observations
+  const sec18Elements = [
+    createH1('18. Security-Relevant Observations'),
+    ...parseMarkdownToElements(project.documentation.securityObservations || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 19: Findings, Limitations, and Traceable Evidence
+  const sec19Elements = [
+    createH1('19. Findings, Limitations, and Traceable Evidence'),
+    ...parseMarkdownToElements(project.documentation.limitationsAndObservations || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 20: Analysis Coverage & Unsupported Areas
+  const sec20Elements = [
+    createH1('20. Analysis Coverage & Unsupported Areas'),
+    ...parseMarkdownToElements(project.documentation.coverageAndUnsupported || ''),
+    new Paragraph({ spacing: { after: 140 } }),
+  ];
+
+  // Section 21: Appendix
   const appendixElements = [
-    createH1('14. Appendix & Complete Inventories'),
-    ...parseMarkdownToElements(project.documentation.appendix),
+    createH1('Appendix: Comprehensive File Inventory'),
+    ...parseMarkdownToElements(project.documentation.appendix || ''),
     new Paragraph({ spacing: { after: 140 } }),
   ];
 
@@ -1001,17 +1064,26 @@ export async function generateDocxReport(
           ...coverElements,
           ...execSummaryElements,
           ...coverageElements,
-          ...overviewElements,
-          ...techStackElements,
-          ...structureElements,
-          ...architectureElements,
-          ...moduleElements,
-          ...dataFlowElements,
-          ...databaseElements,
-          ...apiElements,
-          ...setupElements,
-          ...testingElements,
-          ...limitationElements,
+          ...sec1Elements,
+          ...sec2Elements,
+          ...sec3Elements,
+          ...sec4Elements,
+          ...sec5Elements,
+          ...sec6Elements,
+          ...sec7Elements,
+          ...sec8Elements,
+          ...sec9Elements,
+          ...sec10Elements,
+          ...sec11Elements,
+          ...sec12Elements,
+          ...sec13Elements,
+          ...sec14Elements,
+          ...sec15Elements,
+          ...sec16Elements,
+          ...sec17Elements,
+          ...sec18Elements,
+          ...sec19Elements,
+          ...sec20Elements,
           ...appendixElements,
         ],
       },

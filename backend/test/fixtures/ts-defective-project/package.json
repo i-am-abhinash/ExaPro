@@ -1,0 +1,12 @@
+{
+  "name": "ts-defective-project",
+  "version": "1.0.0",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "node src/missing-entry.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

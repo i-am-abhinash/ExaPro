@@ -159,7 +159,7 @@ const FindingEvidenceSchema = new Schema<IFindingEvidence>(
     id: { type: String, required: true },
     type: { type: String, enum: ['log', 'screenshot', 'http_response', 'test_output', 'code_snippet'], required: true },
     title: { type: String, required: true },
-    data: { type: String, required: true },
+    data: { type: String, default: '' },
     filePath: { type: String },
     lineNumber: { type: Number },
     timestamp: { type: String, required: true },

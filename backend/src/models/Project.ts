@@ -53,19 +53,28 @@ export interface IApiEndpointInfo {
 }
 
 export interface IDocumentationSections {
-  executiveSummary: string;
-  projectOverview: string;
-  technologyStackDescription: string;
-  projectStructureTree: string;
-  systemArchitectureDescription: string;
-  moduleDetails: string;
-  dataFlowDescription: string;
-  databaseDesignDescription: string;
-  apiDocumentationDescription: string;
-  setupAndExecutionInstructions: string;
-  testingAndQualityDescription: string;
-  limitationsAndObservations: string;
-  appendix: string;
+  executiveSummary: string; // Retained for backwards compatibility & quick summary
+  projectOverview: string; // Section 1: Project overview
+  purposeAndFunctionality: string; // Section 2: Purpose and apparent functionality
+  problemStatement: string; // Section 3: Problem statement and intended solution
+  technologyStackDescription: string; // Section 4: Technology stack
+  projectStructureTree: string; // Section 5: Repository and directory structure
+  systemArchitectureDescription: string; // Section 6: Architecture overview
+  moduleDetails: string; // Section 7: Major modules and responsibilities
+  entryPointsAndStartup: string; // Section 8: Application entry points and startup workflow
+  dataFlowDescription: string; // Section 9: Internal module dependencies and data flow
+  apiDocumentationDescription: string; // Section 10: API documentation
+  databaseDesignDescription: string; // Section 11: Database models, schemas, and relationships
+  authImplementation: string; // Section 12: Authentication and authorization implementation
+  configurationAndEnvironment: string; // Section 13: Configuration and environment variables
+  setupAndExecutionInstructions: string; // Section 14: Installation and setup instructions
+  buildAndDevelopment: string; // Section 15: Build and development commands
+  testingAndQualityDescription: string; // Section 16: Testing setup and discovered test files
+  externalIntegrations: string; // Section 17: External integrations
+  securityObservations: string; // Section 18: Security-relevant observations
+  limitationsAndObservations: string; // Section 19: Findings, limitations, and evidence
+  coverageAndUnsupported: string; // Section 20: Analysis coverage and unsupported areas
+  appendix: string; // Detailed inventories & reference appendix
 }
 
 export interface IProjectDocument extends Document {
@@ -226,16 +235,25 @@ const ProjectSchema = new Schema<IProjectDocument>(
     documentation: {
       executiveSummary: { type: String, default: '' },
       projectOverview: { type: String, default: '' },
+      purposeAndFunctionality: { type: String, default: '' },
+      problemStatement: { type: String, default: '' },
       technologyStackDescription: { type: String, default: '' },
       projectStructureTree: { type: String, default: '' },
       systemArchitectureDescription: { type: String, default: '' },
       moduleDetails: { type: String, default: '' },
+      entryPointsAndStartup: { type: String, default: '' },
       dataFlowDescription: { type: String, default: '' },
-      databaseDesignDescription: { type: String, default: '' },
       apiDocumentationDescription: { type: String, default: '' },
+      databaseDesignDescription: { type: String, default: '' },
+      authImplementation: { type: String, default: '' },
+      configurationAndEnvironment: { type: String, default: '' },
       setupAndExecutionInstructions: { type: String, default: '' },
+      buildAndDevelopment: { type: String, default: '' },
       testingAndQualityDescription: { type: String, default: '' },
+      externalIntegrations: { type: String, default: '' },
+      securityObservations: { type: String, default: '' },
       limitationsAndObservations: { type: String, default: '' },
+      coverageAndUnsupported: { type: String, default: '' },
       appendix: { type: String, default: '' },
     },
 

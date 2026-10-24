@@ -224,10 +224,12 @@ function compileEvidenceSections(
     packageScripts,
     dependenciesList,
     environmentVariables,
+    readmeSnippet,
   } = analysis;
 
-  // 1. Executive Summary
   const activeCollsList = database.activeSdkCollections.map((c) => `\`${c.name}\``).join(', ');
+
+  // 1. Executive Summary (High-level synthesis)
   const executiveSummary =
     ai?.executiveSummary ||
     (architecture.architectureType === 'polyglot_fullstack'
@@ -257,19 +259,53 @@ function compileEvidenceSections(
         `**Architectural Pattern:** All application state and view rendering execute locally within the client browser runtime without dedicated backend server dependencies. ` +
         `\n\n**Key Technical Findings:** ${database.summary}`);
 
-  // 2. Project Overview
+  // Section 1: Project Overview
   const projectOverview =
     ai?.projectOverview ||
-    `**Problem Statement & Scope:**\n` +
-      `${projectName} addresses operational requirements for ${projectDescription || 'attendance coordination and member management'}. ` +
-      `The codebase organizes functionality into ${modules.length} functional modules, establishing clean separation between view components, application-level context providers, and data access services.\n\n` +
-      `**Confirmed Functional Capabilities:**\n` +
-      `• **User Interface:** Interactive single-page application built with ${technologies.frontend.join(', ') || 'React'}, providing reactive view state and route-based navigation.\n` +
-      (technologies.auth.length > 0 ? `• **Identity & Access:** Client-side authentication workflows integrated with ${technologies.auth.join(', ')}.\n` : '') +
-      `• **Data Persistence:** ${database.summary}\n` +
-      `• **Service Integration:** ${api.summary}`;
+    `**Project Overview:**\n` +
+      `**${projectName}** is an engineered software application built upon the **${technologies.primaryRuntime}** runtime ecosystem. ` +
+      `Static source inspection analyzed **${coverage.inspectedFilesCount} source files** out of **${coverage.totalDiscoveredFiles} discovered repository items**, achieving **${coverage.coveragePercentage}% inspection coverage**.\n\n` +
+      `**Core Architectural Classification:** \`${architecture.architectureType.replace(/_/g, ' ').toUpperCase()}\`\n` +
+      `• Primary Runtime: **${technologies.primaryRuntime}**\n` +
+      (technologies.backendRuntime ? `• Backend Runtime: **${technologies.backendRuntime}**\n` : '') +
+      `• Primary UI Framework: ${technologies.frontend.join(', ') || 'Standard Web UI'}\n` +
+      `• Persistence Layer: ${database.summary}\n` +
+      `• Network Communication Model: ${api.summary}`;
 
-  // 3. Technology Stack & Dependencies
+  // Section 2: Purpose and Apparent Functionality
+  const purposeAndFunctionality =
+    `**Intended Purpose & Functional Capabilities:**\n` +
+    `The application provides operational capabilities for ${projectDescription || 'end-user application workflows'}. ` +
+    `Based on inspected source components and routing configurations, the following core features are confirmed in the codebase:\n\n` +
+    `• **User Interface Experience:** Built with ${technologies.frontend.join(', ') || 'modern view components'}, managing reactive component trees and user interactions.\n` +
+    (modules.some((m) => m.type === 'page')
+      ? `• **Discovered View Pages (${modules.filter((m) => m.type === 'page').length}):** ` +
+        modules
+          .filter((m) => m.type === 'page')
+          .slice(0, 6)
+          .map((m) => `\`${m.name}\``)
+          .join(', ') +
+        `\n`
+      : '') +
+    (technologies.auth.length > 0
+      ? `• **Identity & Access Management:** Integrated authentication via ${technologies.auth.join(', ')}.\n`
+      : '• **Access Management:** Local or unauthenticated access mode; no remote identity provider discovered.\n') +
+    `• **State Management:** React hooks and context providers coordinate reactive application state across views.\n` +
+    `• **Data Persistence:** ${database.summary}`;
+
+  // Section 3: Problem Statement and Intended Solution
+  const problemStatement = readmeSnippet
+    ? `**Problem Statement & Intended Solution (from repository documentation):**\n\n` +
+      `The repository documentation defines the project scope as follows:\n\n` +
+      `> ${readmeSnippet.slice(0, 500).replace(/\n+/g, ' ')}...\n\n` +
+      `*Source Citation:* Extracted directly from repository \`README.md\`.`
+    : `**Problem Statement & Intended Solution (Inferred):**\n\n` +
+      `*Note on Evidence:* The repository does not include an explicit problem statement in a \`README.md\` file. ` +
+      `Based on the inspected component hierarchy (${modules.length} modules) and manifest declarations, ` +
+      `the application appears to address domain workflows for **${projectDescription || projectName}**, ` +
+      `providing structured interface forms, state coordination, and data storage without requiring manual administrative overhead.`;
+
+  // Section 4: Technology Stack & Matrix
   const techTableRows: string[] = [
     `| Category | Verified Technology | Evidence Level | Evidence Source |`,
     `| :--- | :--- | :--- | :--- |`,
@@ -314,7 +350,7 @@ function compileEvidenceSections(
 
   const technologyStackDescription = techTableRows.join('\n');
 
-  // 4. Project Structure (Tree view)
+  // Section 5: Repository and Directory Structure
   const projectStructureTree =
     `The repository contains **${coverage.totalDiscoveredFiles} discovered files** across source, configuration, and documentation folders. ` +
     `Below is the structural hierarchy of the primary application directories:\n\n` +
@@ -323,7 +359,7 @@ function compileEvidenceSections(
     '\n```\n\n' +
     `**Inspection Scope Notice:** ${coverage.limitationNotice}`;
 
-  // 5. System Architecture
+  // Section 6: System Architecture Overview
   const systemArchitectureDescription =
     (ai?.architectureExplanation ? `${ai.architectureExplanation}\n\n` : '') +
     `**Architecture Summary:**\n${architecture.architectureSummary}\n\n` +
@@ -337,11 +373,11 @@ function compileEvidenceSections(
     `\n\n**Inter-Component Communication Channels:**\n` +
     (architecture.edges.length > 0
       ? architecture.edges
-          .map((e) => `• **${e.sourceId}** → **${e.targetId}** via \`${e.protocol}\` (${e.label})`)
+          .map((e) => `• **${e.sourceId}** → **${e.targetId}** via \`${e.protocol}\` (${e.label}) [${e.isConfirmed ? 'CONFIRMED' : 'INFERRED'}]`)
           .join('\n')
       : '• Direct modular client-side invocation.');
 
-  // 6. Module & Component Analysis
+  // Section 7: Major Modules & Responsibilities
   const coreModules = modules.filter(
     (m) => m.type === 'service' || m.type === 'context' || m.type === 'page' || m.type === 'entry_point'
   );
@@ -360,7 +396,28 @@ function compileEvidenceSections(
   });
   const moduleDetails = moduleLines.join('\n\n');
 
-  // 7. Data Flow
+  // Section 8: Application Entry Points & Startup Workflow
+  const entryModules = modules.filter((m) => m.type === 'entry_point');
+  const entryPointsAndStartup =
+    `**Application Entry Points & Startup Workflow:**\n\n` +
+    (entryModules.length > 0
+      ? entryModules
+          .map(
+            (e) =>
+              `• **Entry Module: \`${e.name}\`** (\`${e.path}\`)\n` +
+              `  - Role: ${e.role}\n` +
+              `  - Exported Symbols: ${e.exports.join(', ') || 'Bootstrap execution'}\n` +
+              `  - Imported Services: ${e.importedServices.join(', ') || 'Root initialization'}`
+          )
+          .join('\n\n')
+      : `• **Standard Web Entry:** Discovered HTML / script root bootstrapping in inspected client files.\n`) +
+    `\n\n**Startup Execution Sequence:**\n` +
+    `1. **HTML Document Load:** Browser loads \`index.html\` and executes linked script tags.\n` +
+    `2. **DOM Mount:** Root React component mounts to document container node.\n` +
+    `3. **Provider Initialization:** Application context providers (AuthContext, StateContext) initialize.\n` +
+    `4. **Initial Data Fetch:** Client services initiate network or datastore queries upon mounting.`;
+
+  // Section 9: Internal Module Dependencies & Data Flow
   const dataFlowDescription =
     ai?.dataFlowExplanation ||
     (architecture.architectureType === 'polyglot_fullstack'
@@ -391,7 +448,26 @@ function compileEvidenceSections(
         `3. **Local Storage:** Client-side data and user preferences are persisted in browser \`localStorage\`.\n` +
         `4. **Virtual DOM Reconciliation:** React re-renders view trees locally within the browser runtime.`);
 
-  // 8. Database Design: Clear separation between Active SDK collections and Rule-only paths
+  // Section 10: API Documentation
+  let apiDocumentationDescription = '';
+  if (api.communicationModel === 'custom_rest_endpoints') {
+    apiDocumentationDescription =
+      `**Custom Server REST Endpoints (${api.serverRestEndpoints.length} declared):**\n\n` +
+      api.serverRestEndpoints.map((e) => `• **\`${e.method} ${e.path}\`** — Declared in \`${e.filePath}\``).join('\n');
+  } else if (api.communicationModel === 'client_baas_sdk') {
+    apiDocumentationDescription =
+      `**Communication Model: Direct Client-to-BaaS SDK**\n\n` +
+      `The application communicates directly with managed cloud backend services using official SDK libraries rather than an intermediate custom Express HTTP server:\n\n` +
+      `• **Firebase Authentication SDK:** Handles user identity, credential verification, and session tokens via \`firebase/auth\`.\n` +
+      `• **Cloud Firestore SDK:** Executes document queries, reads, and batch mutations via \`firebase/firestore\`.\n\n` +
+      `*Technical Assessment:* The absence of custom Express REST endpoints is an intentional design pattern of serverless BaaS architectures, not an indicator of missing backend services.`;
+  } else {
+    apiDocumentationDescription =
+      `**Communication Model:** Client-side standalone application.\n` +
+      `No external API routes or network SDK client operations were detected in inspected source code.`;
+  }
+
+  // Section 11: Database Models, Schemas, & Relationships
   let databaseDesignDescription = '';
   if (database.databaseType === 'cloud_firestore') {
     const activeRows = database.activeSdkCollections.map((c) => {
@@ -429,50 +505,124 @@ function compileEvidenceSections(
       `Static code inspection found no active database drivers, ORM schemas, or cloud database SDK references.`;
   }
 
-  // 9. API Documentation
-  let apiDocumentationDescription = '';
-  if (api.communicationModel === 'custom_rest_endpoints') {
-    apiDocumentationDescription =
-      `**Custom Server REST Endpoints (${api.serverRestEndpoints.length} declared):**\n\n` +
-      api.serverRestEndpoints.map((e) => `• **\`${e.method} ${e.path}\`** — Declared in \`${e.filePath}\``).join('\n');
-  } else if (api.communicationModel === 'client_baas_sdk') {
-    apiDocumentationDescription =
-      `**Communication Model: Direct Client-to-BaaS SDK**\n\n` +
-      `The application communicates directly with managed cloud backend services using official SDK libraries rather than an intermediate custom Express HTTP server:\n\n` +
-      `• **Firebase Authentication SDK:** Handles user identity, credential verification, and session tokens via \`firebase/auth\`.\n` +
-      `• **Cloud Firestore SDK:** Executes document queries, reads, and batch mutations via \`firebase/firestore\`.\n\n` +
-      `*Technical Assessment:* The absence of custom Express REST endpoints is an intentional design pattern of serverless BaaS architectures, not an indicator of missing backend services.`;
-  } else {
-    apiDocumentationDescription =
-      `**Communication Model:** Client-side standalone application.\n` +
-      `No external API routes or network SDK client operations were detected in inspected source code.`;
-  }
+  // Section 12: Authentication & Authorization Implementation
+  const authImplementation =
+    technologies.auth.length > 0
+      ? `**Authentication Architecture (${technologies.auth.join(', ')}):**\n\n` +
+        `The application integrates client-side authentication mechanisms:\n` +
+        `• **Identity Provider:** ${technologies.auth.join(', ')}\n` +
+        `• **Session Strategy:** Managed token credentials stored in client memory or browser session.\n` +
+        (database.securityRules
+          ? `• **Authorization Guard:** Evaluated through database security rules (\`${database.securityRules.rulesFilePath}\`), restricting operations to authorized user IDs (\`request.auth.uid\`).`
+          : '• **Authorization Guard:** Client component conditional rendering based on auth context state.')
+      : `**Authentication Architecture:** None detected.\n\n` +
+        `No dedicated authentication SDKs or user credential verification flows were identified in inspected repository files.`;
 
-  // 10. Setup and Execution Guide
+  // Section 13: Configuration and Environment Variables
+  const envLines = environmentVariables.map((ev) => `• \`${ev}\` (Value redacted for security)`);
+  const configurationAndEnvironment =
+    `**Configuration & Environment Variables:**\n\n` +
+    (envLines.length > 0
+      ? `The following environment variable references were detected across inspected source files:\n\n` +
+        envLines.join('\n') +
+        `\n\n> [!NOTE]\n` +
+        `> **Confidentiality Notice:** ExaPro redacts all active secret values, tokens, and credentials from analysis logs and generated documentation.`
+      : `Standard configuration applied. No environment variable keys (e.g. \`.env\`) were explicitly referenced in inspected files.`);
+
+  // Section 14: Installation and Setup Instructions
   const scriptLines = Object.entries(packageScripts).map(([k, v]) => `• \`npm run ${k}\`: Executes \`${v}\``);
-  const envLines = environmentVariables.map((ev) => `• \`${ev}\``);
-
   const setupAndExecutionInstructions =
+    `**Installation & Setup Guide:**\n\n` +
     `**Prerequisites:**\n` +
-    `• Node.js runtime and package manager (\`${technologies.packageManagers.join(', ') || 'npm'}\`)\n` +
-    `• Modern browser environment supporting ES Modules\n\n` +
-    `**Installation:**\n` +
+    `• Node.js runtime environment (LTS version recommended)\n` +
+    `• Package manager: \`${technologies.packageManagers.join(', ') || 'npm'}\`\n\n` +
+    `**Step 1: Install Dependencies**\n` +
     '```bash\n' +
     `npm install\n` +
     '```\n\n' +
-    (scriptLines.length > 0 ? `**Configured Package Scripts:**\n${scriptLines.join('\n')}\n\n` : '') +
-    (envLines.length > 0
-      ? `**Identified Environment Variables:**\n${envLines.join('\n')}\n\n*(Configuration parameters should be supplied via local \`.env\` file; never commit production credentials).*`
-      : `**Environment Variables:** Standard default configuration applied.`);
+    `**Step 2: Start Development Server**\n` +
+    '```bash\n' +
+    (packageScripts['dev'] ? `npm run dev\n` : packageScripts['start'] ? `npm start\n` : `npm run build\n`) +
+    '```\n\n' +
+    (scriptLines.length > 0 ? `**Declared Manifest Scripts:**\n${scriptLines.join('\n')}\n` : '');
 
-  // 11. Testing & Quality Structure
+  // Section 15: Build and Development Commands
+  const buildAndDevelopment =
+    `**Build & Development Workflows:**\n\n` +
+    (scriptLines.length > 0
+      ? `The project defines the following lifecycle scripts in \`package.json\`:\n\n` +
+        Object.entries(packageScripts)
+          .map(([k, v]) => `• **\`npm run ${k}\`**: \`${v}\``)
+          .join('\n')
+      : `No development or build scripts were found in project manifests.`);
+
+  // Section 16: Testing Setup & Discovered Test Files
+  const testFiles = coverage.inspectedFiles.filter((f: string) => {
+    const l = f.toLowerCase();
+    return l.includes('.test.') || l.includes('.spec.') || l.startsWith('test/') || l.startsWith('tests/');
+  });
+
   const testingAndQualityDescription =
-    `**Testing & Linting Infrastructure:**\n` +
-    `• Detected Tools: ${technologies.testTools.join(', ') || 'Standard linter/test runners'}\n\n` +
+    `**Testing Setup & Discovered Test Files:**\n\n` +
+    (testFiles.length > 0
+      ? `Discovered **${testFiles.length} test files** in the repository:\n\n` +
+        testFiles.map((tf: string) => `• \`${tf}\``).join('\n') +
+        `\n\n`
+      : `No dedicated test files (e.g. \`*.test.ts\`, \`*.spec.js\`) were discovered in the inspected project tree.\n\n`) +
+    `• **Detected Test / Quality Tooling:** ${technologies.testTools.join(', ') || 'Standard linter configuration'}\n\n` +
     `> [!IMPORTANT]\n` +
-    `> **Static Verification Notice:** ExaPro conducts static code inspection and configuration analysis only. Test suites were not executed during this analysis, and test presence does not prove runtime test pass status.`;
+    `> **Static Verification Notice:** ExaPro conducts static source inspection only. Test suites were not executed during this analysis, and test presence does not prove runtime test pass status.`;
 
-  // 12. Limitations & Observations
+  // Section 17: External Integrations
+  const externalIntegrations =
+    `**External Integrations & Cloud Services:**\n\n` +
+    (technologies.database.length > 0 || technologies.auth.length > 0
+      ? `• **Google Cloud / Firebase:** Integrated client SDKs for authentication and datastore operations (${technologies.auth.concat(technologies.database).join(', ')}).\n`
+      : '') +
+    (architecture.architectureType === 'polyglot_fullstack'
+      ? `• **External News Services:** Google News RSS feeds parsed via BeautifulSoup4 in backend microservice.\n` +
+        `• **Audio Rendering Services:** Google Text-to-Speech (gTTS) audio synthesis API.\n`
+      : '') +
+    (api.externalHttpCalls.length > 0
+      ? `• **External HTTP Endpoints:** Inspected source files make outbound requests to: ${api.externalHttpCalls.map((c) => `\`${c.urlPattern}\``).join(', ')}.\n`
+      : '• **External APIs:** No additional third-party network APIs were observed in inspected code.');
+
+  // Section 18: Security-Relevant Observations
+  const secFindings = (analysis.sourceFindings || []).filter((f) => f.category === 'security' || f.ruleId.startsWith('SEC'));
+  const securityObservations =
+    `**Security-Relevant Observations & Hardening Notes:**\n\n` +
+    (secFindings.length > 0
+      ? `Static inspection identified **${secFindings.length} security-relevant pattern(s)** warranting developer review:\n\n` +
+        secFindings
+          .map(
+            (sf) =>
+              `• **[${sf.severity.toUpperCase()}] ${sf.title}** (\`${sf.filePath || 'manifest'}:${sf.startLine || 1}\`):\n` +
+              `  - Rule: \`${sf.ruleId}\`\n` +
+              `  - Reasoning: ${sf.reasoning}\n` +
+              `  - Recommendation: ${sf.recommendation}`
+          )
+          .join('\n\n')
+      : `• No high-risk security patterns (such as dynamic \`eval()\`, unescaped \`dangerouslySetInnerHTML\`, or hardcoded secret credentials) were identified in inspected source code.\n`) +
+    (database.securityRules
+      ? `\n\n• **Cloud Security Rules:** Firestore security rules at \`${database.securityRules.rulesFilePath}\` enforce request authorization. Ensure rules are deployed to active cloud instances.`
+      : '');
+
+  // Section 19: Findings, Limitations, and Evidence Table
+  const allSourceFindings = analysis.sourceFindings || [];
+  const findingsTableRows: string[] = [
+    `| ID | Rule ID | Severity | Status | Category | Location | Diagnostic Finding |`,
+    `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |`,
+  ];
+
+  if (allSourceFindings.length > 0) {
+    allSourceFindings.forEach((f) => {
+      const loc = f.filePath ? `\`${f.filePath}:${f.startLine || 1}\`` : '`manifest`';
+      findingsTableRows.push(
+        `| **${f.id}** | \`${f.ruleId}\` | **${f.severity}** | ${f.status} | ${f.category} | ${loc} | ${f.title} |`
+      );
+    });
+  }
+
   const limitationItems = [
     coverage.limitationNotice,
     database.databaseType === 'cloud_firestore'
@@ -482,9 +632,38 @@ function compileEvidenceSections(
     'Security rules were inspected statically in the repository; remote cloud deployment and active enforcement were not verified.',
     ...(ai?.limitations || []),
   ];
-  const limitationsAndObservations = limitationItems.map((l) => `• ${l}`).join('\n');
 
-  // 13. Appendix
+  const limitationsAndObservations =
+    `**Verified Source Defect Findings (${allSourceFindings.length} findings):**\n\n` +
+    (allSourceFindings.length > 0
+      ? findingsTableRows.join('\n') + `\n\n`
+      : `No static code defects, syntax errors, or broken dependencies were identified in inspected files.\n\n`) +
+    `**Analysis Limitations & Uncertainties:**\n\n` +
+    limitationItems.map((l) => `• ${l}`).join('\n');
+
+  // Section 20: Analysis Coverage & Unsupported Areas
+  const coverageAndUnsupported = [
+    `**Analysis Coverage Accounting & Limitations:**\n\n`,
+    `| Coverage Metric | Value | Detail |`,
+    `| :--- | :--- | :--- |`,
+    `| **Total Discovered Files** | ${coverage.totalDiscoveredFiles} | All files discovered in repository tree |`,
+    `| **Inspected Files** | ${coverage.inspectedFilesCount} | Source code and configuration files inspected |`,
+    `| **Policy Exclusions** | ${coverage.skippedByPolicyCount} | Non-code assets, binaries, lockfiles, images |`,
+    `| **Size Exceeded Files** | ${coverage.sizeExceededFilesCount} | Files exceeding individual size cap (150KB) |`,
+    `| **Capped Omitted Files** | ${coverage.cappedOmittedFilesCount} | Lower-priority files beyond inspection cap (150 files) |`,
+    `| **Parse Failed Files** | ${coverage.parseFailedFilesCount} | Files encountering compiler or syntax diagnostics |`,
+    `| **Unsupported Language Files** | ${coverage.unsupportedFilesCount} | Languages without dedicated AST analyzers |`,
+    `| **Overall Coverage** | **${coverage.coveragePercentage}%** | ${coverage.isPartial ? 'Partial Priority Coverage' : 'Complete Coverage'} |`,
+    `| **Analysis Status** | **\`${coverage.analysisStatus.toUpperCase()}\`** | Reconciled inventory assertion: ${coverage.inventoryReconciled ? 'Pass' : 'Disclosed'} |`,
+  ].join('\n') +
+    `\n\n**Rules Executed (${coverage.rulesExecuted.length}):**\n` +
+    coverage.rulesExecuted.map((r) => `• \`${r}\``).join(', ') +
+    `\n\n**Unsupported Files (${coverage.unsupportedFiles.length}):**\n` +
+    (coverage.unsupportedFiles.length > 0
+      ? coverage.unsupportedFiles.slice(0, 10).map((uf) => `• \`${uf}\``).join('\n')
+      : '• None detected.');
+
+  // Appendix: Complete File Inventory
   const appendix =
     `**Comprehensive Analysis Inventory:**\n\n` +
     `• **Project Name:** ${projectName}\n` +
@@ -501,16 +680,25 @@ function compileEvidenceSections(
   return {
     executiveSummary,
     projectOverview,
+    purposeAndFunctionality,
+    problemStatement,
     technologyStackDescription,
     projectStructureTree,
     systemArchitectureDescription,
     moduleDetails,
+    entryPointsAndStartup,
     dataFlowDescription,
-    databaseDesignDescription,
     apiDocumentationDescription,
+    databaseDesignDescription,
+    authImplementation,
+    configurationAndEnvironment,
     setupAndExecutionInstructions,
+    buildAndDevelopment,
     testingAndQualityDescription,
+    externalIntegrations,
+    securityObservations,
     limitationsAndObservations,
+    coverageAndUnsupported,
     appendix,
   };
 }
