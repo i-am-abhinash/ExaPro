@@ -33,11 +33,11 @@ export const LandingView: React.FC<LandingViewProps> = ({
         transition={{ duration: 0.5, delay: 0.1 }}
         className="flex items-center space-x-3 pt-2"
       >
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[rgba(25,40,68,0.75)] border border-white/[0.14] text-xs font-semibold text-cool-primary shadow-glass-sm backdrop-blur-md">
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[rgba(21,28,50,0.75)] border border-white/[0.14] text-xs font-semibold text-cool-primary shadow-glass-sm backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-aurora animate-subtle-pulse" />
           <span className="tracking-wide uppercase text-[11px] text-cool-secondary">ExaPro Evaluation Platform</span>
           <span className="text-cool-muted/40">•</span>
-          <span className="text-cool-muted font-mono text-[10px]">Midnight Sapphire Glass</span>
+          <span className="text-cool-muted font-mono text-[10px]">Dark Aurora Liquid Glass</span>
         </div>
       </motion.div>
 
@@ -49,10 +49,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.15, type: 'spring', stiffness: 260 }}
-          className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-aurora flex items-center justify-center text-[#17243F] shadow-aurora-md group cursor-pointer"
+          className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-aurora flex items-center justify-center text-[#151C32] shadow-aurora-md group cursor-pointer"
           onClick={onGetStarted}
         >
-          <Layers className="w-8 h-8 sm:w-10 sm:h-10 text-[#17243F] group-hover:scale-105 transition-transform duration-300" />
+          <Layers className="w-8 h-8 sm:w-10 sm:h-10 text-[#151C32] group-hover:scale-105 transition-transform duration-300" />
         </motion.div>
 
         {/* Central Heading: "Examine Project" */}
@@ -87,10 +87,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
         >
           <button
             onClick={onGetStarted}
-            className="group px-8 py-4 sm:px-10 sm:py-4.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#17243F] font-extrabold text-base sm:text-lg shadow-aurora-md hover:shadow-aurora-sm border border-aurora/50 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center space-x-3 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
+            className="group px-8 py-4 sm:px-10 sm:py-4.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#151C32] font-extrabold text-base sm:text-lg shadow-aurora-md hover:shadow-aurora-sm border border-aurora/50 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center space-x-3 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
           >
             <span>Get Started</span>
-            <ArrowRight className="w-5 h-5 text-[#17243F] group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5 text-[#151C32] group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
 

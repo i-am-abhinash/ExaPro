@@ -11,9 +11,10 @@ import {
   Sparkles,
   GitBranch,
   Search,
+  ShieldAlert,
 } from 'lucide-react';
 import { IProjectListItem, IHealthStatus } from '../types';
-import { getDownloadDocxUrl } from '../services/api';
+import { getDownloadDocxUrl, getDownloadFaultReportDocxUrl } from '../services/api';
 import {
   TiltCard,
   GlassButton,
@@ -77,7 +78,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Column: Command & Ingestion */}
             <div className="lg:col-span-8 space-y-5">
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[rgba(25,40,68,0.70)] border border-white/[0.14] text-xs font-semibold text-cool-secondary shadow-sm backdrop-blur-md">
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[rgba(21,28,50,0.70)] border border-white/[0.14] text-xs font-semibold text-cool-secondary shadow-sm backdrop-blur-md">
                 <span className="w-2 h-2 rounded-full bg-aurora animate-subtle-pulse" />
                 <span>Examine Project Workspace</span>
               </div>
@@ -214,16 +215,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
               {/* Supported Models */}
               <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(21,28,50,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   client_baas
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(21,28,50,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   polyglot_fullstack
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(21,28,50,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   client_server_db
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-[rgba(25,40,68,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
+                <span className="px-2.5 py-1 rounded-lg bg-[rgba(21,28,50,0.60)] border border-white/[0.10] text-cool-secondary font-mono font-medium backdrop-blur-sm">
                   frontend_spa_only
                 </span>
               </div>
@@ -309,7 +310,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               title="No project evaluations yet"
               description="Submit a project ZIP archive or public GitHub repository to generate your first technical evaluation report."
               actionText="Examine First Project"
-              actionIcon={<UploadCloud className="w-4 h-4 text-[#17243F]" />}
+              actionIcon={<UploadCloud className="w-4 h-4 text-[#151C32]" />}
               onAction={() => onStartSubmission('zip')}
             />
           ) : filteredProjects.length === 0 ? (
@@ -319,7 +320,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-[rgba(25,40,68,0.78)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
+                <thead className="bg-[rgba(21,28,50,0.85)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
                   <tr>
                     <th className="py-3.5 px-6">Project Name</th>
                     <th className="py-3.5 px-6">Source</th>
@@ -331,10 +332,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </thead>
                 <tbody className="divide-y divide-white/[0.06] text-cool-primary">
                   {filteredProjects.map((proj) => (
-                    <tr key={proj._id} className="hover:bg-[rgba(100,125,190,0.18)] transition-colors group">
+                    <tr key={proj._id} className="hover:bg-[rgba(154,171,255,0.08)] transition-colors group">
                       <td className="py-4 px-6 font-semibold">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-lg bg-[rgba(58,82,128,0.50)] border border-white/[0.12] flex items-center justify-center text-aurora flex-shrink-0 group-hover:border-aurora/40 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-[rgba(29,35,64,0.70)] border border-white/[0.12] flex items-center justify-center text-aurora flex-shrink-0 group-hover:border-aurora/40 transition-colors">
                             <FileText className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -382,19 +383,42 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         </div>
                       </td>
 
-                      <td className="py-4 px-6">
-                        {proj.status === 'completed' ? (
-                          <GlassBadge variant="success" dot size="sm">
-                            Ready
-                          </GlassBadge>
-                        ) : proj.status === 'failed' ? (
-                          <GlassBadge variant="error" dot size="sm">
-                            Failed
-                          </GlassBadge>
-                        ) : (
-                          <GlassBadge variant="aurora" dot pulse size="sm">
-                            {proj.statusMessage || 'Analyzing...'}
-                          </GlassBadge>
+                      <td className="py-4 px-6 space-y-1">
+                        <div>
+                          {proj.status === 'completed' ? (
+                            <GlassBadge variant="success" dot size="sm">
+                              Ready
+                            </GlassBadge>
+                          ) : proj.status === 'completed_with_warnings' ? (
+                            <GlassBadge variant="warning" dot size="sm">
+                              Warnings
+                            </GlassBadge>
+                          ) : proj.status === 'failed' ? (
+                            <GlassBadge variant="error" dot size="sm">
+                              Failed
+                            </GlassBadge>
+                          ) : (
+                            <GlassBadge variant="aurora" dot pulse size="sm">
+                              {proj.statusMessage || 'Analyzing...'}
+                            </GlassBadge>
+                          )}
+                        </div>
+                        {proj.faultSummary && (
+                          <div className="flex items-center space-x-1">
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                proj.faultSummary.qualityGrade === 'A'
+                                  ? 'text-[#54D6A0] bg-[#54D6A0]/15 border border-[#54D6A0]/30'
+                                  : proj.faultSummary.qualityGrade === 'B'
+                                  ? 'text-[#8295FF] bg-[#8295FF]/15 border border-[#8295FF]/30'
+                                  : proj.faultSummary.qualityGrade === 'C'
+                                  ? 'text-[#FFC66D] bg-[#FFC66D]/15 border border-[#FFC66D]/30'
+                                  : 'text-[#FF8195] bg-[#FF8195]/15 border border-[#FF8195]/30'
+                              }`}
+                            >
+                              Score: {proj.faultSummary.qualityScore} ({proj.faultSummary.qualityGrade})
+                            </span>
+                          </div>
                         )}
                       </td>
 
@@ -403,22 +427,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </td>
 
                       <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
-                        {proj.status === 'completed' && (
+                        {(proj.status === 'completed' || proj.status === 'completed_with_warnings') && (
                           <>
                             <GlassButton
                               variant="secondary"
                               size="sm"
                               onClick={() => onViewReport(proj._id)}
                             >
-                              Preview Report
+                              Inspect Reports
                             </GlassButton>
                             <a
                               href={getDownloadDocxUrl(proj._id)}
                               download
-                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#17243F] text-xs font-bold shadow-aurora-sm transition-colors"
+                              title="Download Technical Architecture DOCX"
+                              className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#151C32] text-xs font-bold shadow-aurora-sm transition-colors"
                             >
-                              <Download className="w-3.5 h-3.5 text-[#17243F]" />
-                              <span>DOCX</span>
+                              <FileText className="w-3 h-3 text-[#151C32]" />
+                              <span>Arch</span>
+                            </a>
+                            <a
+                              href={getDownloadFaultReportDocxUrl(proj._id)}
+                              download
+                              title="Download Software Quality & Fault Report DOCX"
+                              className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl glass-tile-interactive text-cool-primary border border-white/[0.15] text-xs font-bold transition-colors"
+                            >
+                              <ShieldAlert className="w-3 h-3 text-[#FF8998]" />
+                              <span>Faults</span>
                             </a>
                           </>
                         )}

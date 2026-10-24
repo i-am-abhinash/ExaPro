@@ -15,9 +15,10 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react';
-import { IReportData } from '../types';
-import { fetchProjectReport, getDownloadDocxUrl } from '../services/api';
+import { IReportData, ITestRunData } from '../types';
+import { fetchProjectReport, fetchTestRun, getDownloadDocxUrl, getDownloadFaultReportDocxUrl, getDownloadFaultReportJsonUrl } from '../services/api';
 import { GlassButton, GlassBadge } from './ui';
+import { FaultReportView } from './FaultReportView';
 
 interface ReportPreviewViewProps {
   projectId: string;
@@ -26,8 +27,10 @@ interface ReportPreviewViewProps {
 
 export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId, onBack }) => {
   const [report, setReport] = useState<IReportData | null>(null);
+  const [testRun, setTestRun] = useState<ITestRunData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeReportTab, setActiveReportTab] = useState<'architecture' | 'faults'>('architecture');
   const [activeSection, setActiveSection] = useState<string>('architecture');
 
   useEffect(() => {
@@ -35,8 +38,15 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
     async function loadReport() {
       try {
         setLoading(true);
-        const data = await fetchProjectReport(projectId);
-        if (isMounted) setReport(data);
+        const [data, tr] = await Promise.all([
+          fetchProjectReport(projectId),
+          fetchTestRun(projectId).catch(() => null),
+        ]);
+        if (isMounted) {
+          setReport(data);
+          if (tr) setTestRun(tr);
+          else if (data.testRun) setTestRun(data.testRun);
+        }
       } catch (err: any) {
         if (isMounted) setError(err.message || 'Failed to load report preview.');
       } finally {
@@ -120,22 +130,88 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             </div>
           </div>
 
-          {/* Download DOCX Button */}
-          <div className="flex items-center space-x-3 pl-8 sm:pl-0">
+          {/* Download Buttons Cluster */}
+          <div className="flex flex-wrap items-center gap-2.5 pl-8 sm:pl-0">
             <a
               href={getDownloadDocxUrl(report.projectId)}
               download
-              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#17243F] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/50 transition-all transform hover:-translate-y-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
+              className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#151C32] font-bold text-xs shadow-aurora-sm border border-aurora/50 transition-all transform hover:-translate-y-0.5"
+              title="Download 14-section Technical Architecture DOCX"
             >
-              <Download className="w-4 h-4 text-[#17243F]" />
-              <span>Download DOCX Report</span>
+              <FileText className="w-3.5 h-3.5 text-[#151C32]" />
+              <span>Docx Architecture</span>
             </a>
+
+            <a
+              href={getDownloadFaultReportDocxUrl(report.projectId)}
+              download
+              className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl glass-tile-interactive text-cool-primary border border-white/[0.15] text-xs font-bold transition-colors"
+              title="Download Software Quality & Fault Report DOCX"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-[#FF8998]" />
+              <span>Fault DOCX</span>
+            </a>
+
+            <a
+              href={getDownloadFaultReportJsonUrl(report.projectId)}
+              download
+              className="inline-flex items-center space-x-2 px-3 py-2.5 rounded-xl glass-tile-interactive text-cool-muted hover:text-cool-primary border border-white/[0.10] text-xs font-mono transition-colors"
+              title="Export Findings as JSON"
+            >
+              <span>JSON</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Primary Dual View Switcher */}
+        <div className="pt-6 border-t border-white/[0.10] flex justify-center">
+          <div className="flex p-1.5 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.12] w-full max-w-xl backdrop-blur-md shadow-sm">
+            <button
+              type="button"
+              onClick={() => setActiveReportTab('architecture')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                activeReportTab === 'architecture'
+                  ? 'bg-aurora/20 text-aurora border border-aurora/35 shadow-sm'
+                  : 'text-cool-muted hover:text-cool-primary'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Report A: Architecture</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveReportTab('faults')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                activeReportTab === 'faults'
+                  ? 'bg-aurora/20 text-aurora border border-aurora/35 shadow-sm'
+                  : 'text-cool-muted hover:text-cool-primary'
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4 text-[#FF8998]" />
+              <span>Report B: Quality & Faults</span>
+              {testRun?.summary && (
+                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FFC66D]/20 text-[#FFC66D] border border-[#FFC66D]/30">
+                  {testRun.summary.qualityScore}/100 ({testRun.summary.qualityGrade})
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Sticky TOC Sidebar + Editorial Technical Document */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+      {/* Main Content Area: Report A or Report B */}
+      {activeReportTab === 'faults' && testRun ? (
+        <FaultReportView projectId={report.projectId} projectName={report.projectName} testRun={testRun} />
+      ) : activeReportTab === 'faults' && !testRun ? (
+        <div className="p-12 text-center rounded-3xl glass-card space-y-3">
+          <ShieldAlert className="w-8 h-8 text-[#FFC66D] mx-auto" />
+          <p className="font-bold text-cool-primary text-base">Fault Report Ingestion in Progress</p>
+          <p className="text-xs text-cool-muted">The test run evaluation is currently processing or no test run was recorded for this project.</p>
+        </div>
+      ) : (
+        /* Report A: Sticky TOC Sidebar + Editorial Technical Document */
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Table of Contents Sidebar */}
         <div className="lg:col-span-1 space-y-2 sticky top-20">
           <div className="p-4 rounded-2xl glass-card space-y-1.5">
@@ -184,7 +260,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             </div>
 
             {/* Embedded High-Resolution SVG Canvas */}
-            <div className="rounded-2xl overflow-hidden bg-[rgba(19,30,53,0.78)] border border-white/[0.12] p-4 sm:p-6 shadow-inner backdrop-blur-md">
+            <div className="rounded-2xl overflow-hidden bg-[rgba(21,28,50,0.85)] border border-white/[0.12] p-4 sm:p-6 shadow-inner backdrop-blur-md">
               <div
                 className="w-full overflow-x-auto flex justify-center py-2"
                 dangerouslySetInnerHTML={{ __html: report.architectureDiagramSvg }}
@@ -192,7 +268,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             </div>
 
             {/* Architecture Narrative */}
-            <div className="p-5 rounded-2xl bg-[rgba(25,40,68,0.70)] border border-white/[0.12] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal backdrop-blur-sm">
+            <div className="p-5 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.12] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal backdrop-blur-sm">
               {report.architectureDescription}
             </div>
           </div>
@@ -264,7 +340,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           {/* SECTION 4: PROJECT STRUCTURE */}
           <div id="section-structure" className="p-6 sm:p-8 rounded-3xl workspace-card space-y-4">
             <h2 className="text-xl font-bold text-cool-primary border-b border-white/[0.10] pb-3 tracking-tight">4. Directory Structure (ASCII Code Tree)</h2>
-            <div className="bg-[rgba(19,30,53,0.78)] p-5 rounded-2xl border border-white/[0.12] font-mono text-[11px] text-cool-primary overflow-x-auto leading-relaxed max-h-96 backdrop-blur-md">
+            <div className="bg-[rgba(21,28,50,0.85)] p-5 rounded-2xl border border-white/[0.12] font-mono text-[11px] text-cool-primary overflow-x-auto leading-relaxed max-h-96 backdrop-blur-md">
               <pre>{report.documentation.projectStructureTree}</pre>
             </div>
           </div>
@@ -344,14 +420,15 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
             <a
               href={getDownloadDocxUrl(report.projectId)}
               download
-              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#17243F] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/50 transition-all transform hover:-translate-y-0.5 flex-shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
+              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#151C32] font-extrabold text-sm shadow-aurora-sm hover:shadow-aurora-md border border-aurora/50 transition-all transform hover:-translate-y-0.5 flex-shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.40)]"
             >
-              <Download className="w-4 h-4 text-[#17243F]" />
+              <Download className="w-4 h-4 text-[#151C32]" />
               <span>Download DOCX Report</span>
             </a>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

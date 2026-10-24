@@ -13,7 +13,7 @@ interface TiltCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export const TiltCard: React.FC<TiltCardProps> = ({
   children,
   className = '',
-  maxTilt = 4,
+  maxTilt = 2.5,
   glare = true,
   elevation = 'elevated',
   onClick,
@@ -35,7 +35,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
 
-  const springConfig = { damping: 22, stiffness: 220, mass: 0.4 };
+  const springConfig = { damping: 24, stiffness: 240, mass: 0.35 };
   const smoothX = useSpring(x, springConfig);
   const smoothY = useSpring(y, springConfig);
 
@@ -78,21 +78,22 @@ export const TiltCard: React.FC<TiltCardProps> = ({
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
       style={{
-        perspective: 1000,
+        perspective: 1200,
         rotateX: canTilt ? rotateX : 0,
         rotateY: canTilt ? rotateY : 0,
         transformStyle: 'preserve-3d',
       }}
-      whileHover={canTilt ? { y: -3, transition: { duration: 0.2 } } : {}}
+      whileHover={canTilt ? { y: -2.5, transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] } } : {}}
+      whileTap={onClick ? { scale: 0.985, y: 0, transition: { duration: 0.12 } } : {}}
       className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${elevationClass} ${className}`}
       {...(rest as any)}
     >
-      {/* Subtle Specular Highlight */}
+      {/* Subtle Iridescent Specular Refraction on Hover */}
       {glare && canTilt && isHovered && (
         <motion.div
-          className="absolute inset-0 pointer-events-none z-10 opacity-30 mix-blend-soft-light transition-opacity duration-300"
+          className="absolute inset-0 pointer-events-none z-10 opacity-40 mix-blend-screen transition-opacity duration-300"
           style={{
-            background: `radial-gradient(circle 260px at ${glareX.get()} ${glareY.get()}, rgba(255,255,255,0.9), transparent 80%)`,
+            background: `radial-gradient(circle 280px at ${glareX.get()} ${glareY.get()}, rgba(255,255,255,0.40) 0%, rgba(168,221,244,0.22) 30%, rgba(200,181,255,0.16) 60%, transparent 80%)`,
           }}
         />
       )}

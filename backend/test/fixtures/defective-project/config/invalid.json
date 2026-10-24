@@ -1,0 +1,8 @@
+{
+  "apiHost": "localhost",
+  "port": 8080,
+  "features": [
+    "auth",
+    "billing",
+  ]
+}

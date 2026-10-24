@@ -10,9 +10,10 @@ import {
   LayoutGrid,
   List,
   GitBranch,
+  ShieldAlert,
 } from 'lucide-react';
 import { IProjectListItem } from '../types';
-import { fetchProjects, deleteProject, getDownloadDocxUrl } from '../services/api';
+import { fetchProjects, deleteProject, getDownloadDocxUrl, getDownloadFaultReportDocxUrl } from '../services/api';
 import {
   TiltCard,
   GlassButton,
@@ -106,7 +107,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         <GlassButton
           variant="primary"
           size="md"
-          icon={<Plus className="w-4 h-4 text-[#17243F]" />}
+          icon={<Plus className="w-4 h-4 text-[#151C32]" />}
           onClick={onNewAnalysis}
           className="self-start sm:self-auto"
         >
@@ -149,7 +150,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           </div>
 
           {/* Grid vs Table View Toggle */}
-          <div className="hidden sm:flex items-center p-1 rounded-xl bg-[rgba(25,40,68,0.78)] border border-white/[0.12] backdrop-blur-md">
+          <div className="hidden sm:flex items-center p-1 rounded-xl bg-[rgba(21,28,50,0.78)] border border-white/[0.12] backdrop-blur-md">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
@@ -183,7 +184,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           title="No evaluations found"
           description="You haven't examined any repositories yet. Start by uploading a ZIP or specifying a GitHub URL."
           actionText="Examine First Project"
-          actionIcon={<Plus className="w-4 h-4 text-[#17243F]" />}
+          actionIcon={<Plus className="w-4 h-4 text-[#151C32]" />}
           onAction={onNewAnalysis}
         />
       ) : filteredProjects.length === 0 ? (
@@ -218,19 +219,40 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                     )}
                   </div>
 
-                  {project.status === 'completed' ? (
-                    <GlassBadge variant="success" dot size="sm">
-                      Ready
-                    </GlassBadge>
-                  ) : project.status === 'failed' ? (
-                    <GlassBadge variant="error" dot size="sm">
-                      Failed
-                    </GlassBadge>
-                  ) : (
-                    <GlassBadge variant="aurora" dot pulse size="sm">
-                      Analyzing...
-                    </GlassBadge>
-                  )}
+                  <div className="flex flex-col items-end space-y-1">
+                    {project.status === 'completed' ? (
+                      <GlassBadge variant="success" dot size="sm">
+                        Ready
+                      </GlassBadge>
+                    ) : project.status === 'completed_with_warnings' ? (
+                      <GlassBadge variant="warning" dot size="sm">
+                        Warnings
+                      </GlassBadge>
+                    ) : project.status === 'failed' ? (
+                      <GlassBadge variant="error" dot size="sm">
+                        Failed
+                      </GlassBadge>
+                    ) : (
+                      <GlassBadge variant="aurora" dot pulse size="sm">
+                        Analyzing...
+                      </GlassBadge>
+                    )}
+                    {project.faultSummary && (
+                      <span
+                        className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
+                          project.faultSummary.qualityGrade === 'A'
+                            ? 'text-[#54D6A0] bg-[#54D6A0]/15 border border-[#54D6A0]/30'
+                            : project.faultSummary.qualityGrade === 'B'
+                            ? 'text-[#8295FF] bg-[#8295FF]/15 border border-[#8295FF]/30'
+                            : project.faultSummary.qualityGrade === 'C'
+                            ? 'text-[#FFC66D] bg-[#FFC66D]/15 border border-[#FFC66D]/30'
+                            : 'text-[#FF8195] bg-[#FF8195]/15 border border-[#FF8195]/30'
+                        }`}
+                      >
+                        Score: {project.faultSummary.qualityScore} ({project.faultSummary.qualityGrade})
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -269,23 +291,31 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                   {new Date(project.createdAt).toLocaleDateString()}
                 </span>
 
-                <div className="flex items-center space-x-2">
-                  {project.status === 'completed' && (
+                <div className="flex items-center space-x-1.5">
+                  {(project.status === 'completed' || project.status === 'completed_with_warnings') && (
                     <>
                       <GlassButton
                         variant="secondary"
                         size="sm"
                         onClick={() => onViewReport(project._id)}
                       >
-                        Preview
+                        Inspect
                       </GlassButton>
                       <a
                         href={getDownloadDocxUrl(project._id)}
                         download
                         className="p-1.5 rounded-lg bg-aurora/18 hover:bg-aurora/28 text-aurora border border-aurora/40 transition-colors"
-                        title="Download DOCX Report"
+                        title="Download Architecture DOCX"
                       >
-                        <Download className="w-4 h-4 text-aurora" />
+                        <FileText className="w-3.5 h-3.5 text-aurora" />
+                      </a>
+                      <a
+                        href={getDownloadFaultReportDocxUrl(project._id)}
+                        download
+                        className="p-1.5 rounded-lg bg-[#FF8998]/15 hover:bg-[#FF8998]/25 text-[#FF8998] border border-[#FF8998]/30 transition-colors"
+                        title="Download Fault Report DOCX"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5 text-[#FF8998]" />
                       </a>
                     </>
                   )}
@@ -307,7 +337,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
         <div className="rounded-3xl glass-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-[rgba(25,40,68,0.78)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
+              <thead className="bg-[rgba(21,28,50,0.85)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px] backdrop-blur-md">
                 <tr>
                   <th className="py-3.5 px-6">Project Name</th>
                   <th className="py-3.5 px-6">Source</th>
@@ -319,10 +349,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
               </thead>
               <tbody className="divide-y divide-white/[0.06] text-cool-primary">
                 {filteredProjects.map((proj) => (
-                  <tr key={proj._id} className="hover:bg-[rgba(100,125,190,0.18)] transition-colors">
+                  <tr key={proj._id} className="hover:bg-[rgba(154,171,255,0.08)] transition-colors">
                     <td className="py-4 px-6 font-semibold">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-lg bg-[rgba(58,82,128,0.50)] border border-white/[0.12] flex items-center justify-center text-aurora flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[rgba(29,35,64,0.70)] border border-white/[0.12] flex items-center justify-center text-aurora flex-shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <span className="truncate max-w-[200px] font-bold text-cool-primary">{proj.projectName}</span>
@@ -342,41 +372,74 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
                         ))}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      {proj.status === 'completed' ? (
-                        <GlassBadge variant="success" dot size="sm">
-                          Ready
-                        </GlassBadge>
-                      ) : proj.status === 'failed' ? (
-                        <GlassBadge variant="error" dot size="sm">
-                          Failed
-                        </GlassBadge>
-                      ) : (
-                        <GlassBadge variant="aurora" dot pulse size="sm">
-                          {proj.statusMessage || 'Analyzing...'}
-                        </GlassBadge>
+                    <td className="py-4 px-6 space-y-1">
+                      <div>
+                        {proj.status === 'completed' ? (
+                          <GlassBadge variant="success" dot size="sm">
+                            Ready
+                          </GlassBadge>
+                        ) : proj.status === 'completed_with_warnings' ? (
+                          <GlassBadge variant="warning" dot size="sm">
+                            Warnings
+                          </GlassBadge>
+                        ) : proj.status === 'failed' ? (
+                          <GlassBadge variant="error" dot size="sm">
+                            Failed
+                          </GlassBadge>
+                        ) : (
+                          <GlassBadge variant="aurora" dot pulse size="sm">
+                            {proj.statusMessage || 'Analyzing...'}
+                          </GlassBadge>
+                        )}
+                      </div>
+                      {proj.faultSummary && (
+                        <div className="flex items-center space-x-1">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                              proj.faultSummary.qualityGrade === 'A'
+                                ? 'text-[#54D6A0] bg-[#54D6A0]/15 border border-[#54D6A0]/30'
+                                : proj.faultSummary.qualityGrade === 'B'
+                                ? 'text-[#8295FF] bg-[#8295FF]/15 border border-[#8295FF]/30'
+                                : proj.faultSummary.qualityGrade === 'C'
+                                ? 'text-[#FFC66D] bg-[#FFC66D]/15 border border-[#FFC66D]/30'
+                                : 'text-[#FF8195] bg-[#FF8195]/15 border border-[#FF8195]/30'
+                            }`}
+                          >
+                            Score: {proj.faultSummary.qualityScore} ({proj.faultSummary.qualityGrade})
+                          </span>
+                        </div>
                       )}
                     </td>
                     <td className="py-4 px-6 text-cool-muted whitespace-nowrap text-xs">
                       {new Date(proj.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
-                      {proj.status === 'completed' && (
+                      {(proj.status === 'completed' || proj.status === 'completed_with_warnings') && (
                         <>
                           <GlassButton
                             variant="secondary"
                             size="sm"
                             onClick={() => onViewReport(proj._id)}
                           >
-                            Preview
+                            Inspect
                           </GlassButton>
                           <a
                             href={getDownloadDocxUrl(proj._id)}
                             download
-                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#17243F] text-xs font-bold shadow-aurora-sm transition-colors"
+                            title="Download Architecture DOCX"
+                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#151C32] text-xs font-bold shadow-aurora-sm transition-colors"
                           >
-                            <Download className="w-3.5 h-3.5 text-[#17243F]" />
-                            <span>DOCX</span>
+                            <FileText className="w-3.5 h-3.5 text-[#151C32]" />
+                            <span>Arch</span>
+                          </a>
+                          <a
+                            href={getDownloadFaultReportDocxUrl(proj._id)}
+                            download
+                            title="Download Fault Report DOCX"
+                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl glass-tile-interactive text-cool-primary border border-white/[0.15] text-xs font-bold transition-colors"
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5 text-[#FF8998]" />
+                            <span>Faults</span>
                           </a>
                         </>
                       )}

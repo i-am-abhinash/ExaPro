@@ -2,7 +2,18 @@ import mongoose, { Document, Schema } from 'mongoose';
 import { StructuredProjectModel } from './analysisModel';
 
 export type SubmissionType = 'zip' | 'github';
-export type AnalysisStatus = 'queued' | 'inspecting' | 'analyzing' | 'generating_docx' | 'completed' | 'failed';
+export type AnalysisStatus =
+  | 'queued'
+  | 'inspecting'
+  | 'analyzing'
+  | 'planning_tests'
+  | 'preparing_environment'
+  | 'running_tests'
+  | 'generating_reports'
+  | 'generating_docx'
+  | 'completed'
+  | 'completed_with_warnings'
+  | 'failed';
 
 export interface IDetectedTechnologies {
   languages: string[];
@@ -86,6 +97,22 @@ export interface IProjectDocument extends Document {
   reportFileName?: string;
   reportFileSize?: number;
 
+  faultReportFilePath?: string;
+  faultReportFileName?: string;
+  faultReportFileSize?: number;
+  testRunId?: mongoose.Types.ObjectId;
+  faultSummary?: {
+    totalTests: number;
+    passed: number;
+    failed: number;
+    blocked: number;
+    notTested: number;
+    confirmedFaults: number;
+    potentialFaults: number;
+    qualityScore: number;
+    qualityGrade: string;
+  };
+
   aiProviderUsed?: string;
   aiModelUsed?: string;
   usedAiFallback: boolean;
@@ -106,13 +133,40 @@ const ProjectSchema = new Schema<IProjectDocument>(
     commitSha: { type: String },
     status: {
       type: String,
-      enum: ['queued', 'inspecting', 'analyzing', 'generating_docx', 'completed', 'failed'],
+      enum: [
+        'queued',
+        'inspecting',
+        'analyzing',
+        'planning_tests',
+        'preparing_environment',
+        'running_tests',
+        'generating_reports',
+        'generating_docx',
+        'completed',
+        'completed_with_warnings',
+        'failed',
+      ],
       default: 'queued',
       required: true,
     },
     progress: { type: Number, default: 0 },
     statusMessage: { type: String, default: 'Project queued for analysis.' },
     errorMessage: { type: String },
+    faultReportFilePath: { type: String },
+    faultReportFileName: { type: String },
+    faultReportFileSize: { type: Number, default: 0 },
+    testRunId: { type: Schema.Types.ObjectId, ref: 'TestRun' },
+    faultSummary: {
+      totalTests: { type: Number, default: 0 },
+      passed: { type: Number, default: 0 },
+      failed: { type: Number, default: 0 },
+      blocked: { type: Number, default: 0 },
+      notTested: { type: Number, default: 0 },
+      confirmedFaults: { type: Number, default: 0 },
+      potentialFaults: { type: Number, default: 0 },
+      qualityScore: { type: Number, default: 0 },
+      qualityGrade: { type: String, default: 'C' },
+    },
 
     detectedTechnologies: {
       languages: { type: [String], default: [] },

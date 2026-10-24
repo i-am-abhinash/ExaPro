@@ -72,6 +72,43 @@ export function getDownloadDocxUrl(projectId: string): string {
   return `${API_BASE}/projects/${projectId}/download`;
 }
 
+export function getDownloadFaultReportDocxUrl(projectId: string): string {
+  return `${API_BASE}/projects/${projectId}/fault-report/docx`;
+}
+
+export function getDownloadFaultReportJsonUrl(projectId: string): string {
+  return `${API_BASE}/projects/${projectId}/fault-report/json`;
+}
+
+export async function fetchTestRun(projectId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/projects/${projectId}/test-run`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to fetch test run');
+  }
+  const data = await res.json();
+  return data.testRun;
+}
+
+export async function fetchFindings(
+  projectId: string,
+  filters?: { severity?: string; category?: string; status?: string; search?: string }
+): Promise<{ total: number; findings: any[] }> {
+  const params = new URLSearchParams();
+  if (filters?.severity) params.set('severity', filters.severity);
+  if (filters?.category) params.set('category', filters.category);
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.search) params.set('search', filters.search);
+
+  const queryStr = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(`${API_BASE}/projects/${projectId}/findings${queryStr}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to fetch findings');
+  }
+  return res.json();
+}
+
 export async function deleteProject(id: string): Promise<void> {
   const res = await fetch(`${API_BASE}/projects/${id}`, {
     method: 'DELETE',

@@ -49,7 +49,7 @@ export const GlassModal: React.FC<GlassModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#17243F]/80 backdrop-blur-md"
+            className="fixed inset-0 bg-[#151C32]/80 backdrop-blur-md"
           />
 
           {/* Modal Container */}
@@ -58,7 +58,7 @@ export const GlassModal: React.FC<GlassModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ type: 'spring', damping: 25, stiffness: 320 }}
-            className={`relative w-full ${maxWidthClasses[maxWidth]} rounded-3xl bg-[rgba(58,82,128,0.78)] backdrop-blur-2xl border border-white/[0.18] p-6 sm:p-8 shadow-glass-xl z-10 space-y-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]`}
+            className={`relative w-full ${maxWidthClasses[maxWidth]} rounded-3xl bg-[rgba(29,35,64,0.85)] backdrop-blur-2xl border border-white/[0.18] p-6 sm:p-8 shadow-glass-xl z-10 space-y-6 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.30)]`}
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-4">

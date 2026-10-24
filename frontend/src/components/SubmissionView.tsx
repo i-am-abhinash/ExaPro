@@ -11,8 +11,10 @@ import {
   Cpu,
   X,
   RefreshCw,
+  FileText,
+  ShieldAlert,
 } from 'lucide-react';
-import { uploadZipProject, submitGitHubRepo, fetchProject, getDownloadDocxUrl } from '../services/api';
+import { uploadZipProject, submitGitHubRepo, fetchProject, getDownloadDocxUrl, getDownloadFaultReportDocxUrl } from '../services/api';
 import { AnalysisStatus } from '../types';
 import {
   GlassButton,
@@ -117,7 +119,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
 
   // Status Polling Effect
   useEffect(() => {
-    if (!activeProjectId || projectStatus === 'completed' || projectStatus === 'failed') {
+    if (!activeProjectId || projectStatus === 'completed' || projectStatus === 'completed_with_warnings' || projectStatus === 'failed') {
       return;
     }
 
@@ -129,7 +131,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
           setProgressPercent(proj.progress || 0);
           setStatusMessage(proj.statusMessage || '');
 
-          if (proj.status === 'completed') {
+          if (proj.status === 'completed' || proj.status === 'completed_with_warnings') {
             setIsSubmitting(false);
           } else if (proj.status === 'failed') {
             setIsSubmitting(false);
@@ -145,10 +147,11 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
   }, [activeProjectId, projectStatus]);
 
   const pipelineStages = [
-    { key: 'inspecting', label: '1. Ingestion & Extraction', pct: 25 },
-    { key: 'analyzing', label: '2. Codebase & AST Inspection', pct: 50 },
-    { key: 'generating_docx', label: '3. Topology & AI Synthesis', pct: 75 },
-    { key: 'completed', label: '4. DOCX Report Compilation', pct: 100 },
+    { key: 'inspecting', label: '1. Ingestion & Extraction', pct: 20 },
+    { key: 'analyzing', label: '2. Architecture & Documentation', pct: 40 },
+    { key: 'planning_tests', label: '3. Static Defect Inspection', pct: 60 },
+    { key: 'running_tests', label: '4. Isolated Test Execution', pct: 80 },
+    { key: 'completed', label: '5. Dual Reports Compilation', pct: 100 },
   ];
 
   return (
@@ -171,7 +174,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         {/* 1. Selection Tabs */}
         {!isSubmitting && projectStatus !== 'completed' && (
           <div className="space-y-6">
-            <div className="flex p-1.5 rounded-2xl bg-[rgba(15,21,35,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
+            <div className="flex p-1.5 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => {
@@ -225,7 +228,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 group ${
                       isDragging
                         ? 'border-aurora bg-aurora/10 scale-[1.01]'
-                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(30,46,76,0.45)] hover:bg-[rgba(44,65,105,0.60)] backdrop-blur-md'
+                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(29,35,64,0.45)] hover:bg-[rgba(35,46,80,0.60)] backdrop-blur-md'
                     }`}
                   >
                     <div className="w-16 h-16 mx-auto rounded-2xl glass-stat-tile flex items-center justify-center text-aurora group-hover:scale-105 transition-transform shadow-glass-sm">
@@ -321,7 +324,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               <GlassButton
                 variant="primary"
                 size="lg"
-                icon={<ArrowRight className="w-5 h-5 text-[#17243F]" />}
+                icon={<ArrowRight className="w-5 h-5 text-[#151C32]" />}
                 onClick={handleStartAnalysis}
                 disabled={activeTab === 'zip' ? !selectedFile : !repoUrl.trim()}
               >
@@ -350,7 +353,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 <span className="text-cool-muted">Pipeline Execution</span>
                 <span className="text-aurora font-bold">{progressPercent}%</span>
               </div>
-              <div className="h-2.5 w-full bg-[rgba(25,40,68,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
+              <div className="h-2.5 w-full bg-[rgba(21,28,50,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
                 <div
                   className="h-full bg-aurora rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.max(5, progressPercent)}%` }}
@@ -371,7 +374,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                         ? 'bg-status-success-bg border-status-success-border text-status-success font-medium'
                         : isCurrent
                         ? 'bg-aurora/15 border-aurora/40 text-aurora font-bold shadow-sm'
-                        : 'bg-[rgba(30,46,76,0.45)] border-white/[0.10] text-cool-muted'
+                        : 'bg-[rgba(29,35,64,0.45)] border-white/[0.10] text-cool-muted'
                     }`}
                   >
                     {isDone ? (
@@ -390,35 +393,46 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         )}
 
         {/* 3. Completed State Card */}
-        {projectStatus === 'completed' && activeProjectId && (
-          <div className="py-8 text-center space-y-6 max-w-lg mx-auto">
+        {(projectStatus === 'completed' || projectStatus === 'completed_with_warnings') && activeProjectId && (
+          <div className="py-8 text-center space-y-6 max-w-xl mx-auto">
             <div className="w-16 h-16 mx-auto rounded-3xl bg-status-success-bg border border-status-success-border flex items-center justify-center text-status-success shadow-sm backdrop-blur-md">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
             <div className="space-y-1.5">
-              <h2 className="text-2xl font-black text-cool-primary tracking-tight">Project Examination Complete</h2>
+              <h2 className="text-2xl font-black text-cool-primary tracking-tight">Project Examination & Testing Complete</h2>
               <p className="text-xs sm:text-sm text-cool-secondary leading-relaxed">
-                Repository evaluation finished successfully. Verified architecture diagram and 14-section DOCX report generated.
+                Source code analysis, automated defect inspection, and test evaluations finished. Technical architecture documentation and software quality & fault reports are ready.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <GlassButton
-                variant="secondary"
+                variant="primary"
                 size="md"
                 onClick={() => onComplete(activeProjectId)}
               >
-                Preview Technical Report
+                Inspect Full Reports & Findings
               </GlassButton>
 
               <a
                 href={getDownloadDocxUrl(activeProjectId)}
                 download
-                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-aurora hover:bg-aurora-hover text-[#17243F] border border-aurora/50 text-xs sm:text-sm font-bold shadow-aurora-sm transition-colors"
+                className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl glass-tile-interactive text-cool-primary border border-white/[0.15] text-xs font-bold transition-colors"
+                title="Download 14-section Technical Architecture DOCX"
               >
-                <Download className="w-4 h-4 text-[#17243F]" />
-                <span>Download DOCX</span>
+                <FileText className="w-4 h-4 text-aurora" />
+                <span>Docx Architecture</span>
+              </a>
+
+              <a
+                href={getDownloadFaultReportDocxUrl(activeProjectId)}
+                download
+                className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl glass-tile-interactive text-cool-primary border border-white/[0.15] text-xs font-bold transition-colors"
+                title="Download Quality & Fault Findings DOCX"
+              >
+                <ShieldAlert className="w-4 h-4 text-[#FF8998]" />
+                <span>Fault Report DOCX</span>
               </a>
             </div>
           </div>

@@ -10,6 +10,8 @@ import { generateProjectArchitecture } from '../services/diagramService';
 import { generateProjectDocumentation } from '../services/aiService';
 import { generateDocxReport } from '../services/docxService';
 import { getDbStatus } from '../db/connection';
+import { runAutomatedTestingPipeline } from '../services/testingOrchestratorService';
+import { TestRun, FaultFinding, IFaultFinding } from '../models/testingModel';
 
 export async function uploadZipProject(req: Request, res: Response): Promise<void> {
   try {
@@ -36,7 +38,7 @@ export async function uploadZipProject(req: Request, res: Response): Promise<voi
     processZipProjectAsync(project._id.toString(), req.file.path);
 
     res.status(201).json({
-      message: 'Project ZIP uploaded successfully. Analysis started.',
+      message: 'Project ZIP uploaded successfully. Analysis and testing started.',
       projectId: project._id,
       project,
     });
@@ -56,7 +58,7 @@ async function processZipProjectAsync(projectId: string, uploadedZipPath: string
     await Project.findByIdAndUpdate(projectId, {
       $set: {
         status: 'inspecting',
-        progress: 25,
+        progress: 15,
         statusMessage: 'Safely decompressing and filtering archive files...',
       },
     });
@@ -75,18 +77,41 @@ async function processZipProjectAsync(projectId: string, uploadedZipPath: string
     await Project.findByIdAndUpdate(projectId, {
       $set: {
         status: 'analyzing',
-        progress: 50,
+        progress: 35,
         statusMessage: 'Inspecting project manifests, routes, schemas, and source tree...',
       },
     });
 
     const analysis = analyzeProjectDirectory(extracted.rootDir, initialProject.projectName);
 
-    // 3. Architecture & Documentation Generation
+    // Collect all relative files for static analysis
+    const allFiles: string[] = [];
+    function collectFiles(dir: string, base: string = '') {
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const e of entries) {
+          const rel = path.join(base, e.name).replace(/\\/g, '/');
+          if (e.isDirectory()) {
+            if (['node_modules', '.git', 'dist', 'build', '.next'].includes(e.name)) continue;
+            collectFiles(path.join(dir, e.name), rel);
+          } else if (e.isFile()) {
+            allFiles.push(rel);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    collectFiles(extracted.rootDir);
+
+    // 3. Automated Testing, Defect Inspection, and Fault Report (Report B)
+    const testRun = await runAutomatedTestingPipeline(projectId, extracted.rootDir, analysis, allFiles);
+
+    // 4. Architecture & Technical Documentation (Report A)
     await Project.findByIdAndUpdate(projectId, {
       $set: {
         status: 'generating_docx',
-        progress: 75,
+        progress: 85,
         statusMessage: 'Synthesizing architecture diagram and compiling DOCX report...',
       },
     });
@@ -118,17 +143,18 @@ async function processZipProjectAsync(projectId: string, uploadedZipPath: string
     );
     if (!docxProject) return;
 
-    // 4. Generate DOCX
+    // 5. Generate Report A: Technical Documentation DOCX
     const docxMeta = await generateDocxReport(docxProject, analysis, diagram.pngBuffer);
 
+    const finalStatus = testRun.stage === 'completed_with_warnings' ? 'completed_with_warnings' : 'completed';
     await Project.findByIdAndUpdate(projectId, {
       $set: {
         reportFilePath: docxMeta.filePath,
         reportFileName: docxMeta.fileName,
         reportFileSize: docxMeta.fileSize,
-        status: 'completed',
+        status: finalStatus,
         progress: 100,
-        statusMessage: 'Project analysis and DOCX documentation generated successfully.',
+        statusMessage: 'Project analysis, automated testing, and dual reports generated successfully.',
       },
     });
   } catch (err: any) {
@@ -216,11 +242,14 @@ async function processGitHubProjectAsync(projectId: string, repoUrl: string): Pr
 
     const analysis = analyzeProjectDirectory(ghRepo.rootDir, ghRepo.repo);
 
-    // 3. Architecture & Documentation Generation
+    // 3. Automated Testing, Defect Inspection, and Fault Report (Report B)
+    const testRun = await runAutomatedTestingPipeline(projectId, ghRepo.rootDir, analysis, ghRepo.allFilePaths);
+
+    // 4. Architecture & Technical Documentation (Report A)
     await Project.findByIdAndUpdate(projectId, {
       $set: {
         status: 'generating_docx',
-        progress: 75,
+        progress: 85,
         statusMessage: 'Synthesizing architecture diagram and compiling DOCX report...',
       },
     });
@@ -252,17 +281,18 @@ async function processGitHubProjectAsync(projectId: string, repoUrl: string): Pr
     );
     if (!docxProject) return;
 
-    // 4. Generate DOCX
+    // 5. Generate Report A: Technical Documentation DOCX
     const docxMeta = await generateDocxReport(docxProject, analysis, diagram.pngBuffer);
 
+    const finalStatus = testRun.stage === 'completed_with_warnings' ? 'completed_with_warnings' : 'completed';
     await Project.findByIdAndUpdate(projectId, {
       $set: {
         reportFilePath: docxMeta.filePath,
         reportFileName: docxMeta.fileName,
         reportFileSize: docxMeta.fileSize,
-        status: 'completed',
+        status: finalStatus,
         progress: 100,
-        statusMessage: 'Project analysis and DOCX documentation generated successfully.',
+        statusMessage: 'Project analysis, automated testing, and dual reports generated successfully.',
       },
     });
   } catch (err: any) {
@@ -283,7 +313,7 @@ async function processGitHubProjectAsync(projectId: string, repoUrl: string): Pr
 export async function listProjects(req: Request, res: Response): Promise<void> {
   try {
     const projects = await Project.find()
-      .select('projectName submissionType repositoryUrl uploadedFileName branch commitSha status progress statusMessage detectedTechnologies totalFilesCount createdAt updatedAt')
+      .select('projectName submissionType repositoryUrl uploadedFileName branch commitSha status progress statusMessage detectedTechnologies totalFilesCount faultSummary faultReportFileName createdAt updatedAt')
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -315,7 +345,7 @@ export async function getProjectReport(req: Request, res: Response): Promise<voi
       res.status(404).json({ error: 'Project not found.' });
       return;
     }
-    if (project.status !== 'completed') {
+    if (project.status !== 'completed' && project.status !== 'completed_with_warnings') {
       res.status(400).json({
         error: `Report is not ready yet. Current status: ${project.status}`,
         status: project.status,
@@ -324,6 +354,8 @@ export async function getProjectReport(req: Request, res: Response): Promise<voi
       });
       return;
     }
+
+    const testRun = await TestRun.findOne({ projectId: id });
 
     res.json({
       projectId: project._id,
@@ -342,6 +374,10 @@ export async function getProjectReport(req: Request, res: Response): Promise<voi
       documentation: project.documentation,
       reportFileName: project.reportFileName,
       reportFileSize: project.reportFileSize,
+      faultReportFileName: project.faultReportFileName,
+      faultReportFileSize: project.faultReportFileSize,
+      faultSummary: project.faultSummary,
+      testRun,
       aiProviderUsed: project.aiProviderUsed,
       aiModelUsed: project.aiModelUsed,
       usedAiFallback: project.usedAiFallback,
@@ -362,7 +398,7 @@ export async function downloadProjectDocx(req: Request, res: Response): Promise<
       return;
     }
 
-    if (project.status !== 'completed' || !project.reportFilePath) {
+    if ((project.status !== 'completed' && project.status !== 'completed_with_warnings') || !project.reportFilePath) {
       res.status(400).json({ error: 'DOCX report has not been generated for this project.' });
       return;
     }
@@ -376,6 +412,113 @@ export async function downloadProjectDocx(req: Request, res: Response): Promise<
     res.download(project.reportFilePath, downloadFileName);
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to download report.' });
+  }
+}
+
+export async function downloadProjectFaultReportDocx(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const project = await Project.findById(id);
+    if (!project) {
+      res.status(404).json({ error: 'Project not found.' });
+      return;
+    }
+
+    if (!project.faultReportFilePath || !fs.existsSync(project.faultReportFilePath)) {
+      res.status(404).json({ error: 'Software Quality and Fault Report DOCX was not found on server.' });
+      return;
+    }
+
+    const downloadFileName = project.faultReportFileName || `${project.projectName}_Fault_Report.docx`;
+    res.download(project.faultReportFilePath, downloadFileName);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to download fault report.' });
+  }
+}
+
+export async function getProjectTestRun(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const testRun = await TestRun.findOne({ projectId: id });
+    if (!testRun) {
+      res.status(404).json({ error: 'No test run found for this project.' });
+      return;
+    }
+    res.json({ testRun });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to get test run.' });
+  }
+}
+
+export async function getProjectFindings(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { severity, category, status, search } = req.query;
+
+    const testRun = await TestRun.findOne({ projectId: id });
+    if (!testRun) {
+      res.status(404).json({ error: 'No test run findings found for this project.' });
+      return;
+    }
+
+    let findings: IFaultFinding[] = (testRun.findings as unknown as IFaultFinding[]) || [];
+
+    if (severity && typeof severity === 'string' && severity !== 'all') {
+      findings = findings.filter((f: IFaultFinding) => f.severity.toLowerCase() === severity.toLowerCase());
+    }
+    if (category && typeof category === 'string' && category !== 'all') {
+      findings = findings.filter((f: IFaultFinding) => f.category.toLowerCase() === category.toLowerCase());
+    }
+    if (status && typeof status === 'string' && status !== 'all') {
+      findings = findings.filter((f: IFaultFinding) => f.verificationStatus.toLowerCase() === status.toLowerCase());
+    }
+    if (search && typeof search === 'string') {
+      const q = search.toLowerCase();
+      findings = findings.filter(
+        (f: IFaultFinding) =>
+          f.title.toLowerCase().includes(q) ||
+          f.description.toLowerCase().includes(q) ||
+          (f.filePath && f.filePath.toLowerCase().includes(q)) ||
+          (f.affectedRouteOrEndpoint && f.affectedRouteOrEndpoint.toLowerCase().includes(q))
+      );
+    }
+
+    res.json({
+      total: findings.length,
+      findings,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to get findings.' });
+  }
+}
+
+export async function getProjectFaultReportJson(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const project = await Project.findById(id);
+    if (!project) {
+      res.status(404).json({ error: 'Project not found.' });
+      return;
+    }
+
+    const testRun = await TestRun.findOne({ projectId: id });
+    if (!testRun) {
+      res.status(404).json({ error: 'No fault report data found for this project.' });
+      return;
+    }
+
+    res.json({
+      projectId: project._id,
+      projectName: project.projectName,
+      generatedAt: testRun.completedAt || testRun.updatedAt,
+      summary: testRun.summary,
+      environment: testRun.environment,
+      testPlan: testRun.testPlan,
+      findings: testRun.findings,
+      detectedTechnologies: project.detectedTechnologies,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to get fault report JSON.' });
   }
 }
 
@@ -396,8 +539,19 @@ export async function deleteProject(req: Request, res: Response): Promise<void> 
       }
     }
 
+    if (project.faultReportFilePath && fs.existsSync(project.faultReportFilePath)) {
+      try {
+        fs.unlinkSync(project.faultReportFilePath);
+      } catch {
+        // ignore
+      }
+    }
+
+    await TestRun.deleteMany({ projectId: id });
+    await FaultFinding.deleteMany({ projectId: id });
     await Project.findByIdAndDelete(id);
-    res.json({ message: 'Project and associated documentation report deleted successfully.' });
+
+    res.json({ message: 'Project, associated test runs, and dual reports deleted successfully.' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to delete project.' });
   }
@@ -408,7 +562,7 @@ export async function checkHealth(req: Request, res: Response): Promise<void> {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    service: 'Exapro Project Documentation Engine',
+    service: 'Exapro Project Documentation & Automated Testing Engine',
     database: dbStatus,
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
     githubTokenConfigured: Boolean(process.env.GITHUB_TOKEN),

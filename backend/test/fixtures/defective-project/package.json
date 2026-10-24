@@ -1,0 +1,8 @@
+{
+  "name": "defective-sample",
+  "version": "1.0.0",
+  "main": "src/entry.js",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

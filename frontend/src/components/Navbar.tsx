@@ -30,9 +30,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             layoutId="brand-logo-icon"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-9 h-9 rounded-xl bg-aurora flex items-center justify-center text-[#17243F] shadow-aurora-sm transition-transform duration-200"
+            className="w-9 h-9 rounded-xl bg-aurora flex items-center justify-center text-[#151C32] shadow-aurora-sm transition-transform duration-200"
           >
-            <Layers className="w-5 h-5 text-[#17243F]" />
+            <Layers className="w-5 h-5 text-[#151C32]" />
           </motion.div>
 
           <div className="flex flex-col">
@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setCurrentTab('new')}
             className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               currentTab === 'new'
-                ? 'bg-aurora text-[#17243F] shadow-aurora-sm border border-aurora/50'
+                ? 'bg-aurora text-[#151C32] shadow-aurora-sm border border-aurora/50'
                 : 'text-aurora bg-aurora/18 hover:bg-aurora/28 border border-aurora/40 shadow-sm'
             }`}
           >

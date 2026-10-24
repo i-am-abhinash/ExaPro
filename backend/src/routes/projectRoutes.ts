@@ -9,6 +9,10 @@ import {
   getProjectById,
   getProjectReport,
   downloadProjectDocx,
+  downloadProjectFaultReportDocx,
+  getProjectTestRun,
+  getProjectFindings,
+  getProjectFaultReportJson,
   deleteProject,
 } from '../controllers/projectController';
 
@@ -43,11 +47,18 @@ const upload = multer({
 router.post('/upload', upload.single('file'), uploadZipProject);
 router.post('/github', submitGitHubProject);
 
-// Query & Report endpoints
+// Query & Technical Report endpoints
 router.get('/', listProjects);
 router.get('/:id', getProjectById);
 router.get('/:id/report', getProjectReport);
 router.get('/:id/download', downloadProjectDocx);
+
+// Automated Testing & Fault Report endpoints
+router.get('/:id/test-run', getProjectTestRun);
+router.get('/:id/findings', getProjectFindings);
+router.get('/:id/fault-report/docx', downloadProjectFaultReportDocx);
+router.get('/:id/fault-report/json', getProjectFaultReportJson);
+
 router.delete('/:id', deleteProject);
 
 export default router;
