@@ -86,7 +86,25 @@ const POLICY_IGNORED_EXTS = new Set([
 const MAX_INSPECTABLE_FILE_SIZE = 150 * 1024; // 150KB
 const MAX_TOTAL_FILES_TO_INSPECT = 150;
 
-export function analyzeProjectDirectory(rootDir: string, defaultName: string): AnalysisResult {
+export function analyzeProjectDirectory(
+  rootDir: string,
+  defaultNameOrType: string = 'Project',
+  submissionTypeOrName: 'zip' | 'github' | string = 'zip'
+): AnalysisResult {
+  let defaultName = defaultNameOrType;
+  let submissionType: 'zip' | 'github' = 'zip';
+
+  if (defaultNameOrType === 'zip' || defaultNameOrType === 'github') {
+    submissionType = defaultNameOrType;
+    defaultName =
+      typeof submissionTypeOrName === 'string' &&
+      submissionTypeOrName !== 'zip' &&
+      submissionTypeOrName !== 'github'
+        ? submissionTypeOrName
+        : 'Project';
+  } else if (submissionTypeOrName === 'zip' || submissionTypeOrName === 'github') {
+    submissionType = submissionTypeOrName;
+  }
   const allDiscoveredFiles: string[] = [];
   const excludedDirectoriesSet = new Set<string>();
   const skippedByPolicyFiles: string[] = [];
@@ -821,7 +839,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         : database.has('MongoDB')
         ? `Database integration active via MongoDB / Mongoose. Detected ${legacyDatabaseSchemas.length} Mongoose models (${legacyDatabaseSchemas.map((s) => s.modelName).join(', ')}).`
         : hasLocalStorage
-        ? `No remote database (SQL/NoSQL) queries detected in application runtime code. Application state and user bookmarks are persisted client-side via browser localStorage (${inspectedFiles.filter((f) => fileContents.get(f)?.includes('localStorage')).map((f) => path.basename(f)).join(', ') || 'SavedNews.tsx'}).${hasSupabaseDep ? ' Supabase client is scaffolded in configuration but not actively queried by UI components.' : ''}`
+        ? `No remote database (SQL/NoSQL) queries detected in application runtime code. Application state and client persistence execute client-side via browser localStorage (${inspectedFiles.filter((f) => fileContents.get(f)?.includes('localStorage')).map((f) => path.basename(f)).join(', ') || 'client modules'}).${hasSupabaseDep ? ' Supabase client is scaffolded in configuration but not actively queried by UI components.' : ''}`
         : 'No dedicated database models or client datastore operations detected in inspected project files.',
     schemaConfidence: activeSdkCollections.length > 0 ? 'partial' : 'none',
   };
@@ -1071,20 +1089,18 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
           }
         }
       } else if (modType === 'service') {
-        if (baseName.includes('audio') || code.includes('gTTS')) {
-          role = 'Audio synthesis service leveraging gTTS for text-to-speech audio rendering.';
-          responsibilities.push('Generates MP3 audio files from article summaries using gTTS');
-          responsibilities.push('Manages local audio cache in AUDIO_DIR to prevent redundant generation');
-        } else if (baseName.includes('news') || code.includes('BeautifulSoup') || code.includes('requests')) {
-          role = 'News aggregation and web scraping service ingesting articles from RSS and publisher feeds.';
-          responsibilities.push('Fetches top headlines and RSS items from Google News and publishers');
-          responsibilities.push('Scrapes full article paragraphs and sanitizes HTML tags via BeautifulSoup');
-          responsibilities.push('Coordinates with NLP pipeline for clustering and categorization');
-        } else if (baseName.includes('nlp') || code.includes('TfidfVectorizer') || code.includes('nltk')) {
-          role = 'Natural language processing pipeline for extractive text summarization and categorization.';
-          responsibilities.push('Implements extractive TextRank summarization via TF-IDF sentence vectorization');
-          responsibilities.push('Performs news classification using Naive Bayes (MultinomialNB) and 20newsgroups');
-          responsibilities.push('Initializes NLTK tokenization and stopword removal models');
+        if (baseName.includes('audio') || code.includes('gTTS') || code.includes('pyttsx')) {
+          role = 'Audio synthesis and speech rendering service module.';
+          responsibilities.push('Performs audio processing and speech synthesis routines');
+          responsibilities.push('Manages audio file output and local cache directory');
+        } else if (code.includes('BeautifulSoup') || code.includes('requests') || code.includes('httpx') || code.includes('urllib')) {
+          role = 'External HTTP client and web document ingestion service module.';
+          responsibilities.push('Fetches external web resources and parses response payloads');
+          responsibilities.push('Coordinates outbound network data ingestion');
+        } else if (baseName.includes('nlp') || code.includes('TfidfVectorizer') || code.includes('nltk') || code.includes('spacy')) {
+          role = 'Natural language processing and machine learning analysis module.';
+          responsibilities.push('Implements text vectorization, tokenization, or model inference routines');
+          responsibilities.push('Coordinates machine learning and data transformation pipelines');
         } else {
           role = `Backend service module providing ${baseName} operations.`;
           if (exports.length > 0) {
@@ -1213,54 +1229,67 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         isConfirmed: true,
         tierNumber: 2,
       });
+      // Detect configured backend port if present in environment or manifests
+      const portMatch = allCodeText.match(/(?:PORT|port)\s*[:=]\s*(\d{2,5})/);
+      const detectedPort = portMatch ? portMatch[1] : undefined;
+
       archEdges.push({
         sourceId: 'client_ui',
         targetId: 'server_runtime',
-        label: 'HTTP REST / JSON (Port 8012)',
+        label: detectedPort ? `HTTP REST / JSON (Port ${detectedPort})` : 'HTTP REST / JSON',
         protocol: 'http_rest',
         isConfirmed: true,
         evidenceSources: serverRestEndpoints.map((e) => e.filePath),
       });
 
-      if (declaredPythonDeps.has('nltk') || declaredPythonDeps.has('scikit-learn') || declaredPythonDeps.has('gtts')) {
+      // Auxiliary backend data processing or ML pipeline node if detected
+      const mlLibs = ['nltk', 'scikit-learn', 'gtts', 'torch', 'spacy', 'tensorflow', 'transformers', 'pandas'].filter(
+        (lib) => declaredPythonDeps.has(lib) || allCodeText.includes(lib)
+      );
+      if (mlLibs.length > 0) {
         archNodes.push({
-          id: 'nlp_audio_pipeline',
-          label: 'NLP & Audio Pipeline',
-          sublabel: 'Extractive Summarization & Audio Synthesis',
+          id: 'data_processing_pipeline',
+          label: 'Data Processing & ML Pipeline',
+          sublabel: 'Domain Processing & Inference',
           category: 'service_module',
-          tech: 'Scikit-Learn, NLTK & gTTS',
-          evidenceSources: inspectedFiles.filter((f) => f.includes('nlp_pipeline') || f.includes('audio_service')),
+          tech: mlLibs.map((l) => l.toUpperCase()).join(', '),
+          evidenceSources: inspectedFiles.filter((f) => mlLibs.some((lib) => fileContents.get(f)?.includes(lib))),
           isConfirmed: true,
           tierNumber: 3,
         });
         archEdges.push({
           sourceId: 'server_runtime',
-          targetId: 'nlp_audio_pipeline',
+          targetId: 'data_processing_pipeline',
           label: 'In-Process Dispatch',
           protocol: 'direct_call',
           isConfirmed: true,
-          evidenceSources: inspectedFiles.filter((f) => f.includes('main.py')),
+          evidenceSources: inspectedFiles.filter((f) => f.includes('main.py') || f.includes('server.py') || f.includes('app.py')),
         });
       }
 
-      if (declaredPythonDeps.has('beautifulsoup4') || declaredPythonDeps.has('requests')) {
+      // External HTTP APIs or scraping services node if detected
+      if (externalHttpCalls.length > 0 || declaredPythonDeps.has('requests') || declaredPythonDeps.has('httpx') || declaredPythonDeps.has('beautifulsoup4')) {
         archNodes.push({
-          id: 'external_news_source',
-          label: 'External News Feeds',
-          sublabel: 'Google News RSS & Publisher Scrapes',
+          id: 'external_services',
+          label: 'External Services & APIs',
+          sublabel: 'Outbound HTTP Integrations',
           category: 'external_api',
-          tech: 'RSS Feeds & BeautifulSoup4',
-          evidenceSources: inspectedFiles.filter((f) => f.includes('news_service')),
+          tech: externalHttpCalls.length > 0
+            ? externalHttpCalls.slice(0, 2).map((c) => c.urlPattern).join(', ')
+            : 'Outbound Web APIs',
+          evidenceSources: inspectedFiles.filter(
+            (f) => fileContents.get(f)?.includes('requests') || fileContents.get(f)?.includes('httpx') || fileContents.get(f)?.includes('fetch(')
+          ),
           isConfirmed: true,
           tierNumber: 3,
         });
         archEdges.push({
           sourceId: 'server_runtime',
-          targetId: 'external_news_source',
-          label: 'HTTP GET / XML RSS Ingestion',
+          targetId: 'external_services',
+          label: 'HTTP Client Request',
           protocol: 'http_rest',
           isConfirmed: true,
-          evidenceSources: inspectedFiles.filter((f) => f.includes('news_service')),
+          evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('requests') || fileContents.get(f)?.includes('httpx')),
         });
       }
 
@@ -1268,7 +1297,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
         archNodes.push({
           id: 'client_storage',
           label: 'Browser LocalStorage',
-          sublabel: 'Offline Bookmarked Articles',
+          sublabel: 'Offline Client State Persistence',
           category: 'database',
           tech: 'Web Storage API',
           evidenceSources: inspectedFiles.filter((f) => fileContents.get(f)?.includes('localStorage')),
@@ -1379,7 +1408,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     architectureType,
     architectureSummary:
       architectureType === 'polyglot_fullstack'
-        ? `${detectedProjectName} implements a Polyglot Fullstack architecture comprising a ${Array.from(frontend).join(', ') || 'React'} client single-page application and an independent ${Array.from(backend).join(', ') || 'Python FastAPI'} backend microservice. The client interfaces with the backend over HTTP REST endpoints (${serverRestEndpoints.map((e) => e.path).join(', ') || '/news, /summarize, /audio'}).`
+        ? `${detectedProjectName} implements a Polyglot Fullstack architecture comprising a ${Array.from(frontend).join(', ') || 'client'} single-page application and an independent ${backendRuntime || Array.from(backend).join(', ') || 'backend microservice'}. The client interfaces with the backend over HTTP REST endpoints (${serverRestEndpoints.length > 0 ? serverRestEndpoints.map((e) => e.path).join(', ') : 'declared server routes'}).`
         : architectureType === 'client_baas'
         ? `${detectedProjectName} implements a client-side Backend-as-a-Service (BaaS) architecture. The ${Array.from(frontend).join(', ') || 'React'} client application interfaces directly with managed cloud services (Firebase Authentication and Cloud Firestore) via client SDK calls without an intermediate custom Express server.`
         : architectureType === 'client_server_db'
@@ -1390,12 +1419,39 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     inferences,
   };
 
+  findings.push({
+    id: 'ARCH-CLASSIFICATION',
+    category: 'config',
+    name: 'Architecture Model Classification',
+    value: architectureType,
+    status: 'inferred',
+    evidenceSources: archNodes.flatMap((n) => n.evidenceSources).slice(0, 5),
+    evidenceLevel: 'configured_in_file',
+    detectionRule: 'Synthesized from detected client frameworks, backend runtimes, and datastores',
+    confidence: 'high',
+  });
+
   // 8. Coverage Report & Evidence-Aware Source Defect Analysis
   const totalDiscovered = allDiscoveredFiles.length;
   const inspectedCount = inspectedFiles.length;
   const skippedCount = skippedByPolicyFiles.length;
   const coveragePercentage = totalDiscovered > 0 ? Math.round((inspectedCount / totalDiscovered) * 100) : 100;
   const isPartial = totalDiscovered > inspectedCount;
+
+  if (cappedOmittedFiles.length > 0) {
+    findings.push({
+      id: 'COVERAGE-CAPPED-FILES',
+      category: 'config',
+      name: 'Capped Files Inspection',
+      value: `${cappedOmittedFiles.length} files exceeded maximum inspection limit`,
+      status: 'not_analyzed',
+      evidenceSources: cappedOmittedFiles.slice(0, 5),
+      evidenceLevel: 'declared_in_manifest',
+      detectionRule: 'File inspection count cap (150 files) policy',
+      confidence: 'high',
+      limitations: 'Omitted files were not subjected to static AST inspection.',
+    });
+  }
 
   // Track unsupported language files
   const unsupportedExts = new Set(['.c', '.cpp', '.cs', '.rb', '.php', '.rs', '.swift', '.kt', '.scala', '.go', '.dart', '.sh', '.bat', '.ps1']);
@@ -1426,13 +1482,32 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
   } else if (languages.size === 0 && unsupportedFiles.length > 0) {
     analysisStatus = 'unsupported';
     partialReasons.push(`Repository contains only unsupported language files (${unsupportedFiles.slice(0, 5).join(', ')}).`);
+    partialReasons.push('unsupported_extensions_present');
   } else if (isPartial) {
     analysisStatus = 'partial';
-    if (sizeExceededFiles.length > 0) partialReasons.push(`${sizeExceededFiles.length} files exceeded size limit (150KB).`);
-    if (cappedOmittedFiles.length > 0) partialReasons.push(`${cappedOmittedFiles.length} files exceeded max inspection cap (150 files).`);
-    if (unreadableFiles.length > 0) partialReasons.push(`${unreadableFiles.length} files were unreadable.`);
+    if (sizeExceededFiles.length > 0) {
+      partialReasons.push('oversized_files_skipped');
+      partialReasons.push(`${sizeExceededFiles.length} files exceeded size limit (150KB).`);
+    }
+    if (cappedOmittedFiles.length > 0) {
+      partialReasons.push('file_count_capped');
+      partialReasons.push(`${cappedOmittedFiles.length} files exceeded max inspection cap (150 files).`);
+    }
+    if (unreadableFiles.length > 0) {
+      partialReasons.push('unreadable_files_present');
+      partialReasons.push(`${unreadableFiles.length} files were unreadable.`);
+    }
   } else if (findingsBySeverity.critical > 0 || staticResult.parseFailedFiles.length > 0) {
     analysisStatus = 'completed_with_warnings';
+  }
+
+  if (unsupportedFiles.length > 0 && !partialReasons.includes('unsupported_extensions_present')) {
+    partialReasons.push('unsupported_extensions_present');
+    partialReasons.push(`${unsupportedFiles.length} files with unsupported language extensions were discovered.`);
+  }
+  if (staticResult.parseFailedFiles.length > 0 && !partialReasons.includes('parse_diagnostics_present')) {
+    partialReasons.push('parse_diagnostics_present');
+    partialReasons.push(`${staticResult.parseFailedFiles.length} source files encountered compiler or syntax parse diagnostics.`);
   }
 
   const coverageReport: CoverageReport = {
@@ -1495,7 +1570,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
     projectDescription:
       projectDescription ||
       `Software application built with ${primaryRuntime}.`,
-    submissionType: 'zip',
+    submissionType: submissionType || 'zip',
     coverage: coverageReport,
     findings,
     sourceFindings: staticResult.findings,
@@ -1517,7 +1592,7 @@ export function analyzeProjectDirectory(rootDir: string, defaultName: string): A
       ? {
           frontend: `${Array.from(frontend).join(', ') || 'React'} Single Page Application (Vite)`,
           backend: `${backendRuntime || 'Python 3 / FastAPI HTTP Microservice'}`,
-          communicationStatus: `Confirmed HTTP REST client-to-backend integration (${serverRestEndpoints.map((e) => e.path).join(', ') || '/news, /summarize, /audio'})`,
+          communicationStatus: `Confirmed HTTP REST client-to-backend integration (${serverRestEndpoints.length > 0 ? serverRestEndpoints.map((e) => e.path).join(', ') : 'declared REST endpoints'})`,
         }
       : undefined,
     modules,

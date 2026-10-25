@@ -82,7 +82,7 @@ async function processZipProjectAsync(projectId: string, uploadedZipPath: string
       },
     });
 
-    const analysis = analyzeProjectDirectory(extracted.rootDir, initialProject.projectName);
+    const analysis = analyzeProjectDirectory(extracted.rootDir, initialProject.projectName, 'zip');
 
     // Collect all relative files for static analysis
     const allFiles: string[] = [];
@@ -240,7 +240,7 @@ async function processGitHubProjectAsync(projectId: string, repoUrl: string): Pr
       },
     });
 
-    const analysis = analyzeProjectDirectory(ghRepo.rootDir, ghRepo.repo);
+    const analysis = analyzeProjectDirectory(ghRepo.rootDir, ghRepo.repo, 'github');
 
     // 3. Automated Testing, Defect Inspection, and Fault Report (Report B)
     const testRun = await runAutomatedTestingPipeline(projectId, ghRepo.rootDir, analysis, ghRepo.allFilePaths);

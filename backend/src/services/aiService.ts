@@ -40,7 +40,7 @@ Use ONLY the supplied verified facts and component inventory.
 
 CRITICAL ARCHITECTURAL CONSTRAINTS:
 1. Do NOT invent an Express server, custom backend, or REST API endpoints if the verified architecture is Client-Side BaaS or Frontend SPA.
-2. If the project is a polyglot system (e.g. React frontend + Python FastAPI backend), accurately describe BOTH subsystems and their verified communication path (e.g. HTTP REST fetch calls to port 8012). Do NOT invent an Express or Node.js server tier.
+2. If the project is a polyglot system (e.g. React frontend + Python FastAPI backend), accurately describe BOTH subsystems and their verified communication path (e.g. HTTP REST fetch calls between client and backend). Do NOT invent an Express or Node.js server tier.
 3. If the project uses Firebase/Firestore, do NOT claim it uses local, in-memory, or filesystem storage.
 4. If the project uses browser localStorage for bookmarks without querying database tables, accurately describe localStorage and do NOT invent MongoDB, Mongoose, or database mutations.
 5. Distinguish confirmed facts from inferences. Distinguish active application collections from paths declared only in security rules.
@@ -110,7 +110,7 @@ Respond strictly in JSON matching this schema:
       const validated = AIDocumentationResponseSchema.safeParse(parsed);
 
       if (validated.success) {
-        const sanitized = sanitizeAiResponse(validated.data, analysis);
+        const sanitized = validateAndSanitizeAiResponse(validated.data, analysis);
         aiResponse = sanitized;
         aiProviderUsed = 'Google Gemini';
         aiModelUsed = modelName;
@@ -137,8 +137,8 @@ Respond strictly in JSON matching this schema:
   };
 }
 
-// Post-generation validator: strips and corrects any hallucinated architecture claims
-function sanitizeAiResponse(ai: AIDocumentationResponse, analysis: AnalysisResult): AIDocumentationResponse {
+// Post-generation evidence validator: verifies and sanitizes AI claims against verified facts
+export function validateAndSanitizeAiResponse(ai: AIDocumentationResponse, analysis: AnalysisResult): AIDocumentationResponse {
   let { executiveSummary, projectOverview, architectureExplanation, dataFlowExplanation, limitations } = ai;
 
   // Rule 1: Eliminate Express / Node server claims when Express is NOT in backend
@@ -152,15 +152,15 @@ function sanitizeAiResponse(ai: AIDocumentationResponse, analysis: AnalysisResul
     forbiddenExpress.forEach((regex) => {
       const repArch =
         analysis.architecture.architectureType === 'polyglot_fullstack'
-          ? 'FastAPI ASGI microservice'
+          ? `${analysis.technologies.backendRuntime || 'backend'} microservice`
           : 'client runtime';
       const repSum =
         analysis.architecture.architectureType === 'polyglot_fullstack'
-          ? 'FastAPI backend service'
+          ? `${analysis.technologies.backendRuntime || 'backend'} service`
           : 'client application';
       const repFlow =
         analysis.architecture.architectureType === 'polyglot_fullstack'
-          ? 'FastAPI route handlers'
+          ? 'backend route handlers'
           : 'application handlers';
       architectureExplanation = architectureExplanation.replace(regex, repArch);
       executiveSummary = executiveSummary.replace(regex, repSum);
@@ -168,21 +168,28 @@ function sanitizeAiResponse(ai: AIDocumentationResponse, analysis: AnalysisResul
     });
   }
 
-  // Rule 2: Eliminate MongoDB / Mongoose claims when MongoDB is NOT in database
-  if (!analysis.technologies.database.includes('MongoDB')) {
-    const forbiddenMongo = [
-      /Mongoose(\s+ODM)?(\s+to\s+MongoDB)?/gi,
-      /MongoDB(\s+database|\s+datastore)?/gi,
-    ];
-    forbiddenMongo.forEach((regex) => {
+  // Rule 2: Eliminate unverified database claims (MongoDB, PostgreSQL, MySQL, SQLite, Firestore, Redis)
+  const allKnownDbs = [
+    { name: 'MongoDB', regex: /MongoDB(\s+database|\s+datastore)?|Mongoose(\s+ODM)?(\s+to\s+MongoDB)?/gi },
+    { name: 'PostgreSQL', regex: /PostgreSQL(\s+database|\s+RDBMS|\s+cluster)?|Postgres/gi },
+    { name: 'MySQL', regex: /MySQL(\s+database|\s+RDBMS)?/gi },
+    { name: 'SQLite', regex: /SQLite(\s+database|\s+file)?/gi },
+    { name: 'Cloud Firestore', regex: /Cloud\s+Firestore(\s+database|\s+collections)?|Firebase\s+Firestore/gi },
+    { name: 'Redis', regex: /Redis(\s+cache|\s+datastore|\s+server)?/gi },
+  ];
+
+  allKnownDbs.forEach((dbItem) => {
+    const isVerified = analysis.technologies.database.some((d) => d.toLowerCase().includes(dbItem.name.toLowerCase()));
+    if (!isVerified) {
       const rep = analysis.findings.some((f) => f.id === 'TECH-LOCALSTORAGE')
         ? 'browser localStorage'
         : 'client state persistence';
-      architectureExplanation = architectureExplanation.replace(regex, rep);
-      dataFlowExplanation = dataFlowExplanation.replace(regex, rep);
-      executiveSummary = executiveSummary.replace(regex, rep);
-    });
-  }
+      architectureExplanation = architectureExplanation.replace(dbItem.regex, rep);
+      dataFlowExplanation = dataFlowExplanation.replace(dbItem.regex, rep);
+      executiveSummary = executiveSummary.replace(dbItem.regex, rep);
+      projectOverview = projectOverview.replace(dbItem.regex, rep);
+    }
+  });
 
   // Rule 3: If database is Cloud Firestore, eliminate "in-memory / local filesystem" claims
   if (analysis.database.databaseType === 'cloud_firestore') {
@@ -191,8 +198,28 @@ function sanitizeAiResponse(ai: AIDocumentationResponse, analysis: AnalysisResul
     dataFlowExplanation = dataFlowExplanation.replace(memoryRegex, 'Cloud Firestore');
   }
 
-  // Rule 4: Remove generic filler phrases
-  const fillerRegex = /(operating\s+securely|modern\s+and\s+robust\s+architecture|ensures\s+security\s+and\s+scalability)/gi;
+  // Rule 4: Neutralize unsupported backend runtime claims (FastAPI, Django, Flask, Spring, NestJS)
+  const allKnownBackends = [
+    { name: 'FastAPI', regex: /FastAPI(\s+microservice|\s+ASGI|\s+backend)?/gi },
+    { name: 'Django', regex: /Django(\s+backend|\s+server|\s+REST)?/gi },
+    { name: 'Flask', regex: /Flask(\s+backend|\s+server|\s+microservice)?/gi },
+    { name: 'NestJS', regex: /NestJS(\s+backend|\s+server)?/gi },
+    { name: 'Spring', regex: /Spring(\s+Boot|\s+backend|\s+microservice)?/gi },
+  ];
+
+  allKnownBackends.forEach((beItem) => {
+    const isVerified = analysis.technologies.backend.some((b) => b.toLowerCase().includes(beItem.name.toLowerCase())) ||
+      (analysis.technologies.backendRuntime || '').toLowerCase().includes(beItem.name.toLowerCase());
+    if (!isVerified) {
+      const rep = 'application runtime';
+      architectureExplanation = architectureExplanation.replace(beItem.regex, rep);
+      dataFlowExplanation = dataFlowExplanation.replace(beItem.regex, rep);
+      executiveSummary = executiveSummary.replace(beItem.regex, rep);
+    }
+  });
+
+  // Rule 5: Remove generic filler phrases
+  const fillerRegex = /(operating\s+securely|modern\s+and\s+robust\s+architecture|ensures\s+security\s+and\s+scalability|designed\s+for\s+high\s+performance)/gi;
   executiveSummary = executiveSummary.replace(fillerRegex, 'grounded in inspected source files');
   architectureExplanation = architectureExplanation.replace(fillerRegex, 'verified in codebase');
 
@@ -233,19 +260,19 @@ function compileEvidenceSections(
   const executiveSummary =
     ai?.executiveSummary ||
     (architecture.architectureType === 'polyglot_fullstack'
-      ? `**${projectName}** is a software application designed for ${projectDescription || 'automated news aggregation, extractive summarization, and audio synthesis'}. ` +
-        `The system implements a **Polyglot Fullstack Microservice** architecture comprising a **${technologies.primaryRuntime}** frontend and a dedicated **${technologies.backendRuntime || 'Python 3 / FastAPI HTTP Microservice'}** backend. ` +
+      ? `**${projectName}** is a software application designed for ${projectDescription || `${projectName} operational workflows`}. ` +
+        `The system implements a **Polyglot Fullstack** architecture comprising a **${technologies.primaryRuntime}** frontend and a dedicated **${technologies.backendRuntime || technologies.backend.join(', ') || 'backend microservice'}**. ` +
         `Analysis is grounded in ${coverage.inspectedFilesCount} inspected modules out of ${coverage.totalDiscoveredFiles} discovered repository files (${coverage.coveragePercentage}% coverage).\n\n` +
-        `**Architectural Style & Subsystems:** The application operates two decoupled subsystems: an interactive React single-page application built with Vite and Tailwind CSS, and a high-performance Python ASGI backend powered by FastAPI. ` +
-        `Communication is established via HTTP REST endpoints (\`/news\`, \`/summarize\`, \`/categories\`, \`/audio\`). ` +
-        `The backend integrates an extractive NLP summarization pipeline (\`scikit-learn\`, \`nltk\`) and a text-to-speech audio rendering engine (\`gTTS\`). ` +
-        `Client-side persistence for saved bookmarks is handled via browser \`localStorage\`, with no active remote SQL or NoSQL database queries observed in inspected application code.`
+        `**Architectural Style & Subsystems:** The application operates decoupled client and server tiers: a ${technologies.frontend.join(', ') || 'web'} client frontend and a ${technologies.backendRuntime || technologies.backend.join(', ') || 'backend service'} backend runtime. ` +
+        `Communication is established via HTTP REST endpoints (${api.serverRestEndpoints.length > 0 ? api.serverRestEndpoints.slice(0, 5).map(e => `\`${e.path}\``).join(', ') : 'declared server routes'}). ` +
+        (technologies.frameworks.length > 0 ? `The system incorporates domain frameworks: ${technologies.frameworks.join(', ')}. ` : '') +
+        `Persistence is established via ${database.summary}.`
       : architecture.architectureType === 'client_baas'
       ? `**${projectName}** is a software application designed for ${projectDescription || 'web workflows'}. ` +
         `The system is built upon **${technologies.primaryRuntime}**, with source files structured across ${coverage.inspectedFilesCount} inspected modules out of ${coverage.totalDiscoveredFiles} discovered repository files (${coverage.coveragePercentage}% coverage). ` +
         `\n\n**Architectural Pattern:** The application implements a **Client-Side Backend-as-a-Service (BaaS)** architecture. ` +
         `Client interface modules communicate directly with cloud infrastructure via official client SDKs (${technologies.auth.concat(technologies.database).join(', ')}), executing authenticated queries and document mutations without an intermediate custom Express server. ` +
-        `\n\n**Key Technical Findings:** Data persistence is established with Cloud Firestore, with **${database.activeSdkCollections.length} actively referenced collections** (${activeCollsList || 'attendance, users'}) verified in client code, and ${database.ruleOnlyCollectionPaths.length} additional paths declared in security rules. ` +
+        `\n\n**Key Technical Findings:** Data persistence is established with Cloud Firestore, with **${database.activeSdkCollections.length} actively referenced collections** (${activeCollsList || 'referenced Firestore paths'}) verified in client code, and ${database.ruleOnlyCollectionPaths.length} additional paths declared in security rules. ` +
         `Static analysis confirmed no custom Express server routes, consistent with its serverless BaaS design. All findings in this report are grounded strictly in inspected source code and manifest declarations.`
       : architecture.architectureType === 'client_server_db'
       ? `**${projectName}** is a software application designed for ${projectDescription || 'multi-tier workflows'}. ` +
@@ -422,19 +449,18 @@ function compileEvidenceSections(
     ai?.dataFlowExplanation ||
     (architecture.architectureType === 'polyglot_fullstack'
       ? `**Polyglot Fullstack Data Flow & Processing Lifecycle:**\n\n` +
-        `1. **Client Initialization & News Fetch:** The React single-page application mounts and dispatches an HTTP GET request to \`http://localhost:8012/news\` via the native Fetch API.\n` +
-        `2. **Backend Route Dispatch & Web Ingestion:** The Python FastAPI microservice receives the request in \`main.py\` and invokes \`fetch_and_process_news\` in \`services/news_service.py\`. It requests live Google News RSS feeds and scrapes article text using \`BeautifulSoup4\`.\n` +
-        `3. **NLP Processing & Extractive Summarization:** \`services/nlp_pipeline.py\` processes article paragraphs, computing sentence weights via TextRank with TF-IDF vectorization and classifying articles using Naive Bayes.\n` +
-        `4. **Reactive Client Display:** Structured JSON article payloads return to the client, where React hook state triggers immediate UI rendering in \`NewsHome.tsx\`.\n` +
-        `5. **On-Demand Audio Streaming:** When the user plays an article summary, \`AudioPlayer.tsx\` requests \`http://localhost:8012/audio?id=...\`. The FastAPI backend coordinates with \`services/audio_service.py\` to generate an MP3 audio file using \`gTTS\` with disk-based caching in \`audio_cache/\`.\n` +
-        `6. **Local State Persistence:** User bookmarks are stored directly in browser \`localStorage\` via \`SavedNews.tsx\` without remote database mutations.`
+        `1. **Client View Initialization:** The ${technologies.frontend.join(', ') || 'client'} application mounts root view components and initializes reactive local state.\n` +
+        `2. **API Request Dispatch:** User interactions dispatch HTTP REST requests targeting backend routes (${api.serverRestEndpoints.length > 0 ? api.serverRestEndpoints.slice(0, 3).map(e => `\`${e.path}\``).join(', ') : 'declared endpoints'}).\n` +
+        `3. **Backend Route Processing:** The ${technologies.backendRuntime || 'backend service'} receives incoming requests, applies middleware verification, and executes controller handlers.\n` +
+        `4. **Domain Logic & Data Flow:** Internal service modules coordinate application logic, invoking data transformations or datastore operations (${database.summary}).\n` +
+        `5. **Reactive Response Rendering:** Structured response payloads return to the client, updating UI state and triggering view re-renders.`
       : architecture.architectureType === 'client_baas'
       ? `**Client-to-Cloud BaaS Operational Lifecycle:**\n\n` +
-        `1. **User Action:** The end user interacts with a React view component (e.g. login credentials submitted, attendance marked, roster queried).\n` +
-        `2. **Component State & Service Invocation:** The view handler validates local input and dispatches a call to an application service module (e.g., \`authService.js\`, \`attendanceService.js\`).\n` +
-        `3. **Direct Cloud SDK Dispatch:** The service module executes official Firebase SDK methods (\`signInWithEmailAndPassword\`, \`getDocs\`, \`setDoc\`, \`addDoc\`) targeting Google Cloud endpoints.\n` +
-        `4. **Security Rules Authorization:** Cloud Firestore statically evaluates security rules in \`firestore.rules\` against the requesting user's authentication token (\`request.auth\`).\n` +
-        `5. **Reactive UI Synchronization:** Returned document payloads or real-time snapshot streams update React Context and component state, triggering immediate UI re-rendering.`
+        `1. **User Action:** The end user interacts with a client view component (e.g. submitting form input or triggering datastore queries).\n` +
+        `2. **Component State & Service Invocation:** The view handler validates local input and dispatches a call to an application service module (${modules.filter(m => m.path.includes('service') || m.path.includes('api')).slice(0, 2).map(m => `\`${m.name}\``).join(', ') || 'client service modules'}).\n` +
+        `3. **Direct Cloud SDK Dispatch:** The service module executes official client SDK methods (${technologies.auth.concat(technologies.database).join(', ') || 'cloud SDK methods'}) targeting managed cloud endpoints.\n` +
+        `4. **Security Rules Authorization:** Cloud infrastructure evaluates declared security rules against the requesting user's authentication context.\n` +
+        `5. **Reactive UI Synchronization:** Returned document payloads or real-time snapshot streams update application state, triggering immediate UI re-rendering.`
       : architecture.architectureType === 'client_server_db'
       ? `**Multi-Tier Request & Persistence Lifecycle:**\n\n` +
         `1. **Client Request:** The user interaction dispatches an HTTP REST call to the server API.\n` +
@@ -577,11 +603,7 @@ function compileEvidenceSections(
   const externalIntegrations =
     `**External Integrations & Cloud Services:**\n\n` +
     (technologies.database.length > 0 || technologies.auth.length > 0
-      ? `• **Google Cloud / Firebase:** Integrated client SDKs for authentication and datastore operations (${technologies.auth.concat(technologies.database).join(', ')}).\n`
-      : '') +
-    (architecture.architectureType === 'polyglot_fullstack'
-      ? `• **External News Services:** Google News RSS feeds parsed via BeautifulSoup4 in backend microservice.\n` +
-        `• **Audio Rendering Services:** Google Text-to-Speech (gTTS) audio synthesis API.\n`
+      ? `• **Cloud / Datastore Services:** Integrated client SDKs for authentication and datastore operations (${technologies.auth.concat(technologies.database).join(', ')}).\n`
       : '') +
     (api.externalHttpCalls.length > 0
       ? `• **External HTTP Endpoints:** Inspected source files make outbound requests to: ${api.externalHttpCalls.map((c) => `\`${c.urlPattern}\``).join(', ')}.\n`

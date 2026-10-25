@@ -32,6 +32,7 @@ export interface StaticAnalysisDefectsResult {
   totalInspectedFiles: number;
   totalChecksRun: number;
   syntaxErrorsCount: number;
+  typeErrorsCount: number;
   brokenImportsCount: number;
   missingDependenciesCount: number;
   configurationIssuesCount: number;
@@ -48,12 +49,15 @@ export function performStaticDefectAnalysis(
 ): StaticAnalysisDefectsResult {
   const rawFindings: IEvidenceFinding[] = [];
   let findingCounter = 1;
+  const findingCounterRef = { count: 1 };
   const parseFailedFiles: string[] = [];
 
   const rulesExecuted = [
     'SYNTAX-TS-001',
+    'TYPE-TS-001',
     'SYNTAX-JSON-001',
     'IMPORT-RELATIVE-001',
+    'IMPORT-ALIAS-001',
     'DEP-UNDECLARED-001',
     'SEC-CONFIG-001',
     'SEC-CONFIG-002',
@@ -72,6 +76,8 @@ export function performStaticDefectAnalysis(
   for (const f of allFiles) {
     lowerFileMap.set(f.replace(/\\/g, '/').toLowerCase(), f.replace(/\\/g, '/'));
   }
+
+  const pathAliases = loadPathAliases(rootDir, allFiles);
 
   // Load package.json if present
   let declaredDependencies = new Set<string>();
@@ -672,6 +678,52 @@ export function performStaticDefectAnalysis(
           }
         }
 
+        // Path alias imports (e.g. from '@/components/Button' or require('~/utils/api'))
+        for (const alias of pathAliases) {
+          const escapedPrefix = alias.prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const aliasRegex = new RegExp(`(?:from\\s+['"]|import\\s*\\(\\s*['"]|require\\s*\\(\\s*['"])(${escapedPrefix}[^'"]+)['"]`, 'i');
+          const aliasMatch = line.match(aliasRegex);
+
+          if (aliasMatch) {
+            const importPath = aliasMatch[1];
+            const subPath = importPath.slice(alias.prefix.length);
+            const resolvedRel = path.posix.normalize(path.posix.join(alias.targetDir, subPath));
+            const exists = resolveFileExists(rootDir, resolvedRel, allFileSet, lowerFileMap);
+
+            if (!exists) {
+              rawFindings.push({
+                id: `RAW-${findingCounter++}`,
+                title: `Broken Path Alias Import: "${importPath}"`,
+                description: `Module "${relFile}" attempts to import "${importPath}" via path alias, but resolved target "${resolvedRel}" does not exist in repository files.`,
+                severity: 'High',
+                confidence: 'high',
+                status: 'confirmed',
+                category: 'dependency',
+                analysisType: 'deterministic',
+                filePath: relFile,
+                startLine: lineNum,
+                endLine: lineNum,
+                codeExcerpt: line.trim(),
+                ruleId: 'IMPORT-ALIAS-001',
+                evidence: [
+                  {
+                    id: `EVD-ALIAS-${lineNum}`,
+                    type: 'code_snippet',
+                    title: 'Broken path alias import',
+                    data: line.trim(),
+                    filePath: relFile,
+                    lineNumber: lineNum,
+                    timestamp: new Date().toISOString(),
+                  },
+                ],
+                reasoning: `Target path "${resolvedRel}" mapped from alias prefix "${alias.prefix}" was not found in the project.`,
+                impact: 'Bundler (Vite, Webpack, Next.js) will fail to resolve the module, causing build errors.',
+                recommendation: `Check if file was moved or renamed, update the path alias in tsconfig.json, or create "${resolvedRel}".`,
+              });
+            }
+          }
+        }
+
         // Package imports
         if (hasPackageJson && declaredDependencies.size > 0) {
           const packageMatch =
@@ -685,7 +737,7 @@ export function performStaticDefectAnalysis(
               : rawPkg.split('/')[0];
 
             if (!NODE_BUILTIN_MODULES.has(pkgName) && !declaredDependencies.has(pkgName)) {
-              if (!pkgName.startsWith('@/') && !pkgName.startsWith('~/')) {
+              if (!pkgName.startsWith('@/') && !pkgName.startsWith('~/') && !pathAliases.some((a) => a.prefix.startsWith(pkgName))) {
                 rawFindings.push({
                   id: `RAW-${findingCounter++}`,
                   title: `Undeclared Dependency Imported: "${pkgName}"`,
@@ -775,42 +827,111 @@ export function performStaticDefectAnalysis(
         const trimmed = line.trim();
         if (trimmed.startsWith('#')) continue;
 
-        // from .foo import bar
-        const pyRelMatch = trimmed.match(/^from\s+\.([a-zA-Z0-9_]+)\s+import/i);
+        // Multi-dot relative imports: from .foo import bar, from ..foo import bar
+        const pyRelMatch = trimmed.match(/^from\s+(\.+)([a-zA-Z0-9_]*)\s+import/i);
         if (pyRelMatch) {
-          const modName = pyRelMatch[1];
-          const targetPy = path.posix.join(dirOfFile, `${modName}.py`);
-          const targetDirInit = path.posix.join(dirOfFile, modName, '__init__.py');
-          if (!allFileSet.has(targetPy) && !allFileSet.has(targetDirInit)) {
-            rawFindings.push({
-              id: `RAW-${findingCounter++}`,
-              title: `Python Broken Relative Import: ".${modName}"`,
-              description: `Module "${relFile}" attempts to import ".${modName}", but no matching Python file or package exists.`,
-              severity: 'High',
-              confidence: 'high',
-              status: 'confirmed',
-              category: 'dependency',
-              analysisType: 'deterministic',
-              filePath: relFile,
-              startLine: lineNum,
-              endLine: lineNum,
-              codeExcerpt: trimmed,
-              ruleId: 'IMPORT-RELATIVE-001',
-              evidence: [
-                {
-                  id: `EVD-PY-IMPORT-${lineNum}`,
-                  type: 'code_snippet',
-                  title: 'Python relative import line',
-                  data: trimmed,
+          const dots = pyRelMatch[1];
+          const modName = pyRelMatch[2];
+          let targetBase = dirOfFile;
+          for (let d = 1; d < dots.length; d++) {
+            targetBase = path.posix.dirname(targetBase);
+          }
+          if (modName) {
+            const targetPy = path.posix.join(targetBase, `${modName}.py`);
+            const targetDirInit = path.posix.join(targetBase, modName, '__init__.py');
+            if (!allFileSet.has(targetPy) && !allFileSet.has(targetDirInit)) {
+              rawFindings.push({
+                id: `RAW-${findingCounter++}`,
+                title: `Python Broken Relative Import: "${dots}${modName}"`,
+                description: `Module "${relFile}" attempts to import "${dots}${modName}", but no matching Python file or package exists.`,
+                severity: 'High',
+                confidence: 'high',
+                status: 'confirmed',
+                category: 'dependency',
+                analysisType: 'deterministic',
+                filePath: relFile,
+                startLine: lineNum,
+                endLine: lineNum,
+                codeExcerpt: trimmed,
+                ruleId: 'IMPORT-RELATIVE-001',
+                evidence: [
+                  {
+                    id: `EVD-PY-IMPORT-${lineNum}`,
+                    type: 'code_snippet',
+                    title: 'Python relative import line',
+                    data: trimmed,
+                    filePath: relFile,
+                    lineNumber: lineNum,
+                    timestamp: new Date().toISOString(),
+                  },
+                ],
+                reasoning: `Python module loader will raise ModuleNotFoundError: No module named '${modName}'.`,
+                impact: 'Python service will fail on module load.',
+                recommendation: `Verify module path or create "${targetPy}".`,
+              });
+            }
+          }
+        }
+
+        // Intra-project package imports: from foo.bar import baz, import foo.bar
+        const pyAbsMatch = trimmed.match(/^(?:from|import)\s+([a-zA-Z0-9_]+)(?:\.([a-zA-Z0-9_]+))?/);
+        if (pyAbsMatch && !trimmed.startsWith('from .')) {
+          const topPkg = pyAbsMatch[1];
+          const subMod = pyAbsMatch[2];
+          if (!PYTHON_BUILTIN_MODULES.has(topPkg)) {
+            const isLocalDir = allFiles.some(
+              (f) =>
+                f.startsWith(`${topPkg}/`) ||
+                f.startsWith(`${topPkg}\\`) ||
+                f.startsWith(`src/${topPkg}/`) ||
+                f.startsWith(`${dirOfFile}/${topPkg}/`)
+            );
+
+            if (isLocalDir && subMod) {
+              const targetSub1 = path.posix.join(topPkg, `${subMod}.py`);
+              const targetSub2 = path.posix.join(dirOfFile, topPkg, `${subMod}.py`);
+              const targetSub3 = path.posix.join('src', topPkg, `${subMod}.py`);
+              const targetSubDir1 = path.posix.join(topPkg, subMod, '__init__.py');
+              const targetSubDir2 = path.posix.join(dirOfFile, topPkg, subMod, '__init__.py');
+
+              if (
+                !allFileSet.has(targetSub1) &&
+                !allFileSet.has(targetSub2) &&
+                !allFileSet.has(targetSub3) &&
+                !allFileSet.has(targetSubDir1) &&
+                !allFileSet.has(targetSubDir2)
+              ) {
+                rawFindings.push({
+                  id: `RAW-${findingCounter++}`,
+                  title: `Python Broken Submodule Import: "${topPkg}.${subMod}"`,
+                  description: `Module "${relFile}" attempts to import "${topPkg}.${subMod}", but submodule "${subMod}.py" does not exist in local package "${topPkg}".`,
+                  severity: 'High',
+                  confidence: 'high',
+                  status: 'confirmed',
+                  category: 'dependency',
+                  analysisType: 'deterministic',
                   filePath: relFile,
-                  lineNumber: lineNum,
-                  timestamp: new Date().toISOString(),
-                },
-              ],
-              reasoning: `Python module loader will raise ModuleNotFoundError: No module named '${modName}'.`,
-              impact: 'Python service will fail on module load.',
-              recommendation: `Verify module path or create "${targetPy}".`,
-            });
+                  startLine: lineNum,
+                  endLine: lineNum,
+                  codeExcerpt: trimmed,
+                  ruleId: 'IMPORT-RELATIVE-001',
+                  evidence: [
+                    {
+                      id: `EVD-PY-SUBMOD-${lineNum}`,
+                      type: 'code_snippet',
+                      title: 'Broken Python submodule import',
+                      data: trimmed,
+                      filePath: relFile,
+                      lineNumber: lineNum,
+                      timestamp: new Date().toISOString(),
+                    },
+                  ],
+                  reasoning: `Python package "${topPkg}" does not contain submodule "${subMod}.py" or package "${subMod}/__init__.py".`,
+                  impact: 'Python module loader will raise ModuleNotFoundError or AttributeError.',
+                  recommendation: `Check whether submodule was renamed or create "${targetSub1}".`,
+                });
+              }
+            }
           }
         }
       }
@@ -891,6 +1012,13 @@ export function performStaticDefectAnalysis(
     }
   }
 
+  // Check 5: TypeScript Semantic Type Checking (TYPE-TS-001)
+  const typeFindings = performTypeScriptTypeChecking(rootDir, allFiles, filesToInspect);
+  for (const tf of typeFindings) {
+    tf.id = `RAW-${findingCounter++}`;
+    rawFindings.push(tf);
+  }
+
   // Pass all raw findings through the strict Evidence Validator
   const validationResult = validateAndDeduplicateFindings(rawFindings, rootDir);
   const validatedFindings = validationResult.validFindings;
@@ -904,6 +1032,7 @@ export function performStaticDefectAnalysis(
     totalInspectedFiles: filesToInspect.length,
     totalChecksRun: filesToInspect.length * rulesExecuted.length,
     syntaxErrorsCount: validatedFindings.filter((f) => f.ruleId.startsWith('SYNTAX')).length,
+    typeErrorsCount: validatedFindings.filter((f) => f.ruleId === 'TYPE-TS-001').length,
     brokenImportsCount: validatedFindings.filter((f) => f.ruleId.startsWith('IMPORT')).length,
     missingDependenciesCount: validatedFindings.filter((f) => f.ruleId.startsWith('DEP')).length,
     configurationIssuesCount: validatedFindings.filter((f) => f.category === 'configuration').length,
@@ -1015,4 +1144,179 @@ function findLineNumberForSubstring(lines: string[], substring: string): number 
     }
   }
   return 1;
+}
+
+interface PathAliasMapping {
+  prefix: string;
+  targetDir: string;
+}
+
+function loadPathAliases(rootDir: string, allFiles: string[]): PathAliasMapping[] {
+  const aliases: PathAliasMapping[] = [];
+
+  const tsconfigRel =
+    allFiles.find((f) => path.basename(f) === 'tsconfig.json') ||
+    allFiles.find((f) => path.basename(f) === 'jsconfig.json');
+
+  let baseUrl = '.';
+
+  if (tsconfigRel) {
+    try {
+      const fullPath = path.join(rootDir, tsconfigRel);
+      const raw = fs.readFileSync(fullPath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed.compilerOptions) {
+        if (parsed.compilerOptions.baseUrl) {
+          baseUrl = parsed.compilerOptions.baseUrl.replace(/^\.\//, '');
+        }
+        if (parsed.compilerOptions.paths && typeof parsed.compilerOptions.paths === 'object') {
+          for (const [key, targets] of Object.entries(parsed.compilerOptions.paths)) {
+            const cleanPrefix = key.replace(/\*$/, '');
+            const targetList = Array.isArray(targets) ? targets : [targets];
+            for (const t of targetList) {
+              if (typeof t === 'string') {
+                const cleanTarget = t.replace(/\*$/, '').replace(/^\.\//, '');
+                const combined = baseUrl && baseUrl !== '.' ? path.posix.join(baseUrl, cleanTarget) : cleanTarget;
+                aliases.push({ prefix: cleanPrefix, targetDir: combined });
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore JSON parse errors in tsconfig
+    }
+  }
+
+  // If no @/ or ~/ alias was explicitly declared, establish standard conventions
+  const hasAtAlias = aliases.some((a) => a.prefix === '@/');
+  const hasTildeAlias = aliases.some((a) => a.prefix === '~/');
+  const hasSrcDir = allFiles.some((f) => f.startsWith('src/') || f.startsWith('src\\'));
+
+  if (!hasAtAlias) {
+    aliases.push({ prefix: '@/', targetDir: hasSrcDir ? 'src/' : '' });
+  }
+  if (!hasTildeAlias) {
+    aliases.push({ prefix: '~/', targetDir: hasSrcDir ? 'src/' : '' });
+  }
+
+  return aliases;
+}
+
+function performTypeScriptTypeChecking(
+  rootDir: string,
+  allFiles: string[],
+  inspectedFilePaths: string[]
+): IEvidenceFinding[] {
+  const findings: IEvidenceFinding[] = [];
+  const tsFiles = inspectedFilePaths.filter((f) => {
+    const ext = path.extname(f).toLowerCase();
+    return ext === '.ts' || ext === '.tsx';
+  });
+
+  if (tsFiles.length === 0) return findings;
+
+  let compilerOptions: ts.CompilerOptions = {
+    noEmit: true,
+    skipLibCheck: true,
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeJs,
+    jsx: ts.JsxEmit.ReactJSX,
+    allowJs: true,
+    esModuleInterop: true,
+    allowSyntheticDefaultImports: true,
+  };
+
+  const tsconfigRel =
+    allFiles.find((f) => path.basename(f) === 'tsconfig.json') ||
+    allFiles.find((f) => path.basename(f) === 'jsconfig.json');
+
+  if (tsconfigRel) {
+    try {
+      const tsconfigAbs = path.join(rootDir, tsconfigRel);
+      const configFile = ts.readConfigFile(tsconfigAbs, ts.sys.readFile);
+      if (configFile.config) {
+        const parsedConfig = ts.parseJsonConfigFileContent(
+          configFile.config,
+          ts.sys,
+          path.dirname(tsconfigAbs)
+        );
+        compilerOptions = {
+          ...compilerOptions,
+          ...parsedConfig.options,
+          noEmit: true,
+          skipLibCheck: true,
+        };
+      }
+    } catch {
+      // Fall back to default options
+    }
+  }
+
+  try {
+    const absPaths = tsFiles.map((f) => path.resolve(rootDir, f));
+    const program = ts.createProgram(absPaths, compilerOptions);
+    const diags = program.getSemanticDiagnostics();
+
+    for (const diag of diags) {
+      if (!diag.file) continue;
+      const absFile = diag.file.fileName;
+      const relFile = path.relative(rootDir, absFile).replace(/\\/g, '/');
+
+      // Filter out declaration files, external node_modules, and paths outside project root
+      if (relFile.startsWith('..') || relFile.startsWith('node_modules/') || relFile.endsWith('.d.ts')) {
+        continue;
+      }
+
+      const msgText = ts.flattenDiagnosticMessageText(diag.messageText, ' ');
+
+      // Ignore module resolution errors (TS2307 / TS2792) which are cleanly handled by IMPORT-RELATIVE-001, IMPORT-ALIAS-001, and DEP-UNDECLARED-001
+      if (diag.code === 2307 || diag.code === 2792) {
+        continue;
+      }
+
+      const pos = diag.start !== undefined ? diag.file.getLineAndCharacterOfPosition(diag.start) : { line: 0, character: 0 };
+      const lineNum = pos.line + 1;
+      const colNum = pos.character + 1;
+      const fileText = diag.file.text || '';
+      const lines = fileText.split('\n');
+      const lineExcerpt = (lines[pos.line] || '').trim();
+
+      findings.push({
+        id: `RAW-TYPE-${findings.length + 1}`,
+        title: `TypeScript Semantic Type Diagnostic: TS${diag.code}`,
+        description: `TypeScript type checker reported semantic diagnostic TS${diag.code} in ${relFile}:${lineNum}:${colNum}: ${msgText}`,
+        severity: 'High',
+        confidence: 'high',
+        status: 'confirmed',
+        category: 'type',
+        analysisType: 'compiler',
+        filePath: relFile,
+        startLine: lineNum,
+        endLine: lineNum,
+        startColumn: colNum,
+        codeExcerpt: lineExcerpt || msgText,
+        ruleId: 'TYPE-TS-001',
+        evidence: [
+          {
+            id: `EVD-TYPE-TS-${lineNum}`,
+            type: 'code_snippet',
+            title: `Semantic Type Diagnostic TS${diag.code}`,
+            data: lineExcerpt || msgText,
+            filePath: relFile,
+            lineNumber: lineNum,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+        reasoning: `TypeScript type checker detected semantic type incompatibility: ${msgText}`,
+        impact: `Type mismatches cause compilation or build failures in strict TypeScript configurations and risk runtime TypeError exceptions.`,
+        recommendation: `Fix the type mismatch at ${relFile}:${lineNum}:${colNum} to conform to the expected type signature.`,
+      });
+    }
+  } catch {
+    // Graceful recovery if type checking encounters unhandled compiler exception
+  }
+
+  return findings;
 }

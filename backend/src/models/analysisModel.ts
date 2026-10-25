@@ -1,4 +1,4 @@
-export type FindingStatus = 'confirmed' | 'probable' | 'not_detected' | 'unknown';
+export type FindingStatus = 'confirmed' | 'inferred' | 'probable' | 'not_detected' | 'not_analyzed' | 'unknown';
 export type EvidenceLevel = 'declared_in_manifest' | 'imported_in_code' | 'configured_in_file' | 'runtime_verified';
 export type ConfidenceLevel = 'high' | 'medium' | 'low';
 

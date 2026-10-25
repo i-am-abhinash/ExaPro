@@ -3,10 +3,12 @@ import assert from 'node:assert';
 import path from 'path';
 import { performStaticDefectAnalysis } from '../src/services/staticDefectAnalyzer';
 import { analyzeProjectDirectory } from '../src/services/analyzerService';
-import { generateProjectDocumentation } from '../src/services/aiService';
+import { generateProjectDocumentation, validateAndSanitizeAiResponse } from '../src/services/aiService';
+import { AIDocumentationResponse } from '../src/services/aiService';
 
 describe('EvidenceAnalysis & StaticAST Pipeline', () => {
   const tsDefectiveDir = path.resolve(__dirname, 'fixtures/ts-defective-project');
+  const tsTypeErrorDir = path.resolve(__dirname, 'fixtures/ts-type-error-project');
 
   it('detects TypeScript AST compiler diagnostics (SYNTAX-TS-001)', () => {
     const files = [
@@ -24,6 +26,59 @@ describe('EvidenceAnalysis & StaticAST Pipeline', () => {
     assert.strictEqual(syntaxFinding.filePath, 'src/badSyntax.ts');
     assert.strictEqual(syntaxFinding.analysisType, 'compiler');
     assert.ok(syntaxFinding.startLine && syntaxFinding.startLine > 0);
+  });
+
+  it('detects TypeScript semantic type errors (TYPE-TS-001)', () => {
+    const files = [
+      'package.json',
+      'tsconfig.json',
+      'src/typeError.ts',
+      'src/aliasError.ts',
+      'src/validModule.ts',
+      'src/validAlias.ts',
+    ];
+
+    const result = performStaticDefectAnalysis(tsTypeErrorDir, files, files);
+
+    const typeFinding = result.findings.find((f) => f.ruleId === 'TYPE-TS-001');
+    assert.ok(typeFinding, 'Expected TYPE-TS-001 finding for semantic type mismatch');
+    assert.strictEqual(typeFinding.filePath, 'src/typeError.ts');
+    assert.strictEqual(typeFinding.category, 'type');
+    assert.strictEqual(typeFinding.status, 'confirmed');
+    assert.strictEqual(typeFinding.analysisType, 'compiler');
+    assert.strictEqual(typeFinding.severity, 'High');
+    assert.ok(
+      typeFinding.codeExcerpt?.includes('definitely not a number') ||
+      typeFinding.description.includes('TS2322'),
+      'Expected excerpt or description to indicate type mismatch'
+    );
+  });
+
+  it('detects broken path alias imports (IMPORT-ALIAS-001) and resolves valid aliases', () => {
+    const files = [
+      'package.json',
+      'tsconfig.json',
+      'src/typeError.ts',
+      'src/aliasError.ts',
+      'src/validModule.ts',
+      'src/validAlias.ts',
+    ];
+
+    const result = performStaticDefectAnalysis(tsTypeErrorDir, files, files);
+
+    // Broken alias should be flagged
+    const aliasFinding = result.findings.find((f) => f.ruleId === 'IMPORT-ALIAS-001');
+    assert.ok(aliasFinding, 'Expected IMPORT-ALIAS-001 finding for missing alias target');
+    assert.strictEqual(aliasFinding.filePath, 'src/aliasError.ts');
+    assert.strictEqual(aliasFinding.category, 'dependency');
+    assert.strictEqual(aliasFinding.status, 'confirmed');
+    assert.ok(aliasFinding.codeExcerpt?.includes('@/helpers/nonexistent'));
+
+    // Valid alias (@/validModule) should NOT trigger broken alias or undeclared dep
+    const falseAliasFinding = result.findings.find(
+      (f) => f.filePath === 'src/validAlias.ts' && (f.ruleId === 'IMPORT-ALIAS-001' || f.ruleId === 'DEP-UNDECLARED-001')
+    );
+    assert.strictEqual(falseAliasFinding, undefined, 'Valid alias import should resolve cleanly');
   });
 
   it('detects unreachable dead code via AST inspection (QUALITY-UNREACHABLE-001)', () => {
@@ -66,8 +121,30 @@ describe('EvidenceAnalysis & StaticAST Pipeline', () => {
     assert.ok(apiMismatch.description.includes('/api/missing-reports'));
   });
 
+  it('validates and sanitizes AI claims against verified project facts', () => {
+    const analysis = analyzeProjectDirectory(tsTypeErrorDir, 'ts-type-error-test', 'zip');
+
+    // Simulate an AI response hallucinating unverified Express, MongoDB, and Redis
+    const hallucinatedAI: AIDocumentationResponse = {
+      executiveSummary: 'This application utilizes an Express.js backend server with a MongoDB document database.',
+      projectOverview: 'The project implements a fullstack system with Express controllers and Redis caching.',
+      purposeAndFunctionality: 'Manages user accounts.',
+      problemStatement: 'Manual tracking of user data.',
+      architectureExplanation: 'Client communicates with Express server on port 5000, querying MongoDB collections.',
+      dataFlowExplanation: 'Data flows from the React interface through Express middleware to MongoDB.',
+      limitations: 'Scalability is bounded by MongoDB connection pools.',
+    };
+
+    const sanitized = validateAndSanitizeAiResponse(hallucinatedAI, analysis);
+
+    // Assert that hallucinated database and server references were stripped
+    assert.ok(!sanitized.executiveSummary.toLowerCase().includes('express.js server'), 'Express claim should be sanitized');
+    assert.ok(!sanitized.executiveSummary.toLowerCase().includes('mongodb database'), 'MongoDB claim should be sanitized');
+    assert.ok(!sanitized.architectureExplanation.includes('MongoDB'), 'MongoDB should not appear in architecture explanation');
+  });
+
   it('full static analysis pipeline produces 17-field source findings with verified excerpts', async () => {
-    const analysis = await analyzeProjectDirectory(tsDefectiveDir, 'zip', 'ts-defective-test');
+    const analysis = await analyzeProjectDirectory(tsDefectiveDir, 'ts-defective-test', 'zip');
 
     assert.ok(analysis.sourceFindings && analysis.sourceFindings.length > 0);
     assert.ok(analysis.coverage);
@@ -92,7 +169,7 @@ describe('EvidenceAnalysis & StaticAST Pipeline', () => {
   });
 
   it('deterministic documentation generator yields all 20 sections without fabrication', async () => {
-    const analysis = await analyzeProjectDirectory(tsDefectiveDir, 'zip', 'ts-defective-test');
+    const analysis = await analyzeProjectDirectory(tsDefectiveDir, 'ts-defective-test', 'zip');
     const docResult = await generateProjectDocumentation(analysis, analysis.architecture.architectureSummary);
 
     assert.ok(docResult.sections, 'sections object must exist');
