@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export type FindingCategory =
   | 'static_analysis'
   | 'build'
+  | 'build'
   | 'startup'
   | 'runtime'
   | 'ui'
@@ -217,6 +218,7 @@ const TestCaseSchema = new Schema<ITestCase>(
     category: {
       type: String,
       enum: [
+        'build',
         'startup',
         'http_readiness',
         'route_accessibility',
