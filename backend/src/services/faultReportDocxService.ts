@@ -204,7 +204,7 @@ export async function generateFaultDocxReport(
                     new TextRun({ text: `• Passed: ${summary.passed} | Failed: ${summary.failed} | Blocked: ${summary.blocked}\n`, size: 20, color: slateBody, font: 'Times New Roman' }),
                     new TextRun({ text: `• Total Findings: ${summary.totalFindings} (${summary.confirmedFaults} confirmed, ${summary.potentialFaults} potential)\n`, size: 20, color: slateBody, font: 'Times New Roman' }),
                     new TextRun({ text: `• Critical: ${summary.severityBreakdown.critical} | High: ${summary.severityBreakdown.high} | Medium: ${summary.severityBreakdown.medium} | Low: ${summary.severityBreakdown.low}\n`, size: 20, color: slateBody, font: 'Times New Roman' }),
-                    new TextRun({ text: `• Execution Coverage: ${summary.testCoveragePercent}%`, bold: true, size: 20, color: primaryNavy, font: 'Times New Roman' }),
+                    new TextRun({ text: `• Planned checks completed: ${summary.totalTests ? Math.round((summary.passed + summary.failed) / summary.totalTests * 100) : 0}% (not code coverage)`, bold: true, size: 20, color: primaryNavy, font: 'Times New Roman' }),
                   ],
                 }),
               ],
