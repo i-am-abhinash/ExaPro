@@ -28,8 +28,6 @@ export function generateProjectTestPlan(analysis: AnalysisResult): TestPlanGener
     detectedStartupCommand = 'npm run dev';
   } else if (hasStartScript) {
     detectedStartupCommand = 'npm start';
-  } else if (hasBuildScript) {
-    detectedStartupCommand = 'npm run build && npm start';
   }
 
   const primaryFramework = analysis.technologies.frontend[0] ||
@@ -50,8 +48,21 @@ export function generateProjectTestPlan(analysis: AnalysisResult): TestPlanGener
     evidenceIds: [],
   });
 
-  // 2. Application Startup & Build Readiness Test
-  if (detectedStartupCommand || hasBuildScript) {
+  if (hasBuildScript) {
+    testCases.push({
+      id: `TC-${String(testCounter++).padStart(3, '0')}`,
+      name: 'Project Build (npm run build)',
+      category: 'build',
+      target: 'npm run build',
+      description: 'Execute the root npm build script in the isolated runner.',
+      expectedOutcome: 'Build script exits with code 0.',
+      status: 'pending',
+      evidenceIds: [],
+    });
+  }
+
+  // 2. Application Startup Readiness Test
+  if (detectedStartupCommand) {
     testCases.push({
       id: `TC-${String(testCounter++).padStart(3, '0')}`,
       name: 'Application Startup & Server Readiness',
