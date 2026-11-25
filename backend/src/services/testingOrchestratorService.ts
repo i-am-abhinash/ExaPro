@@ -101,7 +101,7 @@ export async function runAutomatedTestingPipeline(
   testRun.faultReportDocxPath = faultDocx.filePath;
   testRun.faultReportDocxName = faultDocx.fileName;
   testRun.faultReportDocxSize = faultDocx.fileSize;
-  testRun.stage = summary.failed > 0 || summary.confirmedFaults > 0 ? 'completed_with_warnings' : 'completed';
+  testRun.stage = summary.failed > 0 || summary.confirmedFaults > 0 || summary.blocked > 0 || summary.notTested > 0 ? 'completed_with_warnings' : 'completed';
   testRun.progress = 100;
   testRun.statusMessage = 'Quality and fault analysis report generated successfully.';
   testRun.completedAt = new Date();
