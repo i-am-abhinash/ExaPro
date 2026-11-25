@@ -112,8 +112,8 @@ export function calculateQualityScoreAndSummary(
   const testCoveragePercent = totalTests > 0 ? Math.round(((passed + failed) / totalTests) * 100) : 0;
 
   let rationale = `Provisional assessment, not a production-readiness certification. Calculated from a 100-point baseline. Total deductions: ${deductionNotes.join(', ') || 'None'}.`;
-  if (blocked > 0) {
-    rationale += ` Note: ${blocked} test(s) could not execute at runtime and were marked as blocked. Planned checks completed (not source code coverage): ${testCoveragePercent}%.`;
+  if (blocked + notTested > 0) {
+    rationale += ` Note: ${blocked} blocked and ${notTested} not-tested check(s). Planned checks completed (not source code coverage): ${testCoveragePercent}%.`;
   }
 
   return {
