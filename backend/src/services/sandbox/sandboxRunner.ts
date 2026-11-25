@@ -213,14 +213,6 @@ export class SandboxRunner {
     const executionFindings: IFaultFinding[] = [];
     const evidenceList: IFindingEvidence[] = [];
 
-    // Redact sensitive patterns from logs
-    const sanitize = (str: string) => {
-      return str
-        .replace(/mongodb\+srv:\/\/[^@]+@/g, 'mongodb+srv://***:***@')
-        .replace(/api[_-]?key[:=]\s*['"]?[a-zA-Z0-9_-]+['"]?/gi, 'api_key=***REDACTED***')
-        .replace(/bearer\s+[a-zA-Z0-9_\-\.]+/gi, 'Bearer ***REDACTED***');
-    };
-
     executionLogs.push(`[Docker Sandbox] Initializing secure container: ${containerName}`);
     executionLogs.push(`[Docker Sandbox] Resource limits: CPU=${envStatus.resourceLimits.cpuLimit}, Memory=${envStatus.resourceLimits.memoryLimit}, Timeout=${envStatus.resourceLimits.timeoutSeconds}s`);
 
@@ -256,7 +248,7 @@ export class SandboxRunner {
       }
       const name = containerName + '-' + script;
       const started = Date.now();
-      const setup = deps ? 'npm ci --offline --ignore-scripts --no-audit --no-fund || exit 78; ' : '';
+      const setup = deps ? 'if [ -d /opt/npm-cache ]; then cp -R /opt/npm-cache/. /tmp/npm-cache/ || exit 78; fi; npm ci --offline --ignore-scripts --no-audit --no-fund || exit 78; ' : '';
       const command = 'cp -R /input/. /work/ || exit 78; cd /work || exit 78; ' + setup + 'npm run ' + script;
       const args = ['run', '--rm', '--name', name, '--pull=never', '--network=none',
         '--user=1000:1000', '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges',
