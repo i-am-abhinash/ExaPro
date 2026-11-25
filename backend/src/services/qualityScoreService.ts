@@ -96,6 +96,10 @@ export function calculateQualityScoreAndSummary(
     deductionNotes.push(`-${p} pts: ${blocked} test(s) blocked due to environment/dependency prerequisites`);
   }
 
+  if (blocked + notTested > 0 || totalTests === 0) {
+    score = Math.min(score, 79);
+    deductionNotes.push('Grade capped at C because planned checks were not fully executed.');
+  }
   score = Math.max(0, Math.min(100, Math.round(score)));
 
   let qualityGrade: 'A' | 'B' | 'C' | 'D' | 'F' = 'C';
@@ -105,11 +109,11 @@ export function calculateQualityScoreAndSummary(
   else if (score >= 60) qualityGrade = 'D';
   else qualityGrade = 'F';
 
-  const testCoveragePercent = totalTests > 0 ? Math.round((passed / totalTests) * 100) : 0;
+  const testCoveragePercent = totalTests > 0 ? Math.round(((passed + failed) / totalTests) * 100) : 0;
 
-  let rationale = `Calculated from a 100-point baseline. Total deductions: ${deductionNotes.join(', ') || 'None'}.`;
+  let rationale = `Provisional assessment, not a production-readiness certification. Calculated from a 100-point baseline. Total deductions: ${deductionNotes.join(', ') || 'None'}.`;
   if (blocked > 0) {
-    rationale += ` Note: ${blocked} test(s) could not execute at runtime and were marked as blocked. Test execution coverage is ${testCoveragePercent}%.`;
+    rationale += ` Note: ${blocked} test(s) could not execute at runtime and were marked as blocked. Planned checks completed (not source code coverage): ${testCoveragePercent}%.`;
   }
 
   return {
