@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
@@ -10,7 +10,7 @@ import {
 } from '../../models/testingModel';
 import { AnalysisResult } from '../analyzerService';
 
-const execAsync = promisify(exec);
+const execAsync = promisify(execFile);
 
 export interface SandboxExecutionResult {
   environment: ISandboxEnvironmentStatus;
@@ -43,17 +43,17 @@ export class SandboxRunner {
     };
 
     try {
-      const { stdout } = await execAsync('docker --version', { timeout: 3000 });
+      const { stdout } = await execAsync('docker', ['--version'], { timeout: 3000 });
       const version = stdout.trim();
 
       // Quick ping to daemon to confirm it's actually running
       try {
-        await execAsync('docker info --format "{{.ServerVersion}}"', { timeout: 4000 });
+        await execAsync('docker', ['info', '--format', '{{.ServerVersion}}'], { timeout: 4000 });
         this.cachedStatus = {
           isAvailable: true,
           runtimeType: 'docker',
           version,
-          securityProfile: 'Secured non-root container profile with cgroups resource boundaries',
+          securityProfile: 'Docker available; execution requires explicit operator opt-in',
           resourceLimits: defaultLimits,
         };
       } catch (daemonErr: any) {
@@ -110,7 +110,7 @@ export class SandboxRunner {
         configSanityTest.errorDetails = configDefects.map((d) => `${d.filePath || 'manifest'}: ${d.description}`).join('\n');
       } else {
         configSanityTest.status = 'passed';
-        configSanityTest.actualOutcome = 'Project manifests, package scripts, and configuration schemas parsed without blocking defects.';
+        configSanityTest.actualOutcome = 'No static configuration defects reported; dependencies not verified.';
       }
     }
 
@@ -224,84 +224,64 @@ export class SandboxRunner {
     executionLogs.push(`[Docker Sandbox] Initializing secure container: ${containerName}`);
     executionLogs.push(`[Docker Sandbox] Resource limits: CPU=${envStatus.resourceLimits.cpuLimit}, Memory=${envStatus.resourceLimits.memoryLimit}, Timeout=${envStatus.resourceLimits.timeoutSeconds}s`);
 
-    const startupTest = testCases.find((tc) => tc.category === 'startup');
-    const unitTest = testCases.find((tc) => tc.category === 'project_unit_test');
-
-    try {
-      // Determine base image based on runtime
-      const isPython = analysis.technologies.languages.includes('Python');
-      const baseImage = isPython ? 'python:3.11-slim' : 'node:20-alpine';
-
-      // Verify node syntax / build if package.json has build script
-      const scripts = analysis.packageScripts || {};
-      const buildScript = scripts.build;
-
-      if (buildScript && startupTest && startupTest.status === 'pending') {
-        const buildStartTime = Date.now();
-        try {
-          const runCmd = `docker run --rm --name ${containerName}-build --memory ${envStatus.resourceLimits.memoryLimit} --cpus ${envStatus.resourceLimits.cpuLimit} --pids-limit 100 -v "${extractedDir}:/app:ro" -w /app ${baseImage} sh -c "echo 'Checking syntax and build configuration...'"`;
-          const { stdout, stderr } = await execAsync(runCmd, { timeout: 30000 });
-          const duration = Date.now() - buildStartTime;
-
-          startupTest.status = 'passed';
-          startupTest.durationMs = duration;
-          startupTest.actualOutcome = `Dry-run configuration check passed in ${duration}ms.`;
-          executionLogs.push(sanitize(stdout));
-        } catch (buildErr: any) {
-          startupTest.status = 'failed';
-          startupTest.actualOutcome = `Build verification failed: ${sanitize(buildErr.message)}`;
-          startupTest.errorDetails = sanitize(buildErr.stderr || buildErr.message);
-
-          executionFindings.push({
-            id: `FLT-RUN-001`,
-            projectId,
-            title: 'Container Build Verification Failed',
-            description: `Build execution exited with error: ${sanitize(buildErr.message)}`,
-            category: 'build',
-            severity: 'Critical',
-            confidence: 'high',
-            verificationStatus: 'confirmed',
-            stepsToReproduce: [`Run build in containerized sandbox: ${buildScript}`],
-            expectedBehavior: 'Build script completes with exit code 0.',
-            actualBehavior: sanitize(buildErr.message),
-            evidence: [
-              {
-                id: `EVD-BLD-1`,
-                type: 'test_output',
-                title: 'Build stderr output',
-                data: sanitize(buildErr.stderr || buildErr.message),
-                timestamp: new Date().toISOString(),
-              },
-            ],
-            suggestedFix: 'Resolve compilation errors, missing types, or broken bundle dependencies.',
-            ruleId: 'BUILD-FAIL-001',
-            timestamp: new Date().toISOString(),
-          });
-        }
+    for (const tc of testCases) {
+      if (tc.status !== 'pending') continue;
+      if (tc.category !== 'build' && tc.category !== 'project_unit_test') {
+        tc.status = 'not_tested';
+        tc.actualOutcome = 'No runtime adapter implemented for this category.';
+        continue;
       }
-
-      // If unit test exists
-      if (unitTest && unitTest.status === 'pending') {
-        unitTest.status = 'blocked';
-        unitTest.blockingReason = 'Project unit tests require dependency pre-installation in sandbox.';
-        unitTest.actualOutcome = 'Skipped automated unit test run due to network isolation policy.';
+      const block = (reason: string) => {
+        tc.status = 'blocked';
+        tc.blockingReason = reason;
+        tc.actualOutcome = reason;
+      };
+      if (process.env.EXAPRO_ENABLE_RUNTIME_TESTS !== '1') {
+        block('Runtime execution disabled; opt in only on a dedicated isolated worker.');
+        continue;
       }
-
-      // Remaining tests
-      for (const tc of testCases) {
-        if (tc.status === 'pending') {
-          tc.status = 'not_tested';
-          tc.actualOutcome = 'Browser/route interaction deferred to configured environment.';
-        }
+      const script = tc.category === 'build' ? 'build' : 'test';
+      let manifest: any;
+      try { manifest = JSON.parse(fs.readFileSync(path.join(extractedDir, 'package.json'), 'utf8')); }
+      catch { block('Valid root package.json required.'); continue; }
+      if (typeof manifest?.scripts?.[script] !== 'string' || manifest.workspaces ||
+          (script === 'test' && manifest.scripts.test.includes('no test specified'))) {
+        block('Unsupported or missing root npm script.'); continue;
       }
-    } catch (err: any) {
-      executionLogs.push(`[Docker Error] ${sanitize(err.message)}`);
-    } finally {
-      // Force cleanup any remaining containers
+      const deps = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']
+        .some(key => Object.keys(manifest[key] || {}).length > 0);
+      if (deps && !fs.existsSync(path.join(extractedDir, 'package-lock.json')) &&
+          !fs.existsSync(path.join(extractedDir, 'npm-shrinkwrap.json'))) {
+        block('Dependency installation requires an npm lockfile.'); continue;
+      }
+      const name = containerName + '-' + script;
+      const started = Date.now();
+      const setup = deps ? 'npm ci --offline --ignore-scripts --no-audit --no-fund || exit 78; ' : '';
+      const command = 'cp -R /input/. /work/ || exit 78; cd /work || exit 78; ' + setup + 'npm run ' + script;
+      const args = ['run', '--rm', '--name', name, '--pull=never', '--network=none',
+        '--user=1000:1000', '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges',
+        '--memory=1024m', '--memory-swap=1024m', '--cpus=1', '--pids-limit=100', '--log-driver=none',
+        '--tmpfs', '/work:rw,nosuid,nodev,size=512m,uid=1000,gid=1000',
+        '--tmpfs', '/tmp:rw,nosuid,nodev,size=256m,uid=1000,gid=1000',
+        '-e', 'HOME=/tmp', '-e', 'CI=true', '-e', 'npm_config_cache=/tmp/npm-cache',
+        '-v', path.resolve(extractedDir) + ':/input:ro', '-w', '/work',
+        process.env.EXAPRO_NODE_RUNNER_IMAGE || 'node:20-alpine', 'sh', '-c', command];
       try {
-        await execAsync(`docker rm -f ${containerName} ${containerName}-build`, { timeout: 5000 });
-      } catch {
-        // ignore cleanup error
+        await execAsync('docker', args, { timeout: 120000, maxBuffer: 256 * 1024 });
+        tc.status = 'passed'; tc.exitCode = 0;
+        tc.actualOutcome = 'Root npm ' + script + ' script exited with code 0.';
+      } catch (err: any) {
+        const code = typeof err.code === 'number' ? err.code : undefined;
+        if (code === undefined || code === 78 || code >= 125 || err.killed) {
+          block('Container setup, offline dependencies or resource limits prevented verification.');
+        } else {
+          tc.status = 'failed'; tc.exitCode = code;
+          tc.actualOutcome = 'Root npm ' + script + ' script exited with code ' + code + '.';
+        }
+      } finally {
+        tc.durationMs = Date.now() - started;
+        executionLogs.push(tc.name + ': ' + tc.status);
+        try { await execAsync('docker', ['rm', '-f', name], { timeout: 5000 }); } catch { /* already removed */ }
       }
     }
 
