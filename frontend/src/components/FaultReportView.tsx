@@ -53,9 +53,9 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
     confirmedFaults: 0,
     potentialFaults: 0,
     severityBreakdown: { critical: 0, high: 0, medium: 0, low: 0, informational: 0 },
-    qualityScore: 100,
-    qualityGrade: 'A',
-    qualityScoreRationale: 'All verification checks passed.',
+    qualityScore: 0,
+    qualityGrade: 'F',
+    qualityScoreRationale: 'No assessment summary available.',
     testCoveragePercent: 0,
   };
 
@@ -191,7 +191,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
                 <span className="text-xs text-cool-muted font-mono">/ 100</span>
               </div>
               <p className="text-[11px] text-cool-muted truncate max-w-[150px]">
-                {summary.qualityScore >= 80 ? 'Production Ready' : summary.qualityScore >= 60 ? 'Needs Attention' : 'Critical Defects'}
+                {summary.blocked + summary.notTested > 0 || !testRun.summary ? 'Incomplete assessment' : summary.qualityScore >= 80 ? 'High assessed quality' : summary.qualityScore >= 60 ? 'Needs Attention' : 'Review findings'}
               </p>
             </div>
           </div>
