@@ -15,6 +15,7 @@ export type AnalysisStatus =
 export type FindingCategory =
   | 'static_analysis'
   | 'build'
+  | 'build'
   | 'startup'
   | 'runtime'
   | 'ui'
