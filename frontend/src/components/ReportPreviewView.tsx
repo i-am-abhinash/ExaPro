@@ -131,7 +131,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           <p className="font-bold text-status-error text-lg">Unable to load report</p>
           <p className="text-xs sm:text-sm text-cool-muted">{error || 'Project report record was not found'}</p>
           <GlassButton variant="secondary" size="md" onClick={onBack}>
-            Return to Dashboard
+            Return to My projects
           </GlassButton>
         </div>
       </div>
@@ -176,7 +176,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
               <button
                 onClick={onBack}
                 className="text-cool-muted hover:text-cool-primary p-1.5 rounded-xl hover:bg-white/[0.08] transition-colors"
-                title="Back to Dashboard"
+                title="Back to My projects"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -251,7 +251,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
           ].map(item => <div key={item.label} className="eclipse-card"><p className="text-xs text-cool-muted">{item.label}</p><p className="text-xl font-bold text-cool-primary mt-2">{item.value}</p></div>)}
         </div>
         <nav aria-label="Project report views" className="eclipse-tabs">
-          {([{id:'overview',label:'Overview',first:'summary'},{id:'architecture',label:'Architecture',first:'architecture'},{id:'source',label:'Source & findings',first:'structure'},{id:'faults',label:'Tests & faults',first:''},{id:'security',label:'Security & quality',first:'auth'},{id:'all',label:'Full documentation',first:'summary'}] as const).map(tab => <button key={tab.id} type="button" aria-pressed={activeReportTab===tab.id} onClick={()=>{setActiveReportTab(tab.id);setActiveSection(tab.first);}}>{tab.label}</button>)}
+          {([{id:'overview',label:'Overview',first:'summary'},{id:'architecture',label:'Architecture',first:'architecture'},{id:'source',label:'Code analysis',first:'structure'},{id:'faults',label:'Testing & faults',first:''},{id:'security',label:'Security',first:'auth'},{id:'all',label:'Documentation',first:'summary'}] as const).map(tab => <button key={tab.id} type="button" aria-pressed={activeReportTab===tab.id} onClick={()=>{setActiveReportTab(tab.id);setActiveSection(tab.first);}}>{tab.label}</button>)}
         </nav>
       </div>
 
