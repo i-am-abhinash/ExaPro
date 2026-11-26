@@ -31,33 +31,49 @@ async function runE2ETest() {
     const errText = await uploadRes.text();
     throw new Error(`Upload failed (${uploadRes.status}): ${errText}`);
   }
+  const guestCookie = uploadRes.headers.get('set-cookie')?.split(';')[0];
+  if (!guestCookie?.startsWith('exapro_guest=')) throw new Error('Missing guest workspace cookie');
+  const ownFetch = (url, options = {}) => fetch(url, { ...options, headers: { ...options.headers, Cookie: guestCookie } });
   const uploadData = await uploadRes.json();
   const projectId = uploadData.projectId;
   console.log(`Upload succeeded! Project ID: ${projectId}`);
+
+  // An unrelated browser must not list, open, download or delete this project.
+  const privateList = await ownFetch(`${BASE_URL}/projects`);
+  if (!privateList.ok || !(await privateList.json()).projects.some(p => p._id === projectId)) throw new Error('Owner cannot list own project');
+  const foreignHeaders = { Cookie: 'exapro_guest=' + require('crypto').randomBytes(32).toString('hex') };
+  const foreignList = await fetch(`${BASE_URL}/projects`, { headers: foreignHeaders });
+  if (!foreignList.ok || (await foreignList.json()).projects.some(p => p._id === projectId)) throw new Error('Guest isolation failed on listing');
+  for (const suffix of ['', '/report', '/download', '/test-run', '/findings', '/fault-report/docx', '/fault-report/json']) {
+    const denied = await fetch(`${BASE_URL}/projects/${projectId}${suffix}`, { headers: foreignHeaders });
+    if (denied.status !== 404) throw new Error('Guest isolation failed: ' + suffix);
+  }
+  const deniedDelete = await fetch(`${BASE_URL}/projects/${projectId}`, { method:'DELETE', headers:foreignHeaders });
+  if (deniedDelete.status !== 404) throw new Error('Guest isolation failed on delete');
 
   // 3. Poll Status until Completed
   console.log('\n[Step 3] Polling analysis status...');
   let status = 'queued';
   let project = null;
   let attempts = 0;
-  while (status !== 'completed' && status !== 'failed' && attempts < 30) {
+  while (status !== 'completed' && status !== 'completed_with_warnings' && status !== 'failed' && attempts < 30) {
     attempts++;
     await new Promise((r) => setTimeout(r, 1000));
-    const statusRes = await fetch(`${BASE_URL}/projects/${projectId}`);
+    const statusRes = await ownFetch(`${BASE_URL}/projects/${projectId}`);
     const resJson = await statusRes.json();
     project = resJson.project;
     status = project.status;
     console.log(`  [Attempt ${attempts}] Progress: ${project.progress}% | Status: ${project.status} | Msg: ${project.statusMessage}`);
   }
 
-  if (status !== 'completed') {
+  if (status !== 'completed' && status !== 'completed_with_warnings') {
     throw new Error(`Analysis failed or timed out: ${project?.errorMessage || 'Unknown error'}`);
   }
   console.log('Analysis completed successfully!');
 
   // 4. Verify Report Data
   console.log('\n[Step 4] Retrieving report data from /api/projects/:id/report...');
-  const reportRes = await fetch(`${BASE_URL}/projects/${projectId}/report`);
+  const reportRes = await ownFetch(`${BASE_URL}/projects/${projectId}/report`);
   if (!reportRes.ok) {
     throw new Error(`Failed to fetch report (${reportRes.status})`);
   }
@@ -90,7 +106,7 @@ async function runE2ETest() {
 
   // 5. Verify DOCX Download
   console.log('\n[Step 5] Downloading DOCX report from /api/projects/:id/download...');
-  const downloadRes = await fetch(`${BASE_URL}/projects/${projectId}/download`);
+  const downloadRes = await ownFetch(`${BASE_URL}/projects/${projectId}/download`);
   if (!downloadRes.ok) {
     throw new Error(`DOCX download failed with status ${downloadRes.status}`);
   }
