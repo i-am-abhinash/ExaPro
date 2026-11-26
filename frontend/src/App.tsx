@@ -1,37 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MotionConfig } from 'framer-motion';
-import { Layers, LayoutDashboard, Plus, FolderOpen, FileText, Menu, PanelLeftClose, Home, Activity } from 'lucide-react';
+import { Layers, Plus, FolderOpen, FileText, Menu, PanelLeftClose, Home, ShieldCheck } from 'lucide-react';
 import { LandingView } from './components/LandingView';
-import { DashboardView } from './components/DashboardView';
 import { SubmissionView } from './components/SubmissionView';
 import { ReportPreviewView } from './components/ReportPreviewView';
 import { HistoryView } from './components/HistoryView';
-import { IHealthStatus, IProjectListItem } from './types';
-import { fetchHealth, fetchProjects } from './services/api';
 
-type Page = 'landing' | 'dashboard' | 'new' | 'history' | 'report';
-const pageNames: Record<Page, string> = { landing: 'Home', dashboard: 'Overview', new: 'New analysis', history: 'My projects', report: 'Project report' };
+type Page = 'landing' | 'new' | 'history' | 'report';
+const pageNames: Record<Page, string> = { landing: 'Home', new: 'New analysis', history: 'My projects', report: 'Project report' };
 
 export const App: React.FC = () => {
   const [page, setPage] = useState<Page>('landing');
   const [collapsed, setCollapsed] = useState(false);
   const [source, setSource] = useState<'zip' | 'github'>('zip');
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [health, setHealth] = useState<IHealthStatus | null>(null);
-  const [projects, setProjects] = useState<IProjectListItem[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    fetchHealth().then(h => { if (active) setHealth(h); }).catch(() => { if (active) setHealth(null); });
-    fetchProjects().then(p => { if (active) setProjects(p); }).catch(console.warn);
-    return () => { active = false; };
-  }, [page]);
+  const [submissionKey, setSubmissionKey] = useState(0);
 
   const navigate = (next: Page) => { setPage(next); window.scrollTo(0, 0); };
-  const submit = (type: 'zip' | 'github') => { setSource(type); navigate('new'); };
+  const submit = (type: 'zip' | 'github') => { setSource(type); setSubmissionKey(v=>v+1); setProjectId(null); navigate('new'); };
   const openReport = (id: string) => { setProjectId(id); navigate('report'); };
   const links: { id: Page; icon: typeof Layers; label: string }[] = [
-    { id: 'dashboard' as const, icon: LayoutDashboard, label: 'Overview' },
     { id: 'new' as const, icon: Plus, label: 'New analysis' },
     { id: 'history' as const, icon: FolderOpen, label: 'My projects' },
   ];
@@ -39,7 +27,7 @@ export const App: React.FC = () => {
   return (
     <MotionConfig reducedMotion="user">
       {page === 'landing' ? (
-        <div className="eclipse-landing"><LandingView onGetStarted={() => navigate('dashboard')} onDirectUpload={submit} health={health} /></div>
+        <div className="eclipse-landing"><LandingView onGetStarted={() => submit('zip')} onDirectUpload={submit} /></div>
       ) : (
         <div className={`eclipse-shell ${collapsed ? 'is-collapsed' : ''}`}>
           <aside className="eclipse-sidebar">
@@ -60,7 +48,7 @@ export const App: React.FC = () => {
             </nav>
             <div className="eclipse-sidebar-bottom">
               <button type="button" className="eclipse-home" onClick={() => navigate('landing')} title="Home"><Home size={18}/><span className="eclipse-nav-label">Home</span></button>
-              <div className="eclipse-sidebar-status"><Activity size={17} className={health?.database.isConnected ? 'text-status-success' : 'text-cool-muted'}/><span className="eclipse-nav-label"><strong>System status</strong><small>{health?.database.isConnected ? 'Database connected' : 'Not connected / unknown'}</small></span></div>
+              <div className="eclipse-sidebar-status"><ShieldCheck size={17} className="text-aurora"/><span className="eclipse-nav-label"><strong>Guest workspace</strong><small>History saved to this browser</small></span></div>
             </div>
           </aside>
           <div className="eclipse-main">
@@ -69,10 +57,10 @@ export const App: React.FC = () => {
               <button type="button" className="eclipse-primary eclipse-top-action" onClick={() => submit('zip')}><Plus size={16}/> <span>New analysis</span></button>
             </header>
             <main key={page} className="eclipse-content">
-              {page === 'dashboard' && <DashboardView onStartSubmission={submit} onViewReport={openReport} recentProjects={projects} health={health}/>}
-              {page === 'new' && <SubmissionView initialType={source} onComplete={openReport}/>}
+
+              {page === 'new' && <SubmissionView key={submissionKey} initialType={source} onComplete={openReport}/>}
               {page === 'history' && <HistoryView onViewReport={openReport} onNewAnalysis={() => submit('zip')}/>}
-              {page === 'report' && projectId && <ReportPreviewView key={projectId} projectId={projectId} onBack={() => navigate('dashboard')}/>}
+              {page === 'report' && projectId && <ReportPreviewView key={projectId} projectId={projectId} onBack={() => navigate('history')}/>}
             </main>
             <footer className="eclipse-footer">EXAPRO <span>Software analysis · Testing · Documentation</span></footer>
           </div>
