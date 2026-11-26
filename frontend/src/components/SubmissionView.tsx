@@ -174,7 +174,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         {/* 1. Selection Tabs */}
         {!isSubmitting && projectStatus !== 'completed' && (
           <div className="space-y-6">
-            <div className="flex p-1.5 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
+            <div className="flex p-1.5 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => {
@@ -228,7 +228,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 group ${
                       isDragging
                         ? 'border-aurora bg-aurora/10 scale-[1.01]'
-                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(29,35,64,0.45)] hover:bg-[rgba(35,46,80,0.60)] backdrop-blur-md'
+                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(16,24,39,0.45)] hover:bg-[rgba(23,38,61,0.60)] backdrop-blur-md'
                     }`}
                   >
                     <div className="w-16 h-16 mx-auto rounded-2xl glass-stat-tile flex items-center justify-center text-aurora group-hover:scale-105 transition-transform shadow-glass-sm">
@@ -324,7 +324,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               <GlassButton
                 variant="primary"
                 size="lg"
-                icon={<ArrowRight className="w-5 h-5 text-[#151C32]" />}
+                icon={<ArrowRight className="w-5 h-5 text-[#080D19]" />}
                 onClick={handleStartAnalysis}
                 disabled={activeTab === 'zip' ? !selectedFile : !repoUrl.trim()}
               >
@@ -353,7 +353,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 <span className="text-cool-muted">Pipeline Execution</span>
                 <span className="text-aurora font-bold">{progressPercent}%</span>
               </div>
-              <div className="h-2.5 w-full bg-[rgba(21,28,50,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
+              <div className="h-2.5 w-full bg-[rgba(16,24,39,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
                 <div
                   className="h-full bg-aurora rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.max(5, progressPercent)}%` }}
@@ -374,7 +374,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                         ? 'bg-status-success-bg border-status-success-border text-status-success font-medium'
                         : isCurrent
                         ? 'bg-aurora/15 border-aurora/40 text-aurora font-bold shadow-sm'
-                        : 'bg-[rgba(29,35,64,0.45)] border-white/[0.10] text-cool-muted'
+                        : 'bg-[rgba(16,24,39,0.45)] border-white/[0.10] text-cool-muted'
                     }`}
                   >
                     {isDone ? (
@@ -431,7 +431,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl glass-tile-interactive text-cool-primary border border-white/[0.15] text-xs font-bold transition-colors"
                 title="Download Quality & Fault Findings DOCX"
               >
-                <ShieldAlert className="w-4 h-4 text-[#FF8998]" />
+                <ShieldAlert className="w-4 h-4 text-[#F87171]" />
                 <span>Fault Report DOCX</span>
               </a>
             </div>
