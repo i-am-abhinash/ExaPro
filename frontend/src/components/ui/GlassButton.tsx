@@ -28,18 +28,12 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   };
 
   const variantClasses = {
-    primary:
-      'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold border border-blue-500 transition-colors',
-    teal:
-      'bg-teal hover:bg-teal-hover active:bg-teal-active text-[#0F241E] font-bold border border-teal/40 transition-colors',
-    secondary:
-      'glass-tile-interactive text-cool-primary border border-white/[0.14] hover:border-aurora/50 transition-all duration-200',
-    outline:
-      'bg-[#101827] hover:bg-[#17263D] text-cool-primary border border-white/[0.14] hover:border-aurora/40 transition-all duration-200',
-    ghost:
-      'bg-transparent hover:bg-white/[0.08] active:bg-white/[0.12] text-cool-muted hover:text-cool-primary border border-transparent transition-colors',
-    danger:
-      'bg-status-error-bg hover:bg-status-error-bg/80 active:bg-status-error-bg text-status-error border border-status-error-border transition-colors',
+    primary: 'midnight-glass-primary',
+    teal: 'midnight-glass-teal',
+    secondary: '',
+    outline: '',
+    ghost: 'midnight-glass-ghost',
+    danger: 'midnight-glass-danger',
   };
 
   return (
@@ -47,7 +41,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
       whileHover={disabled || loading ? {} : { y: -1.5, transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] } }}
       whileTap={disabled || loading ? {} : { scale: 0.98, y: 0, transition: { duration: 0.12 } }}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center transition-all select-none disabled:opacity-40 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      className={`midnight-glass-button inline-flex items-center justify-center select-none disabled:opacity-40 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {loading ? (
