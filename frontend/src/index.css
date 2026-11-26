@@ -238,24 +238,39 @@ input:focus,textarea:focus,select:focus {border-color:#00b4ff99!important;box-sh
 }
 
 
-/* Neon Rings — shared background; the supplied original WebP lives in public/.
-   Keep the previous tunnel as a fallback until that asset is installed. */
+/* Neon Rings — medium-dark blue. Filter only the artwork, never the UI. */
 .eclipse-shell,.eclipse-landing {
-  --page-overlay:.20;
+  position:relative;
+  isolation:isolate;
+  --ring-brightness:.60;
+  --page-overlay:.16;
   --card-top:rgba(10,18,32,.28);
   --card-bottom:rgba(4,9,18,.42);
-  background-color:#020305;
-  background-image:linear-gradient(180deg,rgba(2,3,5,.10),rgba(2,3,5,var(--page-overlay))),url('/neon-rings-bg.webp'),url('./assets/cyber-tunnel.svg');
-  background-size:cover,cover,cover;
-  background-position:center,center,center;
-  background-repeat:no-repeat,no-repeat,no-repeat;
-  background-attachment:fixed,fixed,fixed;
+  background:#020305;
 }
-.eclipse-landing {--page-overlay:.06;}
-.eclipse-shell[data-page="new"] {--page-overlay:.18;}
-.eclipse-shell[data-page="history"] {--page-overlay:.26;}
+.eclipse-shell::before,.eclipse-landing::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:#020305 url('/neon-rings-bg.webp') center center / cover no-repeat;
+  filter:brightness(var(--ring-brightness)) saturate(.85) hue-rotate(9deg);
+}
+.eclipse-shell::after,.eclipse-landing::after {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(135deg,rgba(2,5,14,.12),rgba(2,5,14,var(--page-overlay)));
+}
+.eclipse-landing {--ring-brightness:.62;--page-overlay:.08;}
+.eclipse-shell[data-page="new"] {--ring-brightness:.60;--page-overlay:.16;}
+.eclipse-shell[data-page="history"] {--ring-brightness:.57;--page-overlay:.20;}
 .eclipse-shell[data-page="report"] {
-  --page-overlay:.40;
+  --ring-brightness:.54;
+  --page-overlay:.26;
   --card-top:rgba(10,18,32,.42);
   --card-bottom:rgba(4,9,18,.58);
 }
@@ -288,17 +303,14 @@ input:focus,textarea:focus,select:focus {border-color:#00b4ff99!important;box-sh
 .eclipse-landing h1 .text-aurora {text-shadow:0 0 28px #167bff70;}
 .eclipse-landing .eclipse-primary {box-shadow:inset 0 1px 1px #ffffff80,inset 0 -1px 3px #00b4ff55,0 6px 18px #0009,0 0 20px #008cff44;}
 @media(max-width:850px) {
-  .eclipse-shell,.eclipse-landing {
-    background-attachment:scroll,scroll,scroll;
-    background-size:100% 100%,auto 100vh,auto 100vh;
-    background-position:center,top center,top center;
-  }
+  .eclipse-shell::before,.eclipse-landing::before {background-position:center center;}
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   .eclipse-card,.glass-card,.glass-card-elevated,.workspace-card,.neon-detail-card {background:rgba(10,17,29,.90);}
 }
 @media(prefers-reduced-transparency:reduce) {
-  .eclipse-shell,.eclipse-landing {background-image:none;}
+  .eclipse-shell::before,.eclipse-landing::before,
+  .eclipse-shell::after,.eclipse-landing::after {display:none;}
   .eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
   .glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,.liquid-glass-subtle,
   .glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace,.neon-detail-card,
