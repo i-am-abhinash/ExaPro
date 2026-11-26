@@ -257,3 +257,38 @@ input:focus,textarea:focus,select:focus {border-color:#00b4ff99!important;box-sh
 @media(prefers-reduced-transparency:reduce) {
   .eclipse-shell,.eclipse-landing {background-image:none;}
 }
+
+
+/* Neon Silk visibility: the artwork remains visible through major glass surfaces. */
+.eclipse-shell,.eclipse-landing {
+  background-image:linear-gradient(180deg,rgba(3,5,9,.03),rgba(3,5,9,.10)),url('./assets/neon-silk.svg');
+}
+.eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.workspace-card,.liquid-glass-workspace {
+  background:linear-gradient(150deg,rgba(15,25,42,.48),rgba(5,10,18,.62));
+  border-color:rgba(139,190,239,.24);
+  -webkit-backdrop-filter:blur(10px) saturate(135%);
+  backdrop-filter:blur(10px) saturate(135%);
+  box-shadow:0 14px 38px -20px #000c,inset 0 1px 1px #cce6ff30,inset 0 -1px 1px #00b4ff1c;
+}
+.eclipse-sidebar,.eclipse-topbar {
+  background:rgba(5,9,17,.68);
+  -webkit-backdrop-filter:blur(16px) saturate(145%);
+  backdrop-filter:blur(16px) saturate(145%);
+}
+.eclipse-landing .silk-workflow-step {
+  background:linear-gradient(135deg,rgba(10,17,30,.42),rgba(4,8,15,.56));
+  border-color:rgba(128,174,225,.20);
+}
+.eclipse-landing .silk-workflow-step:hover {
+  border-color:rgba(96,207,255,.38);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .eclipse-card,.glass-card,.glass-card-elevated,.workspace-card {background:rgba(10,17,29,.90);}
+}
+@media(prefers-reduced-transparency:reduce) {
+  .eclipse-shell,.eclipse-landing {background-image:none;}
+  .eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+  .glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.workspace-card,.liquid-glass-workspace,
+  .eclipse-sidebar,.eclipse-topbar,.eclipse-landing .silk-workflow-step {background:#0b1220;}
+}
