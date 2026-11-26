@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
+import { randomBytes, createHash } from 'crypto';
+import { Project } from '../models/Project';
 import { UPLOAD_DIR } from '../config/env';
 import {
   uploadZipProject,
@@ -17,6 +19,43 @@ import {
 } from '../controllers/projectController';
 
 const router = Router();
+const GUEST_COOKIE = 'exapro_guest';
+
+// Same-origin browser workspace. The raw 256-bit token stays in an HttpOnly
+// cookie; only its SHA-256 digest is persisted on owned project records.
+router.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  if (req.get('Sec-Fetch-Site') === 'cross-site') {
+    res.status(403).json({ error: 'Cross-site project access is not allowed.' });
+    return;
+  }
+  const match = (req.headers.cookie || '').match(/(?:^|;\s*)exapro_guest=([a-f0-9]{64})(?:;|$)/);
+  let token = match?.[1];
+  if (!token && req.method === 'POST') {
+    token = randomBytes(32).toString('hex');
+    res.cookie(GUEST_COOKIE, token, {
+      httpOnly: true, sameSite: 'strict', secure: req.secure,
+      path: '/api/projects', maxAge: 90 * 24 * 60 * 60 * 1000,
+    });
+  }
+  // Never match legacy ownerless records, including when a cookie is absent.
+  res.locals.guestOwner = token ? createHash('sha256').update(token).digest('hex') : null;
+  next();
+});
+
+// Every project-specific endpoint, including downloads, findings and deletion,
+// must pass ownership validation before invoking its controller.
+router.param('id', async (req, res, next, id) => {
+  try {
+    if (!res.locals.guestOwner || !/^[a-fA-F0-9]{24}$/.test(id)) {
+      res.status(404).json({ error: 'Project not found.' }); return;
+    }
+    const owned = await Project.exists({ _id: id, guestOwner: res.locals.guestOwner });
+    if (!owned) { res.status(404).json({ error: 'Project not found.' }); return; }
+    next();
+  } catch (err) { next(err); }
+});
+
 
 // Multer storage configuration for ZIP files
 const storage = multer.diskStorage({
