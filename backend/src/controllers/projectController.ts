@@ -25,6 +25,7 @@ export async function uploadZipProject(req: Request, res: Response): Promise<voi
 
     // Create project record in MongoDB
     const project = new Project({
+      guestOwner: res.locals.guestOwner,
       projectName: baseProjectName,
       submissionType: 'zip',
       uploadedFileName: originalName,
@@ -40,7 +41,7 @@ export async function uploadZipProject(req: Request, res: Response): Promise<voi
     res.status(201).json({
       message: 'Project ZIP uploaded successfully. Analysis and testing started.',
       projectId: project._id,
-      project,
+      project: { ...project.toObject(), guestOwner: undefined },
     });
   } catch (err: any) {
     console.error('[Upload] Error handling ZIP upload:', err);
@@ -189,6 +190,7 @@ export async function submitGitHubProject(req: Request, res: Response): Promise<
 
     // Create project record
     const project = new Project({
+      guestOwner: res.locals.guestOwner,
       projectName: repoName,
       submissionType: 'github',
       repositoryUrl: repoUrl,
@@ -204,7 +206,7 @@ export async function submitGitHubProject(req: Request, res: Response): Promise<
     res.status(201).json({
       message: 'GitHub repository submitted successfully. Remote inspection started.',
       projectId: project._id,
-      project,
+      project: { ...project.toObject(), guestOwner: undefined },
     });
   } catch (err: any) {
     console.error('[GitHub Submit] Error submitting GitHub repo:', err);
@@ -312,7 +314,8 @@ async function processGitHubProjectAsync(projectId: string, repoUrl: string): Pr
 
 export async function listProjects(req: Request, res: Response): Promise<void> {
   try {
-    const projects = await Project.find()
+    if (!res.locals.guestOwner) { res.json({ projects: [] }); return; }
+    const projects = await Project.find({ guestOwner: res.locals.guestOwner })
       .select('projectName submissionType repositoryUrl uploadedFileName branch commitSha status progress statusMessage detectedTechnologies totalFilesCount faultSummary faultReportFileName createdAt updatedAt')
       .sort({ createdAt: -1 })
       .limit(50);
@@ -326,7 +329,7 @@ export async function listProjects(req: Request, res: Response): Promise<void> {
 export async function getProjectById(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const project = await Project.findById(id);
+    const project = await Project.findOne({ _id: id, guestOwner: res.locals.guestOwner });
     if (!project) {
       res.status(404).json({ error: 'Project not found.' });
       return;
@@ -340,7 +343,7 @@ export async function getProjectById(req: Request, res: Response): Promise<void>
 export async function getProjectReport(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const project = await Project.findById(id);
+    const project = await Project.findOne({ _id: id, guestOwner: res.locals.guestOwner });
     if (!project) {
       res.status(404).json({ error: 'Project not found.' });
       return;
@@ -392,7 +395,7 @@ export async function getProjectReport(req: Request, res: Response): Promise<voi
 export async function downloadProjectDocx(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const project = await Project.findById(id);
+    const project = await Project.findOne({ _id: id, guestOwner: res.locals.guestOwner });
     if (!project) {
       res.status(404).json({ error: 'Project not found.' });
       return;
@@ -418,7 +421,7 @@ export async function downloadProjectDocx(req: Request, res: Response): Promise<
 export async function downloadProjectFaultReportDocx(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const project = await Project.findById(id);
+    const project = await Project.findOne({ _id: id, guestOwner: res.locals.guestOwner });
     if (!project) {
       res.status(404).json({ error: 'Project not found.' });
       return;
@@ -495,7 +498,7 @@ export async function getProjectFindings(req: Request, res: Response): Promise<v
 export async function getProjectFaultReportJson(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const project = await Project.findById(id);
+    const project = await Project.findOne({ _id: id, guestOwner: res.locals.guestOwner });
     if (!project) {
       res.status(404).json({ error: 'Project not found.' });
       return;
@@ -525,7 +528,7 @@ export async function getProjectFaultReportJson(req: Request, res: Response): Pr
 export async function deleteProject(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const project = await Project.findById(id);
+    const project = await Project.findOne({ _id: id, guestOwner: res.locals.guestOwner });
     if (!project) {
       res.status(404).json({ error: 'Project not found.' });
       return;
@@ -549,7 +552,7 @@ export async function deleteProject(req: Request, res: Response): Promise<void> 
 
     await TestRun.deleteMany({ projectId: id });
     await FaultFinding.deleteMany({ projectId: id });
-    await Project.findByIdAndDelete(id);
+    await Project.deleteOne({ _id: id, guestOwner: res.locals.guestOwner });
 
     res.json({ message: 'Project, associated test runs, and dual reports deleted successfully.' });
   } catch (err: any) {
