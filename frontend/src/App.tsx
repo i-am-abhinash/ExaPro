@@ -29,7 +29,7 @@ export const App: React.FC = () => {
       {page === 'landing' ? (
         <div className="eclipse-landing"><LandingView onGetStarted={() => submit('zip')} onDirectUpload={submit} /></div>
       ) : (
-        <div className={`eclipse-shell ${collapsed ? 'is-collapsed' : ''}`}>
+        <div data-page={page} className={`eclipse-shell ${collapsed ? 'is-collapsed' : ''}`}>
           <aside className="eclipse-sidebar">
             <div className="eclipse-brand">
               <button type="button" onClick={() => navigate('landing')} className="eclipse-brand-link" aria-label="ExaPro home">
