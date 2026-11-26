@@ -238,10 +238,10 @@ input:focus,textarea:focus,select:focus {border-color:#00b4ff99!important;box-sh
 }
 
 
-/* Liquid Obsidian: local vector artwork, no remote assets or animation. */
+/* Neon Silk: lightweight local vector ribbons, dark center for readability. */
 .eclipse-shell,.eclipse-landing {
   background-color:#030509;
-  background-image:linear-gradient(180deg,rgba(3,5,9,.16),rgba(3,5,9,.24)),url('./assets/liquid-obsidian.svg');
+  background-image:linear-gradient(180deg,rgba(3,5,9,.08),rgba(3,5,9,.18)),url('./assets/neon-silk.svg');
   background-size:cover,cover;
   background-position:center,center;
   background-repeat:no-repeat,no-repeat;
