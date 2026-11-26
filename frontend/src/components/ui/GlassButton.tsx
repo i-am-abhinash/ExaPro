@@ -29,13 +29,13 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
 
   const variantClasses = {
     primary:
-      'bg-aurora hover:bg-aurora-hover active:bg-aurora-active text-[#151C32] font-bold shadow-aurora-sm hover:shadow-aurora-md border border-white/35 transition-all duration-200 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.60)]',
+      'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold border border-blue-500 transition-colors',
     teal:
-      'bg-teal hover:bg-teal-hover active:bg-teal-active text-[#0F241E] font-bold shadow-teal-sm hover:shadow-teal-md border border-white/35 transition-all duration-200 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.60)]',
+      'bg-teal hover:bg-teal-hover active:bg-teal-active text-[#0F241E] font-bold border border-teal/40 transition-colors',
     secondary:
       'glass-tile-interactive text-cool-primary border border-white/[0.14] hover:border-aurora/50 transition-all duration-200',
     outline:
-      'bg-[rgba(32,42,74,0.40)] backdrop-blur-md hover:bg-[rgba(45,58,100,0.55)] text-cool-primary border border-white/[0.14] hover:border-aurora/40 transition-all duration-200',
+      'bg-[#101827] hover:bg-[#17263D] text-cool-primary border border-white/[0.14] hover:border-aurora/40 transition-all duration-200',
     ghost:
       'bg-transparent hover:bg-white/[0.08] active:bg-white/[0.12] text-cool-muted hover:text-cool-primary border border-transparent transition-colors',
     danger:
