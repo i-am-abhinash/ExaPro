@@ -2,281 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --bg-base: #151C32;
-    --bg-secondary: #1D2340;
-    --bg-plum: #392C50;
-    --surface-nav: rgba(21, 28, 50, 0.72);
-    --surface-glass-primary: rgba(30, 40, 70, 0.45);
-    --surface-glass-elevated: rgba(40, 52, 92, 0.55);
-    --surface-interactive: rgba(42, 54, 94, 0.35);
-    --text-primary: #F3F5FF;
-    --text-secondary: #C1C8DD;
-    --text-muted: #9DA8C4;
-    --reflection-ice: #A8DDF4;
-    --reflection-lavender: #C8B5FF;
-    --reflection-pink: #F0BCE1;
-    --accent-aurora: #9AABFF;
-    --accent-aurora-hover: #B3C1FF;
-    --status-success: #80DCC0;
-    --status-warning: #F0CB91;
-    --status-error: #FF98AC;
-    --border-glass: rgba(255, 255, 255, 0.12);
-  }
-
-  html, body {
-    background-color: #151C32;
-    color: #F3F5FF;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+:root {
+  color-scheme: dark;
+  --bg-base:#080D19; --bg-secondary:#101827; --bg-plum:#172336;
+  --surface-nav:#101827; --surface-glass-primary:#101827; --surface-glass-elevated:#151F30; --surface-interactive:#151F30;
+  --text-primary:#F1F5F9; --text-secondary:#CBD5E1; --text-muted:#94A3B8;
+  --reflection-ice:#22D3EE; --reflection-lavender:#93C5FD; --reflection-pink:#A5B4FC;
+  --accent-aurora:#60A5FA; --accent-aurora-hover:#93C5FD;
+  --status-success:#34D399; --status-warning:#FBBF24; --status-error:#F87171;
+  --border-glass:#202D42;
 }
-
-/* Custom dark aurora scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+html, body, #root { min-height:100%; margin:0; background:#080D19; color:#F1F5F9; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; }
+* { scrollbar-width:thin; scrollbar-color:#334155 #080D19; }
+:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; }
+button, a { -webkit-tap-highlight-color:transparent; }
+.bg-grid-midnight,.bg-grid-sapphire,.bg-grid-liquid,.eclipse-landing { background-image:linear-gradient(to right,#3B82F609 1px,transparent 1px),linear-gradient(to bottom,#3B82F609 1px,transparent 1px); background-size:40px 40px; }
+.eclipse-landing { min-height:100vh; background-color:#080D19; }
+.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,.liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,.glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+  position:relative; background:#101827; border:1px solid #202D42; box-shadow:0 4px 18px #00000014; backdrop-filter:none; border-radius:12px;
 }
-::-webkit-scrollbar-track {
-  background: #151C32;
+.glass-hero,.liquid-glass-hero { background:linear-gradient(110deg,#101827,#14233A); }
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated { background:#151F30; }
+.glass-panel-subtle,.liquid-glass-subtle { background:#0D1524; }
+.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive { transition:background .16s,border-color .16s; }
+.glass-tile-interactive:hover,.glass-panel-interactive:hover,.liquid-glass-interactive:hover { background:#17263D; border-color:#3B82F6; }
+.glass-stat-tile,.liquid-glass-stat { font-variant-numeric:tabular-nums; }
+.glass-nav-header,.liquid-glass-nav { background:#101827; border-bottom:1px solid #202D42; }
+.perspective-container { perspective:none; }
+.preserve-3d { transform-style:flat; }
+.eclipse-shell { display:grid; grid-template-columns:224px minmax(0,1fr); min-height:100vh; }
+.eclipse-shell.is-collapsed { grid-template-columns:76px minmax(0,1fr); }
+.eclipse-sidebar { position:sticky; top:0; height:100dvh; background:#101827; border-right:1px solid #202D42; padding:18px 12px; display:flex; flex-direction:column; min-width:0; z-index:30; }
+.eclipse-brand { display:flex; align-items:center; gap:5px; margin-bottom:38px; }
+.eclipse-brand-link { display:flex; align-items:center; gap:9px; text-align:left; flex:1; min-width:0; }
+.eclipse-logo { display:grid; place-items:center; flex:none; width:36px; height:36px; background:#2563EB; color:white; border-radius:10px; }
+.eclipse-brand strong { font-size:19px; letter-spacing:-.05em; display:block; line-height:1.15; }
+.eclipse-brand small,.eclipse-sidebar-status small { font-size:9px; color:#94A3B8; display:block; white-space:normal; }
+.eclipse-brand small { letter-spacing:.04em; margin-top:4px; }
+.eclipse-collapse { color:#94A3B8; padding:5px; border-radius:6px; flex:none; }
+.eclipse-collapse:hover,.eclipse-home:hover { background:#17263D; color:#F1F5F9; }
+.eclipse-nav-heading { color:#94A3B8; font-size:10px; font-weight:600; letter-spacing:.12em; margin:0 9px 10px; }
+.eclipse-nav { display:grid; gap:5px; }
+.eclipse-nav button,.eclipse-home { display:flex; align-items:center; gap:11px; text-align:left; width:100%; color:#94A3B8; padding:11px 10px; border-radius:8px; font-size:13px; font-weight:500; }
+.eclipse-nav button svg,.eclipse-home svg { flex:none; }
+.eclipse-nav button:hover { background:#17263D; color:#F1F5F9; }
+.eclipse-nav button.active { color:#93C5FD; background:#3B82F61C; box-shadow:inset 3px 0 #60A5FA; }
+.eclipse-sidebar-bottom { margin-top:auto; display:grid; gap:12px; }
+.eclipse-sidebar-status { display:flex; align-items:center; gap:10px; padding:12px 9px; border-top:1px solid #202D42; }
+.eclipse-sidebar-status strong { display:block; font-size:11px; font-weight:600; margin-bottom:3px; }
+.eclipse-main { min-width:0; display:flex; flex-direction:column; }
+.eclipse-topbar { position:sticky; top:0; z-index:20; background:#080D19F5; border-bottom:1px solid #202D42; min-height:64px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px clamp(12px,3vw,32px); }
+.eclipse-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#2563EB; color:#fff; font-size:13px; font-weight:600; padding:10px 15px; border:1px solid #3B82F6; border-radius:8px; transition:background .15s; }
+.eclipse-primary:hover { background:#1D4ED8; }
+.eclipse-content { min-width:0; flex:1; }
+.eclipse-footer { border-top:1px solid #202D42; display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; padding:16px 24px; color:#94A3B8; font-size:11px; }
+.eclipse-shell.is-collapsed .eclipse-nav-label,.eclipse-shell.is-collapsed .eclipse-nav-heading { display:none; }
+.eclipse-shell.is-collapsed .eclipse-brand { flex-direction:column; gap:10px; margin-bottom:24px; }
+.eclipse-shell.is-collapsed .eclipse-nav button,.eclipse-shell.is-collapsed .eclipse-home,.eclipse-shell.is-collapsed .eclipse-sidebar-status { justify-content:center; padding:12px 4px; }
+.eclipse-card { min-width:0; background:#101827; border:1px solid #202D42; border-radius:12px; padding:18px; }
+.eclipse-tabs { display:flex; gap:4px; overflow-x:auto; border-bottom:1px solid #202D42; margin-top:16px; }
+.eclipse-tabs button { white-space:nowrap; border-bottom:2px solid transparent; color:#94A3B8; padding:12px; font-size:13px; font-weight:600; }
+.eclipse-tabs button[aria-pressed="true"] { color:#93C5FD; border-bottom-color:#60A5FA; }
+.eclipse-tabs button:hover { color:#F1F5F9; }
+.eclipse-report-body [id^="section-"] { scroll-margin-top:84px; }
+.eclipse-report-body[data-group="overview"] > [data-group]:not([data-group="overview"]),
+.eclipse-report-body[data-group="architecture"] > [data-group]:not([data-group="architecture"]),
+.eclipse-report-body[data-group="source"] > [data-group]:not([data-group="source"]),
+.eclipse-report-body[data-group="security"] > [data-group]:not([data-group="security"]) { display:none; }
+.eclipse-report-body > [data-group] { margin-top:0; margin-bottom:18px; }
+@media(max-width:850px) {
+  .eclipse-shell,.eclipse-shell.is-collapsed { grid-template-columns:64px minmax(0,1fr); }
+  .eclipse-sidebar { padding:12px 6px; }
+  .eclipse-nav-label,.eclipse-nav-heading,.eclipse-collapse { display:none; }
+  .eclipse-brand { justify-content:center; margin-bottom:28px; }
+  .eclipse-brand-link { flex:0; }
+  .eclipse-nav button,.eclipse-home,.eclipse-sidebar-status { justify-content:center; padding:12px 4px; }
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(50, 62, 102, 0.65);
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+@media(max-width:480px) {
+  .eclipse-shell,.eclipse-shell.is-collapsed { display:flex; flex-direction:column; }
+  .eclipse-sidebar { position:sticky; top:0; height:auto; padding:6px 10px; flex-direction:row; align-items:center; border-right:0; border-bottom:1px solid #202D42; gap:10px; }
+  .eclipse-brand,.eclipse-shell.is-collapsed .eclipse-brand { margin:0; }
+  .eclipse-nav { display:flex; flex:1; justify-content:flex-end; }
+  .eclipse-nav button { width:40px; }
+  .eclipse-sidebar-bottom { display:none; }
+  .eclipse-topbar { position:static; min-height:50px; }
+  .eclipse-top-action { padding:7px 9px; font-size:11px; }
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(154, 171, 255, 0.60);
-}
-
-/* Subtle Dark Aurora Liquid Glass Technical Grid Texture */
-.bg-grid-midnight,
-.bg-grid-sapphire,
-.bg-grid-liquid {
-  background-size: 36px 36px;
-  background-image: 
-    linear-gradient(to right, rgba(200, 181, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(168, 221, 244, 0.025) 1px, transparent 1px);
-}
-
-/* ========================================================
-   IRIDESCENT DARK AURORA LIQUID GLASS SYSTEM
-   ======================================================== */
-
-/* 1. Liquid Glass Hero Panel with Frosted Translucency & Iridescent Rim */
-.glass-hero,
-.liquid-glass-hero {
-  position: relative;
-  background: linear-gradient(135deg, rgba(42, 54, 96, 0.52) 0%, rgba(28, 36, 68, 0.40) 50%, rgba(38, 42, 78, 0.38) 100%);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 24px 64px -12px rgba(6, 10, 24, 0.68),
-    0 8px 24px -4px rgba(6, 10, 24, 0.38),
-    /* Delicate 3D Raised Bevel Inner Specular Highlights */
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.42),
-    inset 1px 0 1.5px 0 rgba(168, 221, 244, 0.22),
-    inset -1px 0 1.5px 0 rgba(200, 181, 255, 0.20),
-    inset 0 -1px 1.5px 0 rgba(240, 188, 225, 0.16),
-    /* Low-opacity internal radial refraction */
-    inset 0 0 32px 0 rgba(200, 181, 255, 0.05);
-}
-
-/* Iridescent 1px perimeter highlight rim on Hero */
-.glass-hero::before,
-.liquid-glass-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(168, 221, 244, 0.40) 25%,
-    rgba(200, 181, 255, 0.32) 50%,
-    rgba(240, 188, 225, 0.36) 75%,
-    rgba(154, 171, 255, 0.28) 100%
-  );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.85;
-}
-
-/* 2. Standard Translucent Frosted Glass Card */
-.glass-panel,
-.glass-card,
-.liquid-glass-card {
-  position: relative;
-  background: linear-gradient(135deg, rgba(32, 42, 74, 0.45) 0%, rgba(24, 30, 56, 0.36) 100%);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 12px 36px -4px rgba(6, 10, 24, 0.48),
-    0 4px 14px -2px rgba(6, 10, 24, 0.28),
-    /* Delicate Raised Bevel */
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.18),
-    inset -1px 0 1px 0 rgba(200, 181, 255, 0.15),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.12),
-    inset 0 0 20px 0 rgba(200, 181, 255, 0.04);
-}
-
-/* 3. Elevated Frosted Glass Surface with Iridescent Accent */
-.glass-panel-elevated,
-.glass-card-elevated,
-.liquid-glass-elevated {
-  position: relative;
-  background: linear-gradient(140deg, rgba(42, 54, 94, 0.55) 0%, rgba(30, 38, 70, 0.44) 100%);
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 20px 48px -8px rgba(6, 10, 24, 0.58),
-    0 6px 18px -3px rgba(6, 10, 24, 0.32),
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.38),
-    inset 1px 0 1.5px 0 rgba(168, 221, 244, 0.22),
-    inset -1px 0 1.5px 0 rgba(200, 181, 255, 0.18),
-    inset 0 -1px 1.5px 0 rgba(240, 188, 225, 0.14),
-    inset 0 0 24px 0 rgba(200, 181, 255, 0.05);
-}
-.glass-panel-elevated::before,
-.glass-card-elevated::before,
-.liquid-glass-elevated::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.40) 0%,
-    rgba(168, 221, 244, 0.35) 25%,
-    rgba(200, 181, 255, 0.28) 50%,
-    rgba(240, 188, 225, 0.32) 75%,
-    rgba(154, 171, 255, 0.25) 100%
-  );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.75;
-}
-
-/* 4. Subtle Translucent Glass (for secondary containers & overlays) */
-.glass-panel-subtle,
-.liquid-glass-subtle {
-  position: relative;
-  background: rgba(26, 34, 60, 0.38);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 
-    0 6px 20px -2px rgba(6, 10, 24, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-
-/* 5. Tactile Interactive Liquid Glass Tiles */
-.glass-tile-interactive,
-.glass-panel-interactive,
-.liquid-glass-interactive {
-  position: relative;
-  background: linear-gradient(135deg, rgba(42, 54, 94, 0.32) 0%, rgba(28, 36, 68, 0.24) 100%);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 8px 24px -3px rgba(6, 10, 24, 0.40),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.30),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.16),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.10);
-  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-tile-interactive:hover,
-.glass-panel-interactive:hover,
-.liquid-glass-interactive:hover {
-  background: linear-gradient(135deg, rgba(54, 68, 118, 0.44) 0%, rgba(36, 46, 85, 0.34) 100%);
-  border-color: rgba(200, 181, 255, 0.38);
-  box-shadow: 
-    0 16px 40px -6px rgba(6, 10, 24, 0.55),
-    0 0 24px -2px rgba(154, 171, 255, 0.26),
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.48),
-    inset 1px 0 1.5px 0 rgba(168, 221, 244, 0.24),
-    inset -1px 0 1.5px 0 rgba(200, 181, 255, 0.22),
-    inset 0 -1px 1.5px 0 rgba(240, 188, 225, 0.18);
-  transform: translateY(-2px);
-}
-.glass-tile-interactive:active,
-.glass-panel-interactive:active,
-.liquid-glass-interactive:active {
-  transform: translateY(0);
-}
-
-/* 6. Statistics HUD Tiles with Tabular Numerals */
-.glass-stat-tile,
-.liquid-glass-stat {
-  position: relative;
-  background: linear-gradient(135deg, rgba(38, 48, 84, 0.38) 0%, rgba(26, 34, 62, 0.30) 100%);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  box-shadow: 
-    0 6px 18px -2px rgba(6, 10, 24, 0.35),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.30),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.15),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.10);
-  font-feature-settings: 'tnum';
-}
-
-/* 7. Translucent Navigation Bar Header with Pearlescent Rim */
-.glass-nav-header,
-.liquid-glass-nav {
-  position: relative;
-  background: rgba(21, 28, 50, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 4px 20px -2px rgba(6, 10, 24, 0.40),
-    inset 0 -1px 0 0 rgba(200, 181, 255, 0.15);
-}
-
-/* 8. Technical Document Reading Container */
-.workspace-card,
-.liquid-glass-workspace {
-  position: relative;
-  background: linear-gradient(135deg, rgba(32, 42, 74, 0.42) 0%, rgba(24, 30, 56, 0.35) 100%);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 10px 32px -4px rgba(6, 10, 24, 0.45),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.18),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.12);
-}
-
-/* 3D Perspective Containers */
-.perspective-container {
-  perspective: 1200px;
-}
-.preserve-3d {
-  transform-style: preserve-3d;
-}
-
-/* Reduced motion accessibility */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+@media(prefers-reduced-motion:reduce) {
+  *,::before,::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
 }
