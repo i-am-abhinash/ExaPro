@@ -88,7 +88,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
   const handleStartAnalysis = async () => {
     setErrorMessage(null);
     setIsSubmitting(true);
-    setProgressPercent(10);
+    setProgressPercent(0);
     setStatusMessage('Initiating repository evaluation...');
 
     try {
@@ -97,7 +97,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         if (!selectedFile) {
           throw new Error('Please select a ZIP file to upload.');
         }
-        setStatusMessage('Uploading project archive to secure backend...');
+        setStatusMessage('Uploading project archive...');
         const result = await uploadZipProject(selectedFile);
         createdId = result.projectId;
       } else {
@@ -150,7 +150,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
     { key: 'inspecting', label: '1. Ingestion & Extraction', pct: 20 },
     { key: 'analyzing', label: '2. Architecture & Documentation', pct: 40 },
     { key: 'planning_tests', label: '3. Static Defect Inspection', pct: 60 },
-    { key: 'running_tests', label: '4. Isolated Test Execution', pct: 80 },
+    { key: 'running_tests', label: '4. Testing & Verification', pct: 80 },
     { key: 'completed', label: '5. Dual Reports Compilation', pct: 100 },
   ];
 
@@ -159,20 +159,20 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
       {/* Workflow Header */}
       <div className="text-center space-y-2">
         <GlassBadge variant="aurora" dot size="sm">
-          Guided Ingestion Workflow
+          NEW ANALYSIS
         </GlassBadge>
         <h1 className="text-3xl sm:text-4xl font-black text-cool-primary tracking-tight">
-          Examine Project Repository
+          What are we analyzing today?
         </h1>
         <p className="text-xs sm:text-sm text-cool-muted max-w-xl mx-auto leading-relaxed">
-          Upload a ZIP archive or specify a public GitHub repository for static analysis, architecture synthesis, and camera-ready technical documentation.
+          Import your project to explore its architecture, code findings, testing results and technical documentation.
         </p>
       </div>
 
       {/* Main Guided Form Container - Elevated Aurora Glass */}
       <div className="rounded-3xl glass-card-elevated p-6 sm:p-10 relative overflow-hidden">
         {/* 1. Selection Tabs */}
-        {!isSubmitting && projectStatus !== 'completed' && (
+        {!isSubmitting && projectStatus !== 'completed' && projectStatus !== 'completed_with_warnings' && projectStatus !== 'failed' && (
           <div className="space-y-6">
             <div className="flex p-1.5 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
               <button
@@ -362,7 +362,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
             </div>
 
             {/* 4 Pipeline Stages */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="flex flex-col gap-3 pt-2">
               {pipelineStages.map((stage) => {
                 const isDone = progressPercent >= stage.pct;
                 const isCurrent = progressPercent >= stage.pct - 25 && progressPercent < stage.pct;
