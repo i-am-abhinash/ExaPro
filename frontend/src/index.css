@@ -2,281 +2,318 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --bg-base: #151C32;
-    --bg-secondary: #1D2340;
-    --bg-plum: #392C50;
-    --surface-nav: rgba(21, 28, 50, 0.72);
-    --surface-glass-primary: rgba(30, 40, 70, 0.45);
-    --surface-glass-elevated: rgba(40, 52, 92, 0.55);
-    --surface-interactive: rgba(42, 54, 94, 0.35);
-    --text-primary: #F3F5FF;
-    --text-secondary: #C1C8DD;
-    --text-muted: #9DA8C4;
-    --reflection-ice: #A8DDF4;
-    --reflection-lavender: #C8B5FF;
-    --reflection-pink: #F0BCE1;
-    --accent-aurora: #9AABFF;
-    --accent-aurora-hover: #B3C1FF;
-    --status-success: #80DCC0;
-    --status-warning: #F0CB91;
-    --status-error: #FF98AC;
-    --border-glass: rgba(255, 255, 255, 0.12);
+:root {
+  color-scheme: dark;
+  --bg-base:#080D19; --bg-secondary:#101827; --bg-plum:#172336;
+  --surface-nav:#101827; --surface-glass-primary:#101827; --surface-glass-elevated:#151F30; --surface-interactive:#151F30;
+  --text-primary:#F1F5F9; --text-secondary:#CBD5E1; --text-muted:#94A3B8;
+  --reflection-ice:#22D3EE; --reflection-lavender:#93C5FD; --reflection-pink:#A5B4FC;
+  --accent-aurora:#60A5FA; --accent-aurora-hover:#93C5FD;
+  --status-success:#34D399; --status-warning:#FBBF24; --status-error:#F87171;
+  --border-glass:#202D42;
+}
+html, body, #root { min-height:100%; margin:0; background:#080D19; color:#F1F5F9; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; }
+* { scrollbar-width:thin; scrollbar-color:#334155 #080D19; }
+:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; }
+button, a { -webkit-tap-highlight-color:transparent; }
+.bg-grid-midnight,.bg-grid-sapphire,.bg-grid-liquid,.eclipse-landing { background-image:linear-gradient(to right,#3B82F609 1px,transparent 1px),linear-gradient(to bottom,#3B82F609 1px,transparent 1px); background-size:40px 40px; }
+.eclipse-landing { min-height:100vh; background-color:#080D19; }
+.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,.liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,.glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+  position:relative; background:#101827; border:1px solid #202D42; box-shadow:0 4px 18px #00000014; backdrop-filter:none; border-radius:12px;
+}
+.glass-hero,.liquid-glass-hero { background:linear-gradient(110deg,#101827,#14233A); }
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated { background:#151F30; }
+.glass-panel-subtle,.liquid-glass-subtle { background:#0D1524; }
+.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive { transition:background .16s,border-color .16s; }
+.glass-tile-interactive:hover,.glass-panel-interactive:hover,.liquid-glass-interactive:hover { background:#17263D; border-color:#3B82F6; }
+.glass-stat-tile,.liquid-glass-stat { font-variant-numeric:tabular-nums; }
+.glass-nav-header,.liquid-glass-nav { background:#101827; border-bottom:1px solid #202D42; }
+.perspective-container { perspective:none; }
+.preserve-3d { transform-style:flat; }
+.eclipse-shell { display:grid; grid-template-columns:224px minmax(0,1fr); min-height:100vh; }
+.eclipse-shell.is-collapsed { grid-template-columns:76px minmax(0,1fr); }
+.eclipse-sidebar { position:sticky; top:0; height:100dvh; background:#101827; border-right:1px solid #202D42; padding:18px 12px; display:flex; flex-direction:column; min-width:0; z-index:30; }
+.eclipse-brand { display:flex; align-items:center; gap:5px; margin-bottom:38px; }
+.eclipse-brand-link { display:flex; align-items:center; gap:9px; text-align:left; flex:1; min-width:0; }
+.eclipse-logo { display:grid; place-items:center; flex:none; width:36px; height:36px; background:#2563EB; color:white; border-radius:10px; }
+.eclipse-brand strong { font-size:19px; letter-spacing:-.05em; display:block; line-height:1.15; }
+.eclipse-brand small,.eclipse-sidebar-status small { font-size:9px; color:#94A3B8; display:block; white-space:normal; }
+.eclipse-brand small { letter-spacing:.04em; margin-top:4px; }
+.eclipse-collapse { color:#94A3B8; padding:5px; border-radius:6px; flex:none; }
+.eclipse-collapse:hover,.eclipse-home:hover { background:#17263D; color:#F1F5F9; }
+.eclipse-nav-heading { color:#94A3B8; font-size:10px; font-weight:600; letter-spacing:.12em; margin:0 9px 10px; }
+.eclipse-nav { display:grid; gap:5px; }
+.eclipse-nav button,.eclipse-home { display:flex; align-items:center; gap:11px; text-align:left; width:100%; color:#94A3B8; padding:11px 10px; border-radius:8px; font-size:13px; font-weight:500; }
+.eclipse-nav button svg,.eclipse-home svg { flex:none; }
+.eclipse-nav button:hover { background:#17263D; color:#F1F5F9; }
+.eclipse-nav button.active { color:#93C5FD; background:#3B82F61C; box-shadow:inset 3px 0 #60A5FA; }
+.eclipse-sidebar-bottom { margin-top:auto; display:grid; gap:12px; }
+.eclipse-sidebar-status { display:flex; align-items:center; gap:10px; padding:12px 9px; border-top:1px solid #202D42; }
+.eclipse-sidebar-status strong { display:block; font-size:11px; font-weight:600; margin-bottom:3px; }
+.eclipse-main { min-width:0; display:flex; flex-direction:column; }
+.eclipse-topbar { position:sticky; top:0; z-index:20; background:#080D19F5; border-bottom:1px solid #202D42; min-height:64px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px clamp(12px,3vw,32px); }
+.eclipse-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#2563EB; color:#fff; font-size:13px; font-weight:600; padding:10px 15px; border:1px solid #3B82F6; border-radius:8px; transition:background .15s; }
+.eclipse-primary:hover { background:#1D4ED8; }
+.eclipse-content { min-width:0; flex:1; }
+.eclipse-footer { border-top:1px solid #202D42; display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; padding:16px 24px; color:#94A3B8; font-size:11px; }
+.eclipse-shell.is-collapsed .eclipse-nav-label,.eclipse-shell.is-collapsed .eclipse-nav-heading { display:none; }
+.eclipse-shell.is-collapsed .eclipse-brand { flex-direction:column; gap:10px; margin-bottom:24px; }
+.eclipse-shell.is-collapsed .eclipse-nav button,.eclipse-shell.is-collapsed .eclipse-home,.eclipse-shell.is-collapsed .eclipse-sidebar-status { justify-content:center; padding:12px 4px; }
+.eclipse-card { min-width:0; background:#101827; border:1px solid #202D42; border-radius:12px; padding:18px; }
+.eclipse-tabs { display:flex; gap:4px; overflow-x:auto; border-bottom:1px solid #202D42; margin-top:16px; }
+.eclipse-tabs button { white-space:nowrap; border-bottom:2px solid transparent; color:#94A3B8; padding:12px; font-size:13px; font-weight:600; }
+.eclipse-tabs button[aria-pressed="true"] { color:#93C5FD; border-bottom-color:#60A5FA; }
+.eclipse-tabs button:hover { color:#F1F5F9; }
+.eclipse-report-body [id^="section-"] { scroll-margin-top:84px; }
+.eclipse-report-body[data-group="overview"] > [data-group]:not([data-group="overview"]),
+.eclipse-report-body[data-group="architecture"] > [data-group]:not([data-group="architecture"]),
+.eclipse-report-body[data-group="source"] > [data-group]:not([data-group="source"]),
+.eclipse-report-body[data-group="security"] > [data-group]:not([data-group="security"]) { display:none; }
+.eclipse-report-body > [data-group] { margin-top:0; margin-bottom:18px; }
+@media(max-width:850px) {
+  .eclipse-shell,.eclipse-shell.is-collapsed { grid-template-columns:64px minmax(0,1fr); }
+  .eclipse-sidebar { padding:12px 6px; }
+  .eclipse-nav-label,.eclipse-nav-heading,.eclipse-collapse { display:none; }
+  .eclipse-brand { justify-content:center; margin-bottom:28px; }
+  .eclipse-brand-link { flex:0; }
+  .eclipse-nav button,.eclipse-home,.eclipse-sidebar-status { justify-content:center; padding:12px 4px; }
+}
+@media(max-width:480px) {
+  .eclipse-shell,.eclipse-shell.is-collapsed { display:flex; flex-direction:column; }
+  .eclipse-sidebar { position:sticky; top:0; height:auto; padding:6px 10px; flex-direction:row; align-items:center; border-right:0; border-bottom:1px solid #202D42; gap:10px; }
+  .eclipse-brand,.eclipse-shell.is-collapsed .eclipse-brand { margin:0; }
+  .eclipse-nav { display:flex; flex:1; justify-content:flex-end; }
+  .eclipse-nav button { width:40px; }
+  .eclipse-sidebar-bottom { display:none; }
+  .eclipse-topbar { position:static; min-height:50px; }
+  .eclipse-top-action { padding:7px 9px; font-size:11px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,::before,::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
+}
+
+
+/* Eclipse Liquid Glass — retain the midnight palette and restore depth. */
+:root {
+  --surface-glass-primary:rgba(16,24,39,.69);
+  --surface-glass-elevated:rgba(23,38,61,.78);
+  --surface-interactive:rgba(24,41,66,.66);
+  --border-glass:rgba(148,184,239,.20);
+  --eclipse-glass-rim:rgba(147,197,253,.17);
+  --eclipse-glass-shadow:0 12px 36px -18px rgba(0,0,0,.65),inset 0 1px 0 rgba(226,240,255,.14);
+}
+.eclipse-shell,.eclipse-landing {
+  background-color:#080D19;
+  background-image:
+    radial-gradient(ellipse at 90% 7%,rgba(37,99,235,.25),transparent 42%),
+    radial-gradient(ellipse at 5% 70%,rgba(14,116,144,.17),transparent 42%),
+    radial-gradient(ellipse at 64% 95%,rgba(59,130,246,.13),transparent 40%),
+    linear-gradient(to right,rgba(96,165,250,.035) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(96,165,250,.035) 1px,transparent 1px);
+  background-size:auto,auto,auto,40px 40px,40px 40px;
+  background-attachment:fixed;
+}
+.eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,
+.liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,
+.glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+  background:linear-gradient(145deg,rgba(28,45,72,.74),rgba(12,22,39,.68));
+  border:1px solid var(--eclipse-glass-rim);
+  box-shadow:var(--eclipse-glass-shadow);
+  -webkit-backdrop-filter:blur(18px) saturate(135%);
+  backdrop-filter:blur(18px) saturate(135%);
+}
+.glass-hero,.liquid-glass-hero,.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated {
+  background:linear-gradient(145deg,rgba(37,60,95,.78),rgba(13,25,44,.74));
+  border-color:rgba(147,197,253,.25);
+  box-shadow:0 18px 48px -22px rgba(0,0,0,.75),inset 0 1px 0 rgba(226,240,255,.22),inset 0 0 24px rgba(96,165,250,.035);
+}
+.glass-panel-subtle,.liquid-glass-subtle { background:rgba(12,22,39,.6); }
+.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive {
+  background:linear-gradient(145deg,rgba(28,45,72,.68),rgba(14,25,43,.64));
+  transition:background .18s,border-color .18s,box-shadow .18s;
+}
+.glass-tile-interactive:hover,.glass-panel-interactive:hover,.liquid-glass-interactive:hover {
+  background:linear-gradient(145deg,rgba(37,64,104,.82),rgba(17,31,52,.76));
+  border-color:rgba(96,165,250,.58);
+  box-shadow:0 10px 28px -14px rgba(59,130,246,.42),inset 0 1px 0 rgba(226,240,255,.20);
+}
+.eclipse-sidebar,.eclipse-topbar,.glass-nav-header,.liquid-glass-nav {
+  background:rgba(10,19,33,.83);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  backdrop-filter:blur(22px) saturate(150%);
+  border-color:rgba(148,184,239,.18);
+  box-shadow:inset 0 1px 0 rgba(226,240,255,.06);
+}
+.eclipse-nav button.active {
+  background:linear-gradient(110deg,rgba(59,130,246,.22),rgba(34,211,238,.06));
+  box-shadow:inset 3px 0 #60A5FA,inset 0 1px 0 rgba(147,197,253,.14);
+}
+.eclipse-primary,.eclipse-logo {
+  background:linear-gradient(145deg,#3B82F6,#1D4ED8);
+  box-shadow:0 5px 20px -8px rgba(59,130,246,.65),inset 0 1px 0 rgba(255,255,255,.26);
+}
+.eclipse-primary:hover { background:linear-gradient(145deg,#2563EB,#1E40AF); }
+.eclipse-footer { background:rgba(8,13,25,.48); }
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+  .glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,
+  .liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,
+  .glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+    background:linear-gradient(145deg,#1B2B45,#101827);
   }
-
-  html, body {
-    background-color: #151C32;
-    color: #F3F5FF;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  .eclipse-sidebar,.eclipse-topbar,.glass-nav-header,.liquid-glass-nav { background:#101827; }
+}
+@media(max-width:850px) {
+  .eclipse-shell,.eclipse-landing { background-attachment:scroll; }
 }
 
-/* Custom dark aurora scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+
+/* Midnight Neon: near-black glass, polished optical edges and restrained light. */
+:root {
+  --bg-base:#030509; --bg-secondary:#080D16;
+  --text-primary:#E8F1FF; --text-secondary:#B6C6DA; --text-muted:#92A2B8;
+  --accent-aurora:#60CFFF; --accent-aurora-hover:#A1E9FF;
+  --surface-glass-primary:rgba(12,20,34,.72);
+  --surface-glass-elevated:rgba(15,25,42,.82);
+  --eclipse-glass-rim:rgba(133,174,225,.22);
+  --eclipse-glass-shadow:0 14px 36px -18px #000c,inset 0 1px 1px #cce6ff23,inset 0 -1px 1px #00b4ff10;
 }
-::-webkit-scrollbar-track {
-  background: #151C32;
+html,body,#root { background:#030509; color:var(--text-primary); }
+.eclipse-shell,.eclipse-landing {
+  background-color:#030509;
+  background-image:radial-gradient(ellipse at 85% 2%,#00306355,transparent 39%),radial-gradient(ellipse at 10% 75%,#00465c26,transparent 42%),radial-gradient(ellipse at 62% 98%,#13295430,transparent 43%),linear-gradient(to right,#60a5fa08 1px,transparent 1px),linear-gradient(to bottom,#60a5fa08 1px,transparent 1px);
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(50, 62, 102, 0.65);
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,
+.liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,
+.glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+  background:linear-gradient(150deg,rgba(22,35,54,.66),rgba(7,12,22,.80));
+  border-color:var(--eclipse-glass-rim); box-shadow:var(--eclipse-glass-shadow);
+  -webkit-backdrop-filter:blur(20px) saturate(145%);backdrop-filter:blur(20px) saturate(145%);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(154, 171, 255, 0.60);
+.eclipse-sidebar,.eclipse-topbar,.glass-nav-header,.liquid-glass-nav {
+  background:rgba(5,9,17,.85);border-color:#8aaedc20;
+  -webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);
+}
+.eclipse-nav button.active {background:linear-gradient(100deg,#00b4ff21,#0c1b2d55);color:#a5e9ff;box-shadow:inset 2px 0 #00b4ff,inset 0 1px 1px #ffffff15,0 0 14px #00b4ff0d;}
+.eclipse-logo { background:linear-gradient(145deg,#185b92,#071629);border:1px solid #79ccff80;box-shadow:inset 0 1px 2px #ffffff55,0 0 13px #00b4ff25; }
+.eclipse-primary,.midnight-glass-button,button.glass-tile-interactive,a.glass-tile-interactive,.eclipse-content a[download] {
+  position:relative;isolation:isolate;overflow:hidden;
+  color:#e8f1ff;border:1px solid rgba(120,175,230,.43);border-radius:12px;
+  background:linear-gradient(155deg,#a1c9fa24,#101b2b99 48%,#163a5e55);
+  box-shadow:inset 0 1px 1px #ffffff50,inset 0 -1px 3px #00b4ff22,inset 0 0 12px #80baff0d,0 5px 15px #0009;
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  transition:background .2s,border-color .2s,box-shadow .2s,transform .2s;
+}
+.eclipse-primary,.midnight-glass-primary,.eclipse-content a[download].bg-aurora {
+  background:linear-gradient(160deg,#489fff4d,#081934ae 50%,#1c62bb59);
+  border-color:#70c2ff8c;
+  box-shadow:inset 0 1px 1px #ffffff80,inset 0 -1px 3px #00b4ff55,inset 0 0 14px #4a93ff1f,0 6px 18px #0009,0 0 12px #008cff22;
+}
+.eclipse-primary::before,.midnight-glass-button::before,button.glass-tile-interactive::before,a.glass-tile-interactive::before,.eclipse-content a[download]::before {
+  content:'';position:absolute;inset:3px 5px 48%;border-radius:9px;
+  background:linear-gradient(180deg,#ffffff36,transparent);pointer-events:none;z-index:-1;
+}
+.eclipse-primary::after,.midnight-glass-button::after,button.glass-tile-interactive::after,a.glass-tile-interactive::after,.eclipse-content a[download]::after {
+  content:'';position:absolute;inset:1px;border:1px solid #ffffff12;border-radius:inherit;pointer-events:none;
+}
+.eclipse-primary:hover,.midnight-glass-button:not(:disabled):hover,button.glass-tile-interactive:not(:disabled):hover,a.glass-tile-interactive:hover,.eclipse-content a[download]:hover {
+  color:#f3fbff;border-color:#60efffbb;background:linear-gradient(155deg,#3a86c744,#10243eaa 48%,#1769aa55);
+  box-shadow:inset 0 1px 2px #ffffff88,inset 0 -2px 7px #00b4ff44,0 0 18px #00b4ff32,0 8px 24px #0008;
+}
+.eclipse-primary:active,.midnight-glass-button:not(:disabled):active,button.glass-tile-interactive:not(:disabled):active {transform:scale(.98);box-shadow:inset 0 2px 10px #0008,0 0 10px #00b4ff44;}
+.midnight-glass-button:disabled {opacity:.45;cursor:not-allowed;}
+.midnight-glass-teal {border-color:#60efff66;background:linear-gradient(155deg,#60efff22,#071e2999 50%,#0891b233);}
+.midnight-glass-danger {border-color:#f8717166;color:#fecaca;background:linear-gradient(155deg,#f8717122,#2d101e99);}
+.midnight-glass-ghost {background:#10182755;border-color:#ffffff12;box-shadow:inset 0 1px 0 #ffffff15;}
+input:not([type="file"]),textarea,select {background-color:#050a13a6;}
+input:focus,textarea:focus,select:focus {border-color:#00b4ff99!important;box-shadow:0 0 0 2px #00b4ff20;}
+:focus-visible {outline-color:#60efff;}
+.eclipse-tabs button[aria-pressed="true"] {color:#a5e9ff;border-bottom-color:#00b4ff;}
+.eclipse-footer {background:#03050980;}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .eclipse-card,.glass-card,.glass-card-elevated,.workspace-card {background:#101827;}
+  .eclipse-primary,.midnight-glass-button {background:linear-gradient(155deg,#163450,#101827);}
 }
 
-/* Subtle Dark Aurora Liquid Glass Technical Grid Texture */
-.bg-grid-midnight,
-.bg-grid-sapphire,
-.bg-grid-liquid {
-  background-size: 36px 36px;
-  background-image: 
-    linear-gradient(to right, rgba(200, 181, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(168, 221, 244, 0.025) 1px, transparent 1px);
-}
 
-/* ========================================================
-   IRIDESCENT DARK AURORA LIQUID GLASS SYSTEM
-   ======================================================== */
-
-/* 1. Liquid Glass Hero Panel with Frosted Translucency & Iridescent Rim */
-.glass-hero,
-.liquid-glass-hero {
-  position: relative;
-  background: linear-gradient(135deg, rgba(42, 54, 96, 0.52) 0%, rgba(28, 36, 68, 0.40) 50%, rgba(38, 42, 78, 0.38) 100%);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 24px 64px -12px rgba(6, 10, 24, 0.68),
-    0 8px 24px -4px rgba(6, 10, 24, 0.38),
-    /* Delicate 3D Raised Bevel Inner Specular Highlights */
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.42),
-    inset 1px 0 1.5px 0 rgba(168, 221, 244, 0.22),
-    inset -1px 0 1.5px 0 rgba(200, 181, 255, 0.20),
-    inset 0 -1px 1.5px 0 rgba(240, 188, 225, 0.16),
-    /* Low-opacity internal radial refraction */
-    inset 0 0 32px 0 rgba(200, 181, 255, 0.05);
+/* Neon Rings — medium-dark blue. Filter only the artwork, never the UI. */
+.eclipse-shell,.eclipse-landing {
+  position:relative;
+  isolation:isolate;
+  --ring-brightness:.60;
+  --page-overlay:.16;
+  --card-top:rgba(10,18,32,.28);
+  --card-bottom:rgba(4,9,18,.42);
+  background:#020305;
 }
-
-/* Iridescent 1px perimeter highlight rim on Hero */
-.glass-hero::before,
-.liquid-glass-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(168, 221, 244, 0.40) 25%,
-    rgba(200, 181, 255, 0.32) 50%,
-    rgba(240, 188, 225, 0.36) 75%,
-    rgba(154, 171, 255, 0.28) 100%
-  );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.85;
+.eclipse-shell::before,.eclipse-landing::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:#020305 url('/neon-rings-bg.webp') center center / cover no-repeat;
+  filter:brightness(var(--ring-brightness)) saturate(.85) hue-rotate(9deg);
 }
-
-/* 2. Standard Translucent Frosted Glass Card */
-.glass-panel,
-.glass-card,
-.liquid-glass-card {
-  position: relative;
-  background: linear-gradient(135deg, rgba(32, 42, 74, 0.45) 0%, rgba(24, 30, 56, 0.36) 100%);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 12px 36px -4px rgba(6, 10, 24, 0.48),
-    0 4px 14px -2px rgba(6, 10, 24, 0.28),
-    /* Delicate Raised Bevel */
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.18),
-    inset -1px 0 1px 0 rgba(200, 181, 255, 0.15),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.12),
-    inset 0 0 20px 0 rgba(200, 181, 255, 0.04);
+.eclipse-shell::after,.eclipse-landing::after {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(135deg,rgba(2,5,14,.12),rgba(2,5,14,var(--page-overlay)));
 }
-
-/* 3. Elevated Frosted Glass Surface with Iridescent Accent */
-.glass-panel-elevated,
-.glass-card-elevated,
-.liquid-glass-elevated {
-  position: relative;
-  background: linear-gradient(140deg, rgba(42, 54, 94, 0.55) 0%, rgba(30, 38, 70, 0.44) 100%);
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 20px 48px -8px rgba(6, 10, 24, 0.58),
-    0 6px 18px -3px rgba(6, 10, 24, 0.32),
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.38),
-    inset 1px 0 1.5px 0 rgba(168, 221, 244, 0.22),
-    inset -1px 0 1.5px 0 rgba(200, 181, 255, 0.18),
-    inset 0 -1px 1.5px 0 rgba(240, 188, 225, 0.14),
-    inset 0 0 24px 0 rgba(200, 181, 255, 0.05);
+.eclipse-landing {--ring-brightness:.62;--page-overlay:.08;}
+.eclipse-shell[data-page="new"] {--ring-brightness:.60;--page-overlay:.16;}
+.eclipse-shell[data-page="history"] {--ring-brightness:.57;--page-overlay:.20;}
+.eclipse-shell[data-page="report"] {
+  --ring-brightness:.54;
+  --page-overlay:.26;
+  --card-top:rgba(10,18,32,.42);
+  --card-bottom:rgba(4,9,18,.58);
 }
-.glass-panel-elevated::before,
-.glass-card-elevated::before,
-.liquid-glass-elevated::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.40) 0%,
-    rgba(168, 221, 244, 0.35) 25%,
-    rgba(200, 181, 255, 0.28) 50%,
-    rgba(240, 188, 225, 0.32) 75%,
-    rgba(154, 171, 255, 0.25) 100%
-  );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.75;
+/* Change card surfaces only; preserve the existing control and navigation styles. */
+.eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,.liquid-glass-subtle,
+.glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace,
+.neon-detail-card,div.glass-tile-interactive,div.glass-panel-interactive,div.liquid-glass-interactive {
+  background:linear-gradient(150deg,var(--card-top),var(--card-bottom));
+  border-color:rgba(132,191,255,.26);
+  -webkit-backdrop-filter:blur(8px) saturate(145%);
+  backdrop-filter:blur(8px) saturate(145%);
+  box-shadow:0 14px 34px -20px #000d,inset 0 1px 1px #ffffff2e,inset 0 -1px 1px #00b4ff29,0 0 18px #3090ff14;
 }
-
-/* 4. Subtle Translucent Glass (for secondary containers & overlays) */
-.glass-panel-subtle,
-.liquid-glass-subtle {
-  position: relative;
-  background: rgba(26, 34, 60, 0.38);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 
-    0 6px 20px -2px rgba(6, 10, 24, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+.eclipse-landing .eclipse-card {
+  border-color:#65c8ff55;
+  box-shadow:0 18px 50px #0008,inset 0 1px 1px #cce6ff44,0 0 25px #208dff1c;
 }
-
-/* 5. Tactile Interactive Liquid Glass Tiles */
-.glass-tile-interactive,
-.glass-panel-interactive,
-.liquid-glass-interactive {
-  position: relative;
-  background: linear-gradient(135deg, rgba(42, 54, 94, 0.32) 0%, rgba(28, 36, 68, 0.24) 100%);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 8px 24px -3px rgba(6, 10, 24, 0.40),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.30),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.16),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.10);
-  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+.eclipse-sidebar,.eclipse-topbar {
+  background:rgba(5,9,17,.72);
+  -webkit-backdrop-filter:blur(16px) saturate(145%);
+  backdrop-filter:blur(16px) saturate(145%);
 }
-.glass-tile-interactive:hover,
-.glass-panel-interactive:hover,
-.liquid-glass-interactive:hover {
-  background: linear-gradient(135deg, rgba(54, 68, 118, 0.44) 0%, rgba(36, 46, 85, 0.34) 100%);
-  border-color: rgba(200, 181, 255, 0.38);
-  box-shadow: 
-    0 16px 40px -6px rgba(6, 10, 24, 0.55),
-    0 0 24px -2px rgba(154, 171, 255, 0.26),
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.48),
-    inset 1px 0 1.5px 0 rgba(168, 221, 244, 0.24),
-    inset -1px 0 1.5px 0 rgba(200, 181, 255, 0.22),
-    inset 0 -1px 1.5px 0 rgba(240, 188, 225, 0.18);
-  transform: translateY(-2px);
+.eclipse-landing .tunnel-workflow-step {
+  background:linear-gradient(135deg,rgba(8,16,30,.22),rgba(4,8,15,.34));
+  border-color:rgba(128,174,225,.25);
 }
-.glass-tile-interactive:active,
-.glass-panel-interactive:active,
-.liquid-glass-interactive:active {
-  transform: translateY(0);
+.eclipse-landing .tunnel-workflow-step:hover {border-color:#60efff77;}
+.eclipse-landing h1 {text-shadow:0 3px 26px #000b;}
+.eclipse-landing h1 .text-aurora {text-shadow:0 0 28px #167bff70;}
+.eclipse-landing .eclipse-primary {box-shadow:inset 0 1px 1px #ffffff80,inset 0 -1px 3px #00b4ff55,0 6px 18px #0009,0 0 20px #008cff44;}
+@media(max-width:850px) {
+  .eclipse-shell::before,.eclipse-landing::before {background-position:center center;}
 }
-
-/* 6. Statistics HUD Tiles with Tabular Numerals */
-.glass-stat-tile,
-.liquid-glass-stat {
-  position: relative;
-  background: linear-gradient(135deg, rgba(38, 48, 84, 0.38) 0%, rgba(26, 34, 62, 0.30) 100%);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  box-shadow: 
-    0 6px 18px -2px rgba(6, 10, 24, 0.35),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.30),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.15),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.10);
-  font-feature-settings: 'tnum';
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .eclipse-card,.glass-card,.glass-card-elevated,.workspace-card,.neon-detail-card {background:rgba(10,17,29,.90);}
 }
-
-/* 7. Translucent Navigation Bar Header with Pearlescent Rim */
-.glass-nav-header,
-.liquid-glass-nav {
-  position: relative;
-  background: rgba(21, 28, 50, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 4px 20px -2px rgba(6, 10, 24, 0.40),
-    inset 0 -1px 0 0 rgba(200, 181, 255, 0.15);
-}
-
-/* 8. Technical Document Reading Container */
-.workspace-card,
-.liquid-glass-workspace {
-  position: relative;
-  background: linear-gradient(135deg, rgba(32, 42, 74, 0.42) 0%, rgba(24, 30, 56, 0.35) 100%);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 10px 32px -4px rgba(6, 10, 24, 0.45),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
-    inset 1px 0 1px 0 rgba(168, 221, 244, 0.18),
-    inset 0 -1px 1px 0 rgba(240, 188, 225, 0.12);
-}
-
-/* 3D Perspective Containers */
-.perspective-container {
-  perspective: 1200px;
-}
-.preserve-3d {
-  transform-style: preserve-3d;
-}
-
-/* Reduced motion accessibility */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+@media(prefers-reduced-transparency:reduce) {
+  .eclipse-shell::before,.eclipse-landing::before,
+  .eclipse-shell::after,.eclipse-landing::after {display:none;}
+  .eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+  .glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,.liquid-glass-subtle,
+  .glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace,.neon-detail-card,
+  div.glass-tile-interactive,div.glass-panel-interactive,div.liquid-glass-interactive,
+  .eclipse-sidebar,.eclipse-topbar,.eclipse-landing .tunnel-workflow-step {background:#0b1220;}
 }

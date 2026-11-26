@@ -13,15 +13,15 @@ interface TiltCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export const TiltCard: React.FC<TiltCardProps> = ({
   children,
   className = '',
-  maxTilt = 2.5,
-  glare = true,
+  maxTilt = 0,
+  glare = false,
   elevation = 'elevated',
   onClick,
   ...rest
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [canTilt, setCanTilt] = useState(true);
+  const [canTilt, setCanTilt] = useState(false);
 
   // Disable tilt on touch screens or reduced motion
   useEffect(() => {

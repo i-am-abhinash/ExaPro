@@ -88,7 +88,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
   const handleStartAnalysis = async () => {
     setErrorMessage(null);
     setIsSubmitting(true);
-    setProgressPercent(10);
+    setProgressPercent(0);
     setStatusMessage('Initiating repository evaluation...');
 
     try {
@@ -97,7 +97,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         if (!selectedFile) {
           throw new Error('Please select a ZIP file to upload.');
         }
-        setStatusMessage('Uploading project archive to secure backend...');
+        setStatusMessage('Uploading project archive...');
         const result = await uploadZipProject(selectedFile);
         createdId = result.projectId;
       } else {
@@ -150,7 +150,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
     { key: 'inspecting', label: '1. Ingestion & Extraction', pct: 20 },
     { key: 'analyzing', label: '2. Architecture & Documentation', pct: 40 },
     { key: 'planning_tests', label: '3. Static Defect Inspection', pct: 60 },
-    { key: 'running_tests', label: '4. Isolated Test Execution', pct: 80 },
+    { key: 'running_tests', label: '4. Testing & Verification', pct: 80 },
     { key: 'completed', label: '5. Dual Reports Compilation', pct: 100 },
   ];
 
@@ -159,22 +159,22 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
       {/* Workflow Header */}
       <div className="text-center space-y-2">
         <GlassBadge variant="aurora" dot size="sm">
-          Guided Ingestion Workflow
+          NEW ANALYSIS
         </GlassBadge>
         <h1 className="text-3xl sm:text-4xl font-black text-cool-primary tracking-tight">
-          Examine Project Repository
+          What are we analyzing today?
         </h1>
         <p className="text-xs sm:text-sm text-cool-muted max-w-xl mx-auto leading-relaxed">
-          Upload a ZIP archive or specify a public GitHub repository for static analysis, architecture synthesis, and camera-ready technical documentation.
+          Import your project to explore its architecture, code findings, testing results and technical documentation.
         </p>
       </div>
 
       {/* Main Guided Form Container - Elevated Aurora Glass */}
       <div className="rounded-3xl glass-card-elevated p-6 sm:p-10 relative overflow-hidden">
         {/* 1. Selection Tabs */}
-        {!isSubmitting && projectStatus !== 'completed' && (
+        {!isSubmitting && projectStatus !== 'completed' && projectStatus !== 'completed_with_warnings' && projectStatus !== 'failed' && (
           <div className="space-y-6">
-            <div className="flex p-1.5 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
+            <div className="flex p-1.5 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.10] max-w-md mx-auto backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => {
@@ -228,7 +228,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 group ${
                       isDragging
                         ? 'border-aurora bg-aurora/10 scale-[1.01]'
-                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(29,35,64,0.45)] hover:bg-[rgba(35,46,80,0.60)] backdrop-blur-md'
+                        : 'border-white/[0.14] hover:border-aurora/50 bg-[rgba(16,24,39,0.45)] hover:bg-[rgba(23,38,61,0.60)] backdrop-blur-md'
                     }`}
                   >
                     <div className="w-16 h-16 mx-auto rounded-2xl glass-stat-tile flex items-center justify-center text-aurora group-hover:scale-105 transition-transform shadow-glass-sm">
@@ -324,7 +324,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               <GlassButton
                 variant="primary"
                 size="lg"
-                icon={<ArrowRight className="w-5 h-5 text-[#151C32]" />}
+                icon={<ArrowRight className="w-5 h-5 text-[#080D19]" />}
                 onClick={handleStartAnalysis}
                 disabled={activeTab === 'zip' ? !selectedFile : !repoUrl.trim()}
               >
@@ -335,7 +335,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         )}
 
         {/* 2. Processing Pipeline Live Stepper */}
-        {(isSubmitting || (projectStatus && projectStatus !== 'completed' && projectStatus !== 'failed')) && (
+        {(isSubmitting || (projectStatus && projectStatus !== 'completed' && projectStatus !== 'completed_with_warnings' && projectStatus !== 'failed')) && (
           <div className="py-8 space-y-8 max-w-xl mx-auto">
             <div className="text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-2xl bg-aurora/15 text-aurora flex items-center justify-center animate-pulse shadow-aurora-sm">
@@ -353,19 +353,19 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 <span className="text-cool-muted">Pipeline Execution</span>
                 <span className="text-aurora font-bold">{progressPercent}%</span>
               </div>
-              <div className="h-2.5 w-full bg-[rgba(21,28,50,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
+              <div className="h-2.5 w-full bg-[rgba(16,24,39,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
                 <div
-                  className="h-full bg-aurora rounded-full transition-all duration-500 shadow-sm"
-                  style={{ width: `${Math.max(5, progressPercent)}%` }}
+                  className="h-full bg-gradient-to-r from-blue-600 to-ice rounded-full transition-all duration-500 shadow-sm"
+                  style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
                 />
               </div>
             </div>
 
             {/* 4 Pipeline Stages */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {pipelineStages.map((stage) => {
+            <div className="flex flex-col gap-3 pt-2">
+              {pipelineStages.map((stage, index) => {
                 const isDone = progressPercent >= stage.pct;
-                const isCurrent = progressPercent >= stage.pct - 25 && progressPercent < stage.pct;
+                const isCurrent = progressPercent >= (index === 0 ? 0 : pipelineStages[index - 1].pct) && progressPercent < stage.pct;
                 return (
                   <div
                     key={stage.key}
@@ -374,7 +374,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                         ? 'bg-status-success-bg border-status-success-border text-status-success font-medium'
                         : isCurrent
                         ? 'bg-aurora/15 border-aurora/40 text-aurora font-bold shadow-sm'
-                        : 'bg-[rgba(29,35,64,0.45)] border-white/[0.10] text-cool-muted'
+                        : 'bg-[rgba(16,24,39,0.45)] border-white/[0.10] text-cool-muted'
                     }`}
                   >
                     {isDone ? (
@@ -384,7 +384,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     ) : (
                       <div className="w-4 h-4 rounded-full border border-white/[0.2] flex-shrink-0" />
                     )}
-                    <span className="truncate">{stage.label}</span>
+                    <span className="flex-1">{stage.label}</span><span className="text-[10px]">{isDone ? 'Done' : isCurrent ? 'In progress' : 'Pending'}</span>
                   </div>
                 );
               })}
@@ -400,9 +400,9 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <h2 className="text-2xl font-black text-cool-primary tracking-tight">Project Examination & Testing Complete</h2>
+              <h2 className="text-2xl font-black text-cool-primary tracking-tight">{projectStatus === 'completed_with_warnings' ? 'Analysis complete with warnings' : 'Analysis complete'}</h2>
               <p className="text-xs sm:text-sm text-cool-secondary leading-relaxed">
-                Source code analysis, automated defect inspection, and test evaluations finished. Technical architecture documentation and software quality & fault reports are ready.
+                Review the generated reports for the results, limitations and recorded test outcomes.
               </p>
             </div>
 
@@ -431,7 +431,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                 className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl glass-tile-interactive text-cool-primary border border-white/[0.15] text-xs font-bold transition-colors"
                 title="Download Quality & Fault Findings DOCX"
               >
-                <ShieldAlert className="w-4 h-4 text-[#FF8998]" />
+                <ShieldAlert className="w-4 h-4 text-[#F87171]" />
                 <span>Fault Report DOCX</span>
               </a>
             </div>
