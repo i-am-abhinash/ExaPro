@@ -91,3 +91,79 @@ button, a { -webkit-tap-highlight-color:transparent; }
 @media(prefers-reduced-motion:reduce) {
   *,::before,::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
 }
+
+
+/* Eclipse Liquid Glass — retain the midnight palette and restore depth. */
+:root {
+  --surface-glass-primary:rgba(16,24,39,.69);
+  --surface-glass-elevated:rgba(23,38,61,.78);
+  --surface-interactive:rgba(24,41,66,.66);
+  --border-glass:rgba(148,184,239,.20);
+  --eclipse-glass-rim:rgba(147,197,253,.17);
+  --eclipse-glass-shadow:0 12px 36px -18px rgba(0,0,0,.65),inset 0 1px 0 rgba(226,240,255,.14);
+}
+.eclipse-shell,.eclipse-landing {
+  background-color:#080D19;
+  background-image:
+    radial-gradient(ellipse at 90% 7%,rgba(37,99,235,.25),transparent 42%),
+    radial-gradient(ellipse at 5% 70%,rgba(14,116,144,.17),transparent 42%),
+    radial-gradient(ellipse at 64% 95%,rgba(59,130,246,.13),transparent 40%),
+    linear-gradient(to right,rgba(96,165,250,.035) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(96,165,250,.035) 1px,transparent 1px);
+  background-size:auto,auto,auto,40px 40px,40px 40px;
+  background-attachment:fixed;
+}
+.eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,
+.liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,
+.glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+  background:linear-gradient(145deg,rgba(28,45,72,.74),rgba(12,22,39,.68));
+  border:1px solid var(--eclipse-glass-rim);
+  box-shadow:var(--eclipse-glass-shadow);
+  -webkit-backdrop-filter:blur(18px) saturate(135%);
+  backdrop-filter:blur(18px) saturate(135%);
+}
+.glass-hero,.liquid-glass-hero,.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated {
+  background:linear-gradient(145deg,rgba(37,60,95,.78),rgba(13,25,44,.74));
+  border-color:rgba(147,197,253,.25);
+  box-shadow:0 18px 48px -22px rgba(0,0,0,.75),inset 0 1px 0 rgba(226,240,255,.22),inset 0 0 24px rgba(96,165,250,.035);
+}
+.glass-panel-subtle,.liquid-glass-subtle { background:rgba(12,22,39,.6); }
+.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive {
+  background:linear-gradient(145deg,rgba(28,45,72,.68),rgba(14,25,43,.64));
+  transition:background .18s,border-color .18s,box-shadow .18s;
+}
+.glass-tile-interactive:hover,.glass-panel-interactive:hover,.liquid-glass-interactive:hover {
+  background:linear-gradient(145deg,rgba(37,64,104,.82),rgba(17,31,52,.76));
+  border-color:rgba(96,165,250,.58);
+  box-shadow:0 10px 28px -14px rgba(59,130,246,.42),inset 0 1px 0 rgba(226,240,255,.20);
+}
+.eclipse-sidebar,.eclipse-topbar,.glass-nav-header,.liquid-glass-nav {
+  background:rgba(10,19,33,.83);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  backdrop-filter:blur(22px) saturate(150%);
+  border-color:rgba(148,184,239,.18);
+  box-shadow:inset 0 1px 0 rgba(226,240,255,.06);
+}
+.eclipse-nav button.active {
+  background:linear-gradient(110deg,rgba(59,130,246,.22),rgba(34,211,238,.06));
+  box-shadow:inset 3px 0 #60A5FA,inset 0 1px 0 rgba(147,197,253,.14);
+}
+.eclipse-primary,.eclipse-logo {
+  background:linear-gradient(145deg,#3B82F6,#1D4ED8);
+  box-shadow:0 5px 20px -8px rgba(59,130,246,.65),inset 0 1px 0 rgba(255,255,255,.26);
+}
+.eclipse-primary:hover { background:linear-gradient(145deg,#2563EB,#1E40AF); }
+.eclipse-footer { background:rgba(8,13,25,.48); }
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+  .glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,
+  .liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,
+  .glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+    background:linear-gradient(145deg,#1B2B45,#101827);
+  }
+  .eclipse-sidebar,.eclipse-topbar,.glass-nav-header,.liquid-glass-nav { background:#101827; }
+}
+@media(max-width:850px) {
+  .eclipse-shell,.eclipse-landing { background-attachment:scroll; }
+}
