@@ -167,3 +167,72 @@ button, a { -webkit-tap-highlight-color:transparent; }
 @media(max-width:850px) {
   .eclipse-shell,.eclipse-landing { background-attachment:scroll; }
 }
+
+
+/* Midnight Neon: near-black glass, polished optical edges and restrained light. */
+:root {
+  --bg-base:#030509; --bg-secondary:#080D16;
+  --text-primary:#E8F1FF; --text-secondary:#B6C6DA; --text-muted:#92A2B8;
+  --accent-aurora:#60CFFF; --accent-aurora-hover:#A1E9FF;
+  --surface-glass-primary:rgba(12,20,34,.72);
+  --surface-glass-elevated:rgba(15,25,42,.82);
+  --eclipse-glass-rim:rgba(133,174,225,.22);
+  --eclipse-glass-shadow:0 14px 36px -18px #000c,inset 0 1px 1px #cce6ff23,inset 0 -1px 1px #00b4ff10;
+}
+html,body,#root { background:#030509; color:var(--text-primary); }
+.eclipse-shell,.eclipse-landing {
+  background-color:#030509;
+  background-image:radial-gradient(ellipse at 85% 2%,#00306355,transparent 39%),radial-gradient(ellipse at 10% 75%,#00465c26,transparent 42%),radial-gradient(ellipse at 62% 98%,#13295430,transparent 43%),linear-gradient(to right,#60a5fa08 1px,transparent 1px),linear-gradient(to bottom,#60a5fa08 1px,transparent 1px);
+}
+.eclipse-card,.glass-hero,.liquid-glass-hero,.glass-panel,.glass-card,.liquid-glass-card,
+.glass-panel-elevated,.glass-card-elevated,.liquid-glass-elevated,.glass-panel-subtle,
+.liquid-glass-subtle,.glass-tile-interactive,.glass-panel-interactive,.liquid-glass-interactive,
+.glass-stat-tile,.liquid-glass-stat,.workspace-card,.liquid-glass-workspace {
+  background:linear-gradient(150deg,rgba(22,35,54,.66),rgba(7,12,22,.80));
+  border-color:var(--eclipse-glass-rim); box-shadow:var(--eclipse-glass-shadow);
+  -webkit-backdrop-filter:blur(20px) saturate(145%);backdrop-filter:blur(20px) saturate(145%);
+}
+.eclipse-sidebar,.eclipse-topbar,.glass-nav-header,.liquid-glass-nav {
+  background:rgba(5,9,17,.85);border-color:#8aaedc20;
+  -webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);
+}
+.eclipse-nav button.active {background:linear-gradient(100deg,#00b4ff21,#0c1b2d55);color:#a5e9ff;box-shadow:inset 2px 0 #00b4ff,inset 0 1px 1px #ffffff15,0 0 14px #00b4ff0d;}
+.eclipse-logo { background:linear-gradient(145deg,#185b92,#071629);border:1px solid #79ccff80;box-shadow:inset 0 1px 2px #ffffff55,0 0 13px #00b4ff25; }
+.eclipse-primary,.midnight-glass-button,button.glass-tile-interactive,a.glass-tile-interactive,.eclipse-content a[download] {
+  position:relative;isolation:isolate;overflow:hidden;
+  color:#e8f1ff;border:1px solid rgba(120,175,230,.43);border-radius:12px;
+  background:linear-gradient(155deg,#a1c9fa24,#101b2b99 48%,#163a5e55);
+  box-shadow:inset 0 1px 1px #ffffff50,inset 0 -1px 3px #00b4ff22,inset 0 0 12px #80baff0d,0 5px 15px #0009;
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  transition:background .2s,border-color .2s,box-shadow .2s,transform .2s;
+}
+.eclipse-primary,.midnight-glass-primary,.eclipse-content a[download].bg-aurora {
+  background:linear-gradient(160deg,#489fff4d,#081934ae 50%,#1c62bb59);
+  border-color:#70c2ff8c;
+  box-shadow:inset 0 1px 1px #ffffff80,inset 0 -1px 3px #00b4ff55,inset 0 0 14px #4a93ff1f,0 6px 18px #0009,0 0 12px #008cff22;
+}
+.eclipse-primary::before,.midnight-glass-button::before,button.glass-tile-interactive::before,a.glass-tile-interactive::before,.eclipse-content a[download]::before {
+  content:'';position:absolute;inset:3px 5px 48%;border-radius:9px;
+  background:linear-gradient(180deg,#ffffff36,transparent);pointer-events:none;z-index:-1;
+}
+.eclipse-primary::after,.midnight-glass-button::after,button.glass-tile-interactive::after,a.glass-tile-interactive::after,.eclipse-content a[download]::after {
+  content:'';position:absolute;inset:1px;border:1px solid #ffffff12;border-radius:inherit;pointer-events:none;
+}
+.eclipse-primary:hover,.midnight-glass-button:not(:disabled):hover,button.glass-tile-interactive:not(:disabled):hover,a.glass-tile-interactive:hover,.eclipse-content a[download]:hover {
+  color:#f3fbff;border-color:#60efffbb;background:linear-gradient(155deg,#3a86c744,#10243eaa 48%,#1769aa55);
+  box-shadow:inset 0 1px 2px #ffffff88,inset 0 -2px 7px #00b4ff44,0 0 18px #00b4ff32,0 8px 24px #0008;
+}
+.eclipse-primary:active,.midnight-glass-button:not(:disabled):active,button.glass-tile-interactive:not(:disabled):active {transform:scale(.98);box-shadow:inset 0 2px 10px #0008,0 0 10px #00b4ff44;}
+.midnight-glass-button:disabled {opacity:.45;cursor:not-allowed;}
+.midnight-glass-teal {border-color:#60efff66;background:linear-gradient(155deg,#60efff22,#071e2999 50%,#0891b233);}
+.midnight-glass-danger {border-color:#f8717166;color:#fecaca;background:linear-gradient(155deg,#f8717122,#2d101e99);}
+.midnight-glass-ghost {background:#10182755;border-color:#ffffff12;box-shadow:inset 0 1px 0 #ffffff15;}
+input:not([type="file"]),textarea,select {background-color:#050a13a6;}
+input:focus,textarea:focus,select:focus {border-color:#00b4ff99!important;box-shadow:0 0 0 2px #00b4ff20;}
+:focus-visible {outline-color:#60efff;}
+.eclipse-tabs button[aria-pressed="true"] {color:#a5e9ff;border-bottom-color:#00b4ff;}
+.eclipse-footer {background:#03050980;}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .eclipse-card,.glass-card,.glass-card-elevated,.workspace-card {background:#101827;}
+  .eclipse-primary,.midnight-glass-button {background:linear-gradient(155deg,#163450,#101827);}
+}
