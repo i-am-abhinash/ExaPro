@@ -335,7 +335,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
         )}
 
         {/* 2. Processing Pipeline Live Stepper */}
-        {(isSubmitting || (projectStatus && projectStatus !== 'completed' && projectStatus !== 'failed')) && (
+        {(isSubmitting || (projectStatus && projectStatus !== 'completed' && projectStatus !== 'completed_with_warnings' && projectStatus !== 'failed')) && (
           <div className="py-8 space-y-8 max-w-xl mx-auto">
             <div className="text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-2xl bg-aurora/15 text-aurora flex items-center justify-center animate-pulse shadow-aurora-sm">
@@ -355,17 +355,17 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
               </div>
               <div className="h-2.5 w-full bg-[rgba(16,24,39,0.70)] rounded-full overflow-hidden p-0.5 border border-white/[0.12]">
                 <div
-                  className="h-full bg-aurora rounded-full transition-all duration-500 shadow-sm"
-                  style={{ width: `${Math.max(5, progressPercent)}%` }}
+                  className="h-full bg-gradient-to-r from-blue-600 to-ice rounded-full transition-all duration-500 shadow-sm"
+                  style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
                 />
               </div>
             </div>
 
             {/* 4 Pipeline Stages */}
             <div className="flex flex-col gap-3 pt-2">
-              {pipelineStages.map((stage) => {
+              {pipelineStages.map((stage, index) => {
                 const isDone = progressPercent >= stage.pct;
-                const isCurrent = progressPercent >= stage.pct - 25 && progressPercent < stage.pct;
+                const isCurrent = progressPercent >= (index === 0 ? 0 : pipelineStages[index - 1].pct) && progressPercent < stage.pct;
                 return (
                   <div
                     key={stage.key}
@@ -384,7 +384,7 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
                     ) : (
                       <div className="w-4 h-4 rounded-full border border-white/[0.2] flex-shrink-0" />
                     )}
-                    <span className="truncate">{stage.label}</span>
+                    <span className="flex-1">{stage.label}</span><span className="text-[10px]">{isDone ? 'Done' : isCurrent ? 'In progress' : 'Pending'}</span>
                   </div>
                 );
               })}
@@ -400,9 +400,9 @@ export const SubmissionView: React.FC<SubmissionViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <h2 className="text-2xl font-black text-cool-primary tracking-tight">Project Examination & Testing Complete</h2>
+              <h2 className="text-2xl font-black text-cool-primary tracking-tight">{projectStatus === 'completed_with_warnings' ? 'Analysis complete with warnings' : 'Analysis complete'}</h2>
               <p className="text-xs sm:text-sm text-cool-secondary leading-relaxed">
-                Source code analysis, automated defect inspection, and test evaluations finished. Technical architecture documentation and software quality & fault reports are ready.
+                Review the generated reports for the results, limitations and recorded test outcomes.
               </p>
             </div>
 
