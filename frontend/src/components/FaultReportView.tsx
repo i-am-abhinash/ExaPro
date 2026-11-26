@@ -123,14 +123,14 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
   // Quality Grade Theme styling
   const gradeColor =
     summary.qualityGrade === 'A'
-      ? 'text-[#54D6A0] bg-[#54D6A0]/15 border-[#54D6A0]/40'
+      ? 'text-[#34D399] bg-[#34D399]/15 border-[#34D399]/40'
       : summary.qualityGrade === 'B'
-      ? 'text-[#8295FF] bg-[#8295FF]/15 border-[#8295FF]/40'
+      ? 'text-[#60A5FA] bg-[#60A5FA]/15 border-[#60A5FA]/40'
       : summary.qualityGrade === 'C'
-      ? 'text-[#FFC66D] bg-[#FFC66D]/15 border-[#FFC66D]/40'
+      ? 'text-[#FBBF24] bg-[#FBBF24]/15 border-[#FBBF24]/40'
       : summary.qualityGrade === 'D'
-      ? 'text-[#FF9F5A] bg-[#FF9F5A]/15 border-[#FF9F5A]/40'
-      : 'text-[#FF8195] bg-[#FF8195]/15 border-[#FF8195]/40';
+      ? 'text-[#FB923C] bg-[#FB923C]/15 border-[#FB923C]/40'
+      : 'text-[#F87171] bg-[#F87171]/15 border-[#F87171]/40';
 
   return (
     <div className="space-y-8">
@@ -159,9 +159,9 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
             <a
               href={getDownloadFaultReportDocxUrl(projectId)}
               download
-              className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-aurora hover:bg-aurora-hover text-[#151C32] font-bold text-xs shadow-aurora-sm border border-aurora/50 transition-all transform hover:-translate-y-0.5"
+              className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-aurora hover:bg-aurora-hover text-[#080D19] font-bold text-xs shadow-aurora-sm border border-aurora/50 transition-all transform hover:-translate-y-0.5"
             >
-              <Download className="w-4 h-4 text-[#151C32]" />
+              <Download className="w-4 h-4 text-[#080D19]" />
               <span>Download Fault DOCX</span>
             </a>
 
@@ -179,7 +179,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
         {/* Quality Score HUD Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Quality Score Meter */}
-          <div className="p-5 rounded-2xl bg-[rgba(21,28,50,0.85)] border border-white/[0.12] flex items-center space-x-4">
+          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] flex items-center space-x-4">
             <div className={`w-16 h-16 rounded-2xl border flex flex-col items-center justify-center font-mono font-black ${gradeColor}`}>
               <span className="text-2xl leading-none">{summary.qualityGrade}</span>
               <span className="text-[10px] uppercase font-bold tracking-wider mt-0.5">Grade</span>
@@ -197,32 +197,32 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           </div>
 
           {/* Confirmed vs Potential Faults */}
-          <div className="p-5 rounded-2xl bg-[rgba(21,28,50,0.85)] border border-white/[0.12] space-y-1">
+          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] space-y-1">
             <p className="text-xs text-cool-muted font-medium">Fault Verification</p>
             <div className="flex items-center space-x-4 pt-1">
               <div>
-                <span className="text-2xl font-black text-[#FF8195]">{summary.confirmedFaults}</span>
+                <span className="text-2xl font-black text-[#F87171]">{summary.confirmedFaults}</span>
                 <p className="text-[10px] text-cool-muted uppercase font-bold">Confirmed</p>
               </div>
               <div className="h-8 w-px bg-white/[0.10]" />
               <div>
-                <span className="text-2xl font-black text-[#FFC66D]">{summary.potentialFaults}</span>
+                <span className="text-2xl font-black text-[#FBBF24]">{summary.potentialFaults}</span>
                 <p className="text-[10px] text-cool-muted uppercase font-bold">Potential</p>
               </div>
             </div>
           </div>
 
           {/* Test Execution Stats */}
-          <div className="p-5 rounded-2xl bg-[rgba(21,28,50,0.85)] border border-white/[0.12] space-y-1">
+          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] space-y-1">
             <p className="text-xs text-cool-muted font-medium">Automated Tests</p>
             <div className="flex items-center space-x-3 pt-1">
               <div>
-                <span className="text-2xl font-black text-[#54D6A0]">{summary.passed}</span>
+                <span className="text-2xl font-black text-[#34D399]">{summary.passed}</span>
                 <p className="text-[10px] text-cool-muted uppercase font-bold">Passed</p>
               </div>
               <div className="h-8 w-px bg-white/[0.10]" />
               <div>
-                <span className="text-2xl font-black text-[#FF8195]">{summary.failed}</span>
+                <span className="text-2xl font-black text-[#F87171]">{summary.failed}</span>
                 <p className="text-[10px] text-cool-muted uppercase font-bold">Failed</p>
               </div>
               <div className="h-8 w-px bg-white/[0.10]" />
@@ -234,13 +234,13 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           </div>
 
           {/* Sandbox Status Tile */}
-          <div className="p-5 rounded-2xl bg-[rgba(21,28,50,0.85)] border border-white/[0.12] space-y-1">
+          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] space-y-1">
             <p className="text-xs text-cool-muted font-medium">Execution Sandbox</p>
             <div className="flex items-center space-x-2 pt-1">
               {environment.isAvailable ? (
-                <ShieldCheck className="w-5 h-5 text-[#54D6A0]" />
+                <ShieldCheck className="w-5 h-5 text-[#34D399]" />
               ) : (
-                <ShieldAlert className="w-5 h-5 text-[#FFC66D]" />
+                <ShieldAlert className="w-5 h-5 text-[#FBBF24]" />
               )}
               <span className="text-sm font-bold text-cool-primary">
                 {environment.isAvailable ? 'Docker Isolated' : 'Host Protection Active'}
@@ -266,18 +266,18 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
 
       {/* 2. Host Isolation & Security Profile Notice (If Docker Unavailable) */}
       {!environment.isAvailable && (
-        <div className="p-6 rounded-3xl bg-[rgba(255,198,109,0.06)] border border-[#FFC66D]/30 space-y-3 backdrop-blur-md">
-          <div className="flex items-center space-x-3 text-[#FFC66D]">
+        <div className="p-6 rounded-3xl bg-[rgba(251,191,36,0.06)] border border-[#FBBF24]/30 space-y-3 backdrop-blur-md">
+          <div className="flex items-center space-x-3 text-[#FBBF24]">
             <ShieldAlert className="w-5 h-5 flex-shrink-0" />
             <h3 className="text-sm font-black uppercase tracking-wider">
               Host Security Protection Enforced: Container Sandbox Blocked
             </h3>
           </div>
           <p className="text-xs text-cool-secondary leading-relaxed">
-            ExaPro enforces a strict zero-trust sandbox policy. To protect the host operating system from untrusted code, runtime tests were reported as <span className="font-bold text-[#FFC66D]">blocked</span> rather than executed directly on the host machine.
+            ExaPro enforces a strict zero-trust sandbox policy. To protect the host operating system from untrusted code, runtime tests were reported as <span className="font-bold text-[#FBBF24]">blocked</span> rather than executed directly on the host machine.
           </p>
           {environment.reason && (
-            <div className="p-3 rounded-xl bg-[rgba(21,28,50,0.70)] border border-white/[0.10] text-[11px] font-mono text-cool-muted space-y-1">
+            <div className="p-3 rounded-xl bg-[rgba(16,24,39,0.70)] border border-white/[0.10] text-[11px] font-mono text-cool-muted space-y-1">
               <p><span className="text-cool-primary font-bold">Diagnostic:</span> {environment.reason}</p>
               {environment.remediation && (
                 <p><span className="text-aurora font-bold">Remediation:</span> {environment.remediation}</p>
@@ -290,7 +290,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
       {/* 3. Sub-Navigation Tabs & Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Navigation Tabs */}
-        <div className="flex p-1 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.10] backdrop-blur-md w-full sm:w-auto">
+        <div className="flex p-1 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.10] backdrop-blur-md w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab('findings')}
@@ -353,7 +353,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
             </span>
 
             {/* Severity Filter */}
-            <div className="flex items-center space-x-1 bg-[rgba(21,28,50,0.60)] p-1 rounded-xl border border-white/[0.10]">
+            <div className="flex items-center space-x-1 bg-[rgba(16,24,39,0.60)] p-1 rounded-xl border border-white/[0.10]">
               {['all', 'Critical', 'High', 'Medium', 'Low'].map((sev) => (
                 <button
                   key={sev}
@@ -371,7 +371,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
             </div>
 
             {/* Verification Status Filter */}
-            <div className="flex items-center space-x-1 bg-[rgba(21,28,50,0.60)] p-1 rounded-xl border border-white/[0.10]">
+            <div className="flex items-center space-x-1 bg-[rgba(16,24,39,0.60)] p-1 rounded-xl border border-white/[0.10]">
               {['all', 'confirmed', 'potential', 'blocked'].map((st) => (
                 <button
                   key={st}
@@ -392,7 +392,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           {/* Findings List */}
           {filteredFindings.length === 0 ? (
             <div className="p-12 text-center rounded-3xl glass-card space-y-3">
-              <CheckCircle2 className="w-8 h-8 text-[#54D6A0] mx-auto" />
+              <CheckCircle2 className="w-8 h-8 text-[#34D399] mx-auto" />
               <p className="font-bold text-cool-primary text-base">No defects matched current criteria</p>
               <p className="text-xs text-cool-muted">Try clearing the search query or adjusting your severity filters.</p>
             </div>
@@ -403,18 +403,18 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
 
                 const sevBadge =
                   finding.severity === 'Critical'
-                    ? 'text-[#FF8195] bg-[#FF8195]/15 border-[#FF8195]/40'
+                    ? 'text-[#F87171] bg-[#F87171]/15 border-[#F87171]/40'
                     : finding.severity === 'High'
-                    ? 'text-[#FF9F5A] bg-[#FF9F5A]/15 border-[#FF9F5A]/40'
+                    ? 'text-[#FB923C] bg-[#FB923C]/15 border-[#FB923C]/40'
                     : finding.severity === 'Medium'
-                    ? 'text-[#FFC66D] bg-[#FFC66D]/15 border-[#FFC66D]/40'
-                    : 'text-[#8295FF] bg-[#8295FF]/15 border-[#8295FF]/40';
+                    ? 'text-[#FBBF24] bg-[#FBBF24]/15 border-[#FBBF24]/40'
+                    : 'text-[#60A5FA] bg-[#60A5FA]/15 border-[#60A5FA]/40';
 
                 const statusBadge =
                   finding.verificationStatus === 'confirmed'
-                    ? 'text-[#54D6A0] bg-[#54D6A0]/15 border-[#54D6A0]/30'
+                    ? 'text-[#34D399] bg-[#34D399]/15 border-[#34D399]/30'
                     : finding.verificationStatus === 'potential'
-                    ? 'text-[#FFC66D] bg-[#FFC66D]/15 border-[#FFC66D]/30'
+                    ? 'text-[#FBBF24] bg-[#FBBF24]/15 border-[#FBBF24]/30'
                     : 'text-cool-muted bg-white/[0.06] border-white/[0.10]';
 
                 return (
@@ -493,13 +493,13 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
                         {(finding.expectedBehavior || finding.actualBehavior) && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                             <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1">
-                              <p className="font-bold text-[#54D6A0]">Expected Behavior</p>
+                              <p className="font-bold text-[#34D399]">Expected Behavior</p>
                               <p className="text-cool-secondary leading-relaxed">
                                 {finding.expectedBehavior || 'Standard compliant execution.'}
                               </p>
                             </div>
                             <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1">
-                              <p className="font-bold text-[#FF8195]">Actual Behavior</p>
+                              <p className="font-bold text-[#F87171]">Actual Behavior</p>
                               <p className="text-cool-secondary leading-relaxed">
                                 {finding.actualBehavior || 'Defect manifestation identified.'}
                               </p>
@@ -585,7 +585,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[rgba(21,28,50,0.85)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px]">
+              <thead className="bg-[rgba(16,24,39,0.85)] text-cool-muted border-b border-white/[0.12] uppercase tracking-wider font-bold text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Test Case & Target</th>
                   <th className="py-3 px-4">Category</th>
@@ -598,11 +598,11 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
                 {filteredTests.map((test) => {
                   const statusPill =
                     test.status === 'passed'
-                      ? 'text-[#54D6A0] bg-[#54D6A0]/15 border-[#54D6A0]/30'
+                      ? 'text-[#34D399] bg-[#34D399]/15 border-[#34D399]/30'
                       : test.status === 'failed'
-                      ? 'text-[#FF8195] bg-[#FF8195]/15 border-[#FF8195]/30'
+                      ? 'text-[#F87171] bg-[#F87171]/15 border-[#F87171]/30'
                       : test.status === 'blocked'
-                      ? 'text-[#FFC66D] bg-[#FFC66D]/15 border-[#FFC66D]/30'
+                      ? 'text-[#FBBF24] bg-[#FBBF24]/15 border-[#FBBF24]/30'
                       : 'text-cool-muted bg-white/[0.06] border-white/[0.10]';
 
                   return (
@@ -649,7 +649,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="p-4 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.12] space-y-1">
+            <div className="p-4 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.12] space-y-1">
               <p className="text-xs text-cool-muted">Container Runtime Engine</p>
               <p className="text-sm font-bold text-cool-primary font-mono">{environment.runtimeType}</p>
               <p className="text-[11px] text-cool-muted">
@@ -657,13 +657,13 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.12] space-y-1">
+            <div className="p-4 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.12] space-y-1">
               <p className="text-xs text-cool-muted">Security Constraint Profile</p>
               <p className="text-sm font-bold text-cool-primary font-mono">{environment.securityProfile}</p>
               <p className="text-[11px] text-cool-muted">Non-root container user enforced</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[rgba(21,28,50,0.70)] border border-white/[0.12] space-y-1">
+            <div className="p-4 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.12] space-y-1">
               <p className="text-xs text-cool-muted">Allocated Resource Limits</p>
               <p className="text-sm font-bold text-cool-primary font-mono">
                 {environment.resourceLimits.cpuLimit} CPU / {environment.resourceLimits.memoryLimit} RAM
@@ -676,8 +676,8 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
 
           {/* Remediation Guide if Blocked */}
           {!environment.isAvailable && (
-            <div className="p-5 rounded-2xl bg-[rgba(21,28,50,0.85)] border border-[#FFC66D]/30 space-y-3">
-              <h4 className="text-xs font-bold text-[#FFC66D] uppercase tracking-wider flex items-center space-x-2">
+            <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-[#FBBF24]/30 space-y-3">
+              <h4 className="text-xs font-bold text-[#FBBF24] uppercase tracking-wider flex items-center space-x-2">
                 <Terminal className="w-4 h-4" />
                 <span>How to Enable Isolated Dynamic Testing</span>
               </h4>
