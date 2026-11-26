@@ -324,7 +324,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
               </div>
 
               {/* Embedded High-Resolution SVG Canvas */}
-              <div className="rounded-2xl overflow-hidden bg-[rgba(16,24,39,0.85)] border border-white/[0.12] p-4 sm:p-6 shadow-inner backdrop-blur-md">
+              <div className="neon-detail-card rounded-2xl overflow-hidden border border-white/[0.12] p-4 sm:p-6 shadow-inner ">
                 <div
                   className="w-full overflow-x-auto flex justify-center py-2"
                   dangerouslySetInnerHTML={{ __html: report.architectureDiagramSvg }}
@@ -332,7 +332,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
               </div>
 
               {/* Architecture Narrative */}
-              <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.12] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal backdrop-blur-sm">
+              <div className="neon-detail-card p-5 rounded-2xl border border-white/[0.12] text-xs sm:text-sm text-cool-primary leading-relaxed whitespace-pre-line font-normal ">
                 {report.documentation.systemArchitectureDescription || report.architectureDescription}
               </div>
             </div>
@@ -367,7 +367,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
                   <div>{report.documentation.purposeAndFunctionality}</div>
                 )}
                 {report.documentation.problemStatement && (
-                  <div className="p-4 rounded-2xl bg-[rgba(16,24,39,0.50)] border border-white/[0.08]">
+                  <div className="neon-detail-card p-4 rounded-2xl border border-white/[0.08]">
                     {report.documentation.problemStatement}
                   </div>
                 )}
@@ -628,7 +628,7 @@ export const ReportPreviewView: React.FC<ReportPreviewViewProps> = ({ projectId,
 
               {/* Finding Cards List */}
               {filteredSourceFindings.length === 0 ? (
-                <div className="p-8 text-center rounded-2xl bg-[rgba(16,24,39,0.40)] border border-white/[0.08] space-y-2">
+                <div className="neon-detail-card p-8 text-center rounded-2xl border border-white/[0.08] space-y-2">
                   <CheckCircle2 className="w-8 h-8 text-status-success mx-auto" />
                   <p className="font-bold text-cool-primary text-sm">
                     {sourceFindings.length === 0
