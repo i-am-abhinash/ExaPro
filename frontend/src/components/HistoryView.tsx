@@ -94,9 +94,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-3">
-            <h1 className="text-3xl font-black text-cool-primary tracking-tight">Project History</h1>
+            <h1 className="text-3xl font-black text-cool-primary tracking-tight">My projects</h1>
             <GlassBadge variant="neutral" size="sm">
-              {projects.length} Total Repositories
+              {projects.length} Projects
             </GlassBadge>
           </div>
           <p className="text-xs sm:text-sm text-cool-muted">
@@ -121,7 +121,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
           <GlassInput
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, repository, or language..."
+            placeholder="Search your projects..."
             icon={<Search className="w-4 h-4 text-cool-muted" />}
           />
         </div>
@@ -181,7 +181,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onViewReport, onNewAna
       ) : projects.length === 0 ? (
         <GlassEmptyState
           icon={<FileText className="w-8 h-8" />}
-          title="No evaluations found"
+          title="No matching projects"
           description="You haven't examined any repositories yet. Start by uploading a ZIP or specifying a GitHub URL."
           actionText="Examine First Project"
           actionIcon={<Plus className="w-4 h-4 text-[#080D19]" />}
