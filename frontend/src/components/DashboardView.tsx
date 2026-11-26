@@ -12,7 +12,6 @@ import {
   ShieldAlert,
   Activity,
 } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { IProjectListItem, IHealthStatus } from '../types';
 import { getDownloadDocxUrl, getDownloadFaultReportDocxUrl } from '../services/api';
 import {
@@ -29,6 +28,29 @@ interface DashboardViewProps {
   health: IHealthStatus | null;
 }
 
+// Native SVG avoids the third-party chart component's React hook dependency.
+const QualityTrend: React.FC<{projects: IProjectListItem[]}> = ({projects}) => {
+  const points = projects.map((p,i) => ({
+    id:p._id, name:p.projectName, score:p.faultSummary!.qualityScore,
+    x:projects.length === 1 ? 332 : 44+i*576/(projects.length-1),
+    y:16+144*(1-Math.max(0,Math.min(100,p.faultSummary!.qualityScore))/100),
+  }));
+  const line = points.map(p=>p.x+','+p.y).join(' ');
+  return (
+    <figure className="mt-4" aria-label="Project quality scores by submission">
+      <svg viewBox="0 0 640 190" className="w-full h-auto max-h-52 overflow-visible" role="img" aria-label={points.map(p=>p.name+': '+p.score+'/100').join('; ')}>
+        <defs><linearGradient id="eclipse-trend-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#60A5FA" stopOpacity=".26"/><stop offset="100%" stopColor="#60A5FA" stopOpacity="0"/></linearGradient></defs>
+        {[0,25,50,75,100].map(v=>{const y=16+144*(1-v/100);return <g key={v}><line x1="44" y1={y} x2="620" y2={y} stroke="#94A3B8" strokeOpacity=".18" strokeDasharray="4 5"/><text x="34" y={y+4} textAnchor="end" fill="#94A3B8" fontSize="12">{v}</text></g>;})}
+        {points.length>1&&<><polygon points={points[0].x+',160 '+line+' '+points[points.length-1].x+',160'} fill="url(#eclipse-trend-fill)"/><polyline points={line} fill="none" stroke="#60A5FA" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke"/></>}
+        {points.map(p=><g key={p.id}><circle cx={p.x} cy={p.y} r="5" fill="#93C5FD" stroke="#080D19" strokeWidth="2"><title>{p.name}: {p.score}/100</title></circle></g>)}
+      </svg>
+      <figcaption className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-cool-muted mt-1">
+        {points.map(p=><span key={p.id} className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-aurora"/>{p.name}<strong className="text-cool-primary tabular-nums">{p.score}</strong></span>)}
+      </figcaption>
+    </figure>
+  );
+};
+
 export const DashboardView: React.FC<DashboardViewProps> = ({
   onStartSubmission,
   onViewReport,
@@ -38,7 +60,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [tableSearch, setTableSearch] = useState('');
 
   const ready = recentProjects.filter(p => p.status === 'completed' || p.status === 'completed_with_warnings');
-  const assessed = recentProjects.filter(p => typeof p.faultSummary?.qualityScore === 'number');
+  const assessed = recentProjects.filter(p => typeof p.faultSummary?.qualityScore === 'number' && Number.isFinite(p.faultSummary.qualityScore));
   const avg = assessed.length ? Math.round(assessed.reduce((n,p) => n + p.faultSummary!.qualityScore, 0) / assessed.length) : null;
   const findings = assessed.reduce((n,p) => n + p.faultSummary!.confirmedFaults + p.faultSummary!.potentialFaults, 0);
   const outcomes = assessed.reduce((n,p) => ({passed:n.passed+p.faultSummary!.passed,failed:n.failed+p.faultSummary!.failed,blocked:n.blocked+p.faultSummary!.blocked,total:n.total+p.faultSummary!.totalTests}), {passed:0,failed:0,blocked:0,total:0});
@@ -68,7 +90,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
         <section className="eclipse-card xl:col-span-2">
           <h2 className="font-semibold">Project quality trend</h2><p className="text-xs text-cool-muted mt-1">Latest assessed submissions · not version comparisons</p>
-          {trend.length === 0 ? <div className="h-40 grid place-items-center text-sm text-cool-muted">Submit a project to see its quality score.</div> : <div className="mt-4 h-44"><ResponsiveContainer width="100%" height="100%"><LineChart data={trend.map(p=>({name:p.projectName,score:p.faultSummary!.qualityScore}))}><CartesianGrid stroke="#202D42" strokeDasharray="3 3" vertical={false}/><XAxis dataKey="name" tick={{fill:'#94A3B8',fontSize:10}} interval="preserveStartEnd"/><YAxis domain={[0,100]} tick={{fill:'#94A3B8',fontSize:10}} width={28}/><Tooltip contentStyle={{background:'#101827',border:'1px solid #202D42',color:'#F1F5F9'}}/><Line type="monotone" dataKey="score" stroke="#60A5FA" strokeWidth={2} dot={{r:4}} isAnimationActive={false}/></LineChart></ResponsiveContainer></div>}
+          {trend.length === 0 ? <div className="h-40 grid place-items-center text-sm text-cool-muted">Submit a project to see its quality score.</div> : <QualityTrend projects={trend}/>}
         </section>
         <section className="eclipse-card">
           <h2 className="font-semibold">Test results</h2><p className="text-xs text-cool-muted mt-1">Across recorded test plans</p>
