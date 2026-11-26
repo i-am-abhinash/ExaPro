@@ -1,213 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Navbar } from './components/Navbar';
+import { MotionConfig } from 'framer-motion';
+import { Layers, LayoutDashboard, Plus, FolderOpen, FileText, Menu, PanelLeftClose, Home, Activity } from 'lucide-react';
 import { LandingView } from './components/LandingView';
 import { DashboardView } from './components/DashboardView';
 import { SubmissionView } from './components/SubmissionView';
 import { ReportPreviewView } from './components/ReportPreviewView';
 import { HistoryView } from './components/HistoryView';
-import { AmbientBackground } from './components/ui/AmbientBackground';
 import { IHealthStatus, IProjectListItem } from './types';
 import { fetchHealth, fetchProjects } from './services/api';
 
+type Page = 'landing' | 'dashboard' | 'new' | 'history' | 'report';
+const pageNames: Record<Page, string> = { landing: 'Home', dashboard: 'Overview', new: 'New analysis', history: 'My projects', report: 'Project report' };
+
 export const App: React.FC = () => {
-  // App navigation state: 'landing' | 'dashboard' | 'new' | 'history' | 'report'
-  const [currentTab, setCurrentTab] = useState<'landing' | 'dashboard' | 'new' | 'history' | 'report'>('landing');
-  const [submissionInitialType, setSubmissionInitialType] = useState<'zip' | 'github'>('zip');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [hasSeenLanding, setHasSeenLanding] = useState<boolean>(false);
-
+  const [page, setPage] = useState<Page>('landing');
+  const [collapsed, setCollapsed] = useState(false);
+  const [source, setSource] = useState<'zip' | 'github'>('zip');
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [health, setHealth] = useState<IHealthStatus | null>(null);
-  const [recentProjects, setRecentProjects] = useState<IProjectListItem[]>([]);
+  const [projects, setProjects] = useState<IProjectListItem[]>([]);
 
-  // Load backend health and recent projects
   useEffect(() => {
-    async function initData() {
-      try {
-        const h = await fetchHealth();
-        setHealth(h);
-      } catch (err) {
-        console.warn('Backend health check error:', err);
-      }
+    let active = true;
+    fetchHealth().then(h => { if (active) setHealth(h); }).catch(() => { if (active) setHealth(null); });
+    fetchProjects().then(p => { if (active) setProjects(p); }).catch(console.warn);
+    return () => { active = false; };
+  }, [page]);
 
-      try {
-        const projects = await fetchProjects();
-        setRecentProjects(projects);
-      } catch (err) {
-        console.warn('Projects fetch error:', err);
-      }
-    }
-    initData();
-  }, [currentTab]);
-
-  // Transition from landing page to dashboard
-  const handleGetStarted = () => {
-    setHasSeenLanding(true);
-    setCurrentTab('dashboard');
-  };
-
-  const handleDirectUpload = (type: 'zip' | 'github') => {
-    setSubmissionInitialType(type);
-    setHasSeenLanding(true);
-    setCurrentTab('new');
-  };
-
-  const handleStartSubmission = (type: 'zip' | 'github') => {
-    setSubmissionInitialType(type);
-    setCurrentTab('new');
-  };
-
-  const handleViewReport = (id: string) => {
-    setSelectedProjectId(id);
-    setCurrentTab('report');
-  };
-
-  const handleSubmissionComplete = (id: string) => {
-    setSelectedProjectId(id);
-    setCurrentTab('report');
-  };
-
-  const handleReturnToLanding = () => {
-    setCurrentTab('landing');
-  };
-
+  const navigate = (next: Page) => { setPage(next); window.scrollTo(0, 0); };
+  const submit = (type: 'zip' | 'github') => { setSource(type); navigate('new'); };
+  const openReport = (id: string) => { setProjectId(id); navigate('report'); };
+  const links: { id: Page; icon: typeof Layers; label: string }[] = [
+    { id: 'dashboard' as const, icon: LayoutDashboard, label: 'Overview' },
+    { id: 'new' as const, icon: Plus, label: 'New analysis' },
+    { id: 'history' as const, icon: FolderOpen, label: 'My projects' },
+  ];
+  if (projectId) links.push({ id: 'report', icon: FileText, label: 'Project report' });
   return (
-    <div className="relative min-h-screen bg-[#151C32] text-[#F3F5FF] flex flex-col justify-between selection:bg-aurora/30 selection:text-aurora font-sans">
-      {/* Dark Aurora Liquid Glass Background with layered refraction orbs */}
-      <AmbientBackground />
-
-      <div className="relative z-10 flex-1 flex flex-col">
-        {/* Navbar is displayed when not on the opening landing screen */}
-        {currentTab !== 'landing' && (
-          <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-          >
-            <Navbar
-              currentTab={currentTab}
-              setCurrentTab={setCurrentTab}
-              health={health}
-              hasSeenLanding={hasSeenLanding}
-              onReturnToLanding={handleReturnToLanding}
-            />
-          </motion.div>
-        )}
-
-        <main className="flex-1 pb-16">
-          <AnimatePresence mode="wait">
-            {/* 1. Dedicated Opening Landing Experience */}
-            {currentTab === 'landing' && (
-              <motion.div
-                key="landing-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{
-                  opacity: 0,
-                  scale: 0.98,
-                  y: -10,
-                  transition: { duration: 0.3, ease: 'easeOut' },
-                }}
-              >
-                <LandingView
-                  onGetStarted={handleGetStarted}
-                  onDirectUpload={handleDirectUpload}
-                  health={health}
-                />
-              </motion.div>
-            )}
-
-            {/* 2. Main Dashboard Command Center */}
-            {currentTab === 'dashboard' && (
-              <motion.div
-                key="dashboard-view"
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-              >
-                <DashboardView
-                  onStartSubmission={handleStartSubmission}
-                  onViewReport={handleViewReport}
-                  recentProjects={recentProjects}
-                  health={health}
-                />
-              </motion.div>
-            )}
-
-            {/* 3. Examine Project Submission Workflow */}
-            {currentTab === 'new' && (
-              <motion.div
-                key="submission-view"
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-              >
-                <SubmissionView
-                  initialType={submissionInitialType}
-                  onComplete={handleSubmissionComplete}
-                />
-              </motion.div>
-            )}
-
-            {/* 4. Project History */}
-            {currentTab === 'history' && (
-              <motion.div
-                key="history-view"
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-              >
-                <HistoryView
-                  onViewReport={handleViewReport}
-                  onNewAnalysis={() => {
-                    setSubmissionInitialType('zip');
-                    setCurrentTab('new');
-                  }}
-                />
-              </motion.div>
-            )}
-
-            {/* 5. Report Preview & Technical Details */}
-            {currentTab === 'report' && selectedProjectId && (
-              <motion.div
-                key="report-view"
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-              >
-                <ReportPreviewView
-                  projectId={selectedProjectId}
-                  onBack={() => setCurrentTab('dashboard')}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </main>
-      </div>
-
-      {/* Global Minimalist Footer */}
-      <footer className="relative z-10 border-t border-white/[0.08] bg-[rgba(21,28,50,0.78)] backdrop-blur-md py-6 text-xs text-[#9DA8C4]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-cool-primary">EXAPRO</span>
-            <span>•</span>
-            <span>AI-Powered Software Architecture Evaluator & Technical Documentation Engine</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-cool-muted font-mono">
-            <span>Dark Aurora Liquid Glass</span>
-            <span>•</span>
-            <span>Pearlescent Frosted Translucency</span>
-            <span>•</span>
-            <span>Camera-Ready DOCX</span>
+    <MotionConfig reducedMotion="user">
+      {page === 'landing' ? (
+        <div className="eclipse-landing"><LandingView onGetStarted={() => navigate('dashboard')} onDirectUpload={submit} health={health} /></div>
+      ) : (
+        <div className={`eclipse-shell ${collapsed ? 'is-collapsed' : ''}`}>
+          <aside className="eclipse-sidebar">
+            <div className="eclipse-brand">
+              <button type="button" onClick={() => navigate('landing')} className="eclipse-brand-link" aria-label="ExaPro home">
+                <span className="eclipse-logo"><Layers size={21}/></span>
+                <span className="eclipse-nav-label"><strong>ExaPro</strong><small>ENGINEERING WORKSPACE</small></span>
+              </button>
+              <button type="button" className="eclipse-collapse" onClick={() => setCollapsed(v => !v)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed}>{collapsed ? <Menu size={17}/> : <PanelLeftClose size={17}/>}</button>
+            </div>
+            <p className="eclipse-nav-heading">WORKSPACE</p>
+            <nav aria-label="Workspace navigation" className="eclipse-nav">
+              {links.map(({id, icon: Icon, label}) => (
+                <button key={id} type="button" title={label} aria-current={page === id ? 'page' : undefined} className={page === id ? 'active' : ''} onClick={() => id === 'new' ? submit('zip') : navigate(id)}>
+                  <Icon size={18}/><span className="eclipse-nav-label">{label}</span>
+                </button>
+              ))}
+            </nav>
+            <div className="eclipse-sidebar-bottom">
+              <button type="button" className="eclipse-home" onClick={() => navigate('landing')} title="Home"><Home size={18}/><span className="eclipse-nav-label">Home</span></button>
+              <div className="eclipse-sidebar-status"><Activity size={17} className={health?.database.isConnected ? 'text-status-success' : 'text-cool-muted'}/><span className="eclipse-nav-label"><strong>System status</strong><small>{health?.database.isConnected ? 'Database connected' : 'Not connected / unknown'}</small></span></div>
+            </div>
+          </aside>
+          <div className="eclipse-main">
+            <header className="eclipse-topbar">
+              <div className="text-xs sm:text-sm text-cool-muted">Workspace <span className="mx-2 text-cool-muted">/</span><span className="text-cool-primary font-semibold">{pageNames[page]}</span></div>
+              <button type="button" className="eclipse-primary eclipse-top-action" onClick={() => submit('zip')}><Plus size={16}/> <span>New analysis</span></button>
+            </header>
+            <main key={page} className="eclipse-content">
+              {page === 'dashboard' && <DashboardView onStartSubmission={submit} onViewReport={openReport} recentProjects={projects} health={health}/>}
+              {page === 'new' && <SubmissionView initialType={source} onComplete={openReport}/>}
+              {page === 'history' && <HistoryView onViewReport={openReport} onNewAnalysis={() => submit('zip')}/>}
+              {page === 'report' && projectId && <ReportPreviewView key={projectId} projectId={projectId} onBack={() => navigate('dashboard')}/>}
+            </main>
+            <footer className="eclipse-footer">EXAPRO <span>Software analysis · Testing · Documentation</span></footer>
           </div>
         </div>
-      </footer>
-    </div>
+      )}
+    </MotionConfig>
   );
 };
-
 export default App;
