@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="base" cx=".65" cy=".38" r=".95">
+      <stop stop-color="#101823"/><stop offset=".44" stop-color="#070b11"/><stop offset="1" stop-color="#020305"/>
+    </radialGradient>
+    <linearGradient id="fold" x1=".1" y1="0" x2=".82" y2="1">
+      <stop stop-color="#030509"/><stop offset=".22" stop-color="#0a111b"/><stop offset=".38" stop-color="#202d3c"/>
+      <stop offset=".43" stop-color="#344757"/><stop offset=".47" stop-color="#121d29"/><stop offset=".60" stop-color="#05080d"/>
+      <stop offset=".82" stop-color="#101924"/><stop offset="1" stop-color="#020305"/>
+    </linearGradient>
+    <linearGradient id="fold2" x1="0" y1="1" x2=".85" y2="0">
+      <stop stop-color="#020306"/><stop offset=".25" stop-color="#0d141f"/><stop offset=".42" stop-color="#273645"/>
+      <stop offset=".46" stop-color="#172a35"/><stop offset=".51" stop-color="#080e15"/><stop offset=".70" stop-color="#03060a"/><stop offset="1" stop-color="#101b27"/>
+    </linearGradient>
+    <linearGradient id="reflection" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4cbaff" stop-opacity="0"/><stop offset=".25" stop-color="#8ac8df" stop-opacity=".15"/>
+      <stop offset=".49" stop-color="#60efff" stop-opacity=".46"/><stop offset=".69" stop-color="#447cae" stop-opacity=".20"/><stop offset="1" stop-color="#447cae" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#66e5ff" stop-opacity="0"/><stop offset=".32" stop-color="#66e5ff" stop-opacity=".10"/>
+      <stop offset=".63" stop-color="#add5ec" stop-opacity=".45"/><stop offset=".86" stop-color="#35acff" stop-opacity=".22"/><stop offset="1" stop-color="#35acff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="clear" cx=".49" cy=".49" r=".52">
+      <stop stop-color="#030509" stop-opacity=".72"/><stop offset=".58" stop-color="#030509" stop-opacity=".44"/><stop offset="1" stop-color="#030509" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="10"/></filter>
+  </defs>
+  <path fill="url(#base)" d="M0 0h1920v1080H0z"/>
+  <!-- Sweeping obsidian folds with thin optical reflections. -->
+  <path d="M575 -110C1015 -50 1190 51 1342 277C1495 505 1680 564 2015 391V-110Z" fill="url(#fold)"/>
+  <path d="M775 -100C1132 4 1241 142 1388 341C1530 535 1746 523 2010 350" stroke="url(#reflection)" stroke-width="20" fill="none" filter="url(#soft)"/>
+  <path d="M775 -100C1132 4 1241 142 1388 341C1530 535 1746 523 2010 350" stroke="url(#reflection)" stroke-width="2.6" fill="none"/>
+  <path d="M1065 -100C1375 80 1393 251 1542 327C1688 403 1832 328 2010 234V-110Z" fill="url(#fold2)"/>
+  <path d="M1065 -100C1375 80 1393 251 1542 327C1688 403 1832 328 2010 234" stroke="url(#edge)" stroke-width="2" fill="none"/>
+  <path d="M-90 490C228 386 350 491 513 706C692 945 943 1007 1355 1165H-100Z" fill="url(#fold2)"/>
+  <path d="M-90 490C228 386 350 491 513 706C692 945 943 1007 1355 1165" stroke="url(#edge)" stroke-width="18" fill="none" filter="url(#soft)"/>
+  <path d="M-90 490C228 386 350 491 513 706C692 945 943 1007 1355 1165" stroke="url(#edge)" stroke-width="2" fill="none"/>
+  <path d="M-100 668C187 573 290 710 449 874C583 1012 758 1083 1035 1160H-100Z" fill="url(#fold)"/>
+  <path d="M-100 668C187 573 290 710 449 874C583 1012 758 1083 1035 1160" stroke="url(#reflection)" stroke-width="1.8" fill="none"/>
+  <path d="M2020 750C1754 661 1609 723 1490 855C1393 962 1248 1044 1090 1160H2020Z" fill="url(#fold2)" opacity=".65"/>
+  <path d="M2020 750C1754 661 1609 723 1490 855C1393 962 1248 1044 1090 1160" stroke="url(#edge)" stroke-width="1.5" fill="none" opacity=".65"/>
+  <path fill="url(#clear)" d="M0 0h1920v1080H0z"/>
+</svg>
