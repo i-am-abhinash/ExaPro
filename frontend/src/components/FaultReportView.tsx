@@ -179,7 +179,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
         {/* Quality Score HUD Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Quality Score Meter */}
-          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] flex items-center space-x-4">
+          <div className="neon-detail-card p-5 rounded-2xl border border-white/[0.12] flex items-center space-x-4">
             <div className={`w-16 h-16 rounded-2xl border flex flex-col items-center justify-center font-mono font-black ${gradeColor}`}>
               <span className="text-2xl leading-none">{summary.qualityGrade}</span>
               <span className="text-[10px] uppercase font-bold tracking-wider mt-0.5">Grade</span>
@@ -197,7 +197,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           </div>
 
           {/* Confirmed vs Potential Faults */}
-          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] space-y-1">
+          <div className="neon-detail-card p-5 rounded-2xl border border-white/[0.12] space-y-1">
             <p className="text-xs text-cool-muted font-medium">Fault Verification</p>
             <div className="flex items-center space-x-4 pt-1">
               <div>
@@ -213,7 +213,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           </div>
 
           {/* Test Execution Stats */}
-          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] space-y-1">
+          <div className="neon-detail-card p-5 rounded-2xl border border-white/[0.12] space-y-1">
             <p className="text-xs text-cool-muted font-medium">Automated Tests</p>
             <div className="flex items-center space-x-3 pt-1">
               <div>
@@ -234,7 +234,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           </div>
 
           {/* Sandbox Status Tile */}
-          <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-white/[0.12] space-y-1">
+          <div className="neon-detail-card p-5 rounded-2xl border border-white/[0.12] space-y-1">
             <p className="text-xs text-cool-muted font-medium">Execution Sandbox</p>
             <div className="flex items-center space-x-2 pt-1">
               {environment.isAvailable ? (
@@ -649,7 +649,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="p-4 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.12] space-y-1">
+            <div className="neon-detail-card p-4 rounded-2xl border border-white/[0.12] space-y-1">
               <p className="text-xs text-cool-muted">Container Runtime Engine</p>
               <p className="text-sm font-bold text-cool-primary font-mono">{environment.runtimeType}</p>
               <p className="text-[11px] text-cool-muted">
@@ -657,13 +657,13 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.12] space-y-1">
+            <div className="neon-detail-card p-4 rounded-2xl border border-white/[0.12] space-y-1">
               <p className="text-xs text-cool-muted">Security Constraint Profile</p>
               <p className="text-sm font-bold text-cool-primary font-mono">{environment.securityProfile}</p>
               <p className="text-[11px] text-cool-muted">Non-root container user enforced</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[rgba(16,24,39,0.70)] border border-white/[0.12] space-y-1">
+            <div className="neon-detail-card p-4 rounded-2xl border border-white/[0.12] space-y-1">
               <p className="text-xs text-cool-muted">Allocated Resource Limits</p>
               <p className="text-sm font-bold text-cool-primary font-mono">
                 {environment.resourceLimits.cpuLimit} CPU / {environment.resourceLimits.memoryLimit} RAM
@@ -676,7 +676,7 @@ export const FaultReportView: React.FC<FaultReportViewProps> = ({
 
           {/* Remediation Guide if Blocked */}
           {!environment.isAvailable && (
-            <div className="p-5 rounded-2xl bg-[rgba(16,24,39,0.85)] border border-[#FBBF24]/30 space-y-3">
+            <div className="neon-detail-card p-5 rounded-2xl border border-[#FBBF24]/30 space-y-3">
               <h4 className="text-xs font-bold text-[#FBBF24] uppercase tracking-wider flex items-center space-x-2">
                 <Terminal className="w-4 h-4" />
                 <span>How to Enable Isolated Dynamic Testing</span>
