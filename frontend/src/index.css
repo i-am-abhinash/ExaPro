@@ -238,14 +238,14 @@ input:focus,textarea:focus,select:focus {border-color:#00b4ff99!important;box-sh
 }
 
 
-/* Neon Rings — shared background; the supplied original JPEG lives in public/.
+/* Neon Rings — shared background; the supplied original WebP lives in public/.
    Keep the previous tunnel as a fallback until that asset is installed. */
 .eclipse-shell,.eclipse-landing {
   --page-overlay:.20;
   --card-top:rgba(10,18,32,.28);
   --card-bottom:rgba(4,9,18,.42);
   background-color:#020305;
-  background-image:linear-gradient(180deg,rgba(2,3,5,.10),rgba(2,3,5,var(--page-overlay))),url('/neon-rings-bg.jpg'),url('./assets/cyber-tunnel.svg');
+  background-image:linear-gradient(180deg,rgba(2,3,5,.10),rgba(2,3,5,var(--page-overlay))),url('/neon-rings-bg.webp'),url('./assets/cyber-tunnel.svg');
   background-size:cover,cover,cover;
   background-position:center,center,center;
   background-repeat:no-repeat,no-repeat,no-repeat;
