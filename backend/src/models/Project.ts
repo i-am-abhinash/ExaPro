@@ -78,6 +78,7 @@ export interface IDocumentationSections {
 }
 
 export interface IProjectDocument extends Document {
+  guestOwner?: string;
   projectName: string;
   submissionType: SubmissionType;
   repositoryUrl?: string;
@@ -134,6 +135,7 @@ export interface IProjectDocument extends Document {
 
 const ProjectSchema = new Schema<IProjectDocument>(
   {
+    guestOwner: { type: String, index: true, select: false },
     projectName: { type: String, required: true },
     submissionType: { type: String, enum: ['zip', 'github'], required: true },
     repositoryUrl: { type: String },
